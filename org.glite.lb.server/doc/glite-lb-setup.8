@@ -1,4 +1,4 @@
-.TH GLITE-LB-SETUP 19 "November 2012" "EMI Project" "Logging&Bookkeeping"
+.TH GLITE-LB-SETUP 8 19 "November 2012" "EMI Project" "Logging&Bookkeeping"
 
 .SH NAME
 glite-lb-setup - script for setting up L&B services
@@ -95,15 +95,19 @@ Sets up emir-serp daemon.
 Package \fIemir-serp\fR must be installed and $EMIR_URL must be specified for this action to take effect.
 
 .TP
-\fBupgrade_logger\fR (part of upgrade action)
-Move L&B logger event files, if needed (upgrade from L&B >= 4.0.1).
+\fBupgrade_files\fR
+Remove old obsolete files (upgrade from L&B <= 3.1.1).
 
 .TP
-\fBupgrade_notif\fR (part of upgrade action)
+\fBupgrade_logger\fR
+Move L&B logger event files, if needed (upgrade from L&B <= 4.0.1).
+
+.TP
+\fBupgrade_notif\fR
 Move L&B notification event files, if needed (upgrade from L&B >= 4.0.1).
 
 .TP
-\fBupgrade_proxy\fR (part of upgrade action)
+\fBupgrade_proxy\fR
 Move L&B proxy event files, if needed (upgrade from L&B >= 4.0.1).
 
 .TP
@@ -152,7 +156,6 @@ Set up an L&B server running in the combined proxy and server ("BOTH") mode in S
 
  mysqladmin -u root password [Edited]
  MYSQL_PASSWORD=[Edited] glite-lb-setup
- fetch-crl
 
 .SH "SEE ALSO"
 .PP

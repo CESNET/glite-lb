@@ -22,7 +22,8 @@ GLITE_HOST_CERT=${GLITE_HOST_CERT:-"$GLITE_HOME/.certs/hostcert.pem"}
 GLITE_HOST_KEY=${GLITE_HOST_KEY:-"$GLITE_HOME/.certs/hostkey.pem"}
 
 
-ACTIONS="db certs msg authz harvester bdii emir_info emir_daemon upgrade crl startup krb krbgsi"
+ACTIONS="db certs msg authz harvester bdii emir_info emir_daemon upgrade_files upgrade_logger upgrade_notif upgrade_proxy crl startup krb krbgsi"
+GROUP_ACTIONS="all none yaim logger upgrade emir"
 
 qecho() {
 	if test "$quiet" != "1"; then
@@ -123,7 +124,7 @@ setup_all() {
 	setup_bdii=1
 	setup_emir_info=1
 	setup_emir_daemon=1
-	setup_upgrade=1
+	setup_upgrade_files=1
 	setup_upgrade_logger=1
 	setup_upgrade_notif=1
 	setup_upgrade_proxy=1
@@ -148,7 +149,7 @@ ACTIONS are:
 	db certs msg authz harvester bdii
 	emir_info .... prepare service info file
 	emir_daemon .. configure EMIR client daemon
-	upgrade_logger upgrade_notif upgrade_proxy
+	upgrade_files upgrade_logger upgrade_notif upgrade_proxy
 	crl startup
 	krb    ....... setup Kerberos
 	krbgsi ....... setup Kerberos and enable GSI autentization
@@ -184,9 +185,9 @@ EOF
 	logger)
 		setup_certs=1
 		setup_msg=1
-		setup_upgrade=1
+		setup_upgrade_logger=1
 		;;
-	upgrade) setup_upgrade=1;
+	upgrade) setup_upgrade_files=1;
 		setup_upgrade_logger=1;
 		setup_upgrade_notif=1;
 		setup_upgrade_proxy=1
@@ -203,6 +204,7 @@ EOF
 	bdii)	setup_bdii=1 ;;
 	emir_info) setup_emir_info=1 ;;
 	emir_daemon) setup_emir_daemon=1 ;;
+	upgrade_files) setup_upgrade_files=1 ;;
 	upgrade_logger) setup_upgrade_logger=1 ;;
 	upgrade_notif) setup_upgrade_notif=1 ;;
 	upgrade_proxy) setup_upgrade_proxy=1 ;;
@@ -217,7 +219,7 @@ EOF
 	esac
 	shift
 done
-for action in $ACTIONS all none yaim logger upgrade emir; do
+for action in $ACTIONS $GROUP_ACTIONS; do
 	eval value=\"$`echo setup_$action`\"
 	if test "$value" = "1"; then
 		setup=1;
@@ -604,7 +606,7 @@ fi
 
 # ==== upgrade ====
 
-if test "$setup_upgrade" = "1"; then
+if test "$setup_upgrade_files" = "1"; then
 	# upgrade from L&B <= 3.1.1
 	# (legacy start-up stuff)
 	if test -f @glite_etc@/gLiteservices; then
@@ -629,8 +631,8 @@ fi
 if test "$setup_upgrade_notif" = "1"; then
 	# upgrade from L&B <= 4.0.1
 	rm -f /tmp/glite-lb-notif.sock
-	if test -d /var/spool/lb-notif; then
-		find /var/tmp -type f -name glite-lb-notif.\* -exec mv {} /var/spool/lb-notif \;
+	if test -d /var/spool/glite/lb-notif; then
+		find /var/tmp -type f -name glite-lb-notif.\* -exec mv {} /var/spool/glite/lb-notif \;
 	fi
 fi
 
