@@ -72,6 +72,9 @@ stop() {
 	return $retval
 }
 
+# upgrade from L&B <= 4.0.1
+[ -f /var/glite/glite-lb-notif-interlogd.pid -a ! -f /var/run/glite/glite-lb-notif-interlogd.pid ] && mv -v /var/glite/glite-lb-notif-interlogd.pid /var/run/glite
+
 case "$1" in
     start)
 	status $prog >/dev/null 2>&1 && exit 0

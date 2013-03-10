@@ -845,6 +845,7 @@ if test "$setup_startup" = "1" -a "$startup_error" != "1"; then
 @debian@		$GLITE_LOCATION_ETC/init.d/glite-lb-$i restart || startup_error=1
 @debian@	done
 @redhat@	/sbin/chkconfig mysqld on
+@redhat@	/sbin/chkconfig glite-lb-locallogger off >/dev/null 2>&1 || :
 @redhat@	/sbin/chkconfig glite-lb-bkserverd on
 @redhat@	/sbin/chkconfig glite-lb-logd on
 @redhat@	/sbin/chkconfig glite-lb-interlogd on

@@ -102,3 +102,4 @@ GLITE_LB_RTM_DN='/C=UK/O=eScience/OU=Imperial/L=Physics/CN=heppc24.hep.ph.ic.ac.
 @debian@RUN_PROXY_IL=no
 @debian@RUN_NOTIF_IL=no
 @debian@RUN_LOGD=no
+@debian@RUN_HARVESTER=no

@@ -77,6 +77,9 @@ start() {
 	return $retval
 }
 
+# upgrade from L&B <= 4.0.1
+[ -f /var/glite/glite-lb-bkserverd.pid -a ! -f /var/run/glite/glite-lb-bkserverd.pid ] && mv -v /var/glite/glite-lb-bkserverd.pid /var/run/glite
+
 stop() {
 	echo -n "Shutting down $prog: "
 	killproc $prog

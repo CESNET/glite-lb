@@ -76,6 +76,9 @@ do_stop()
 	return "$RETVAL"
 }
 
+# upgrade from L&B <= 4.0.1
+[ -f /var/glite/glite-lb-notif-interlogd.pid -a ! -f $PIDFILE ] && mv -v /var/glite/glite-lb-notif-interlogd.pid /var/run/glite
+
 case "$1" in
   start)
 	[ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
