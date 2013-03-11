@@ -62,6 +62,7 @@ exit 0
 /usr/share/doc/%{name}-%{version}/ChangeLog
 /usr/share/doc/%{name}-%{version}/package.description
 /usr/libexec/grid-monitoring/probes/emi.lb/LB-probe
+/usr/libexec/grid-monitoring/probes/emi.lb/IL-probe
 
 
 %changelog
