@@ -1363,6 +1363,8 @@ int bk_handle_connection_proxy(int conn, struct timeval *timeout, void *data)
 					&authz_policy.actions[i].rules[j]);
 	}
 
+	memcpy(ctx->purge_timeout, purge_timeout, sizeof(ctx->purge_timeout));
+
 	/* required to match superuser-authorized notifications */
 
 	if (fake_host)
