@@ -233,7 +233,9 @@ However, it is triggered with \verb'glite-lb-purge' client command
 A~typical invocation specifies \LB server to purge (\verb'-m' option),
 and purge timeouts (grace periods) for several job states -- options
 \verb'-a' (aborted), \verb'-n' (canceled), \verb'-c' (cleared), and
-\verb'-o' (other). \LB versions 2.0 supports also \verb'-e' (done) option.
+\verb'-o' (other). \LBver{2.0} and newer support also \verb'-e' (done) option.
+It is important to note that the \emph{other} option refers to a fixed set of states that do not have their own controlling option. Its meaning does not stretch dynamically to cover all unlisted states. In other words, if, e.g., argument \texttt{-a} is not passed to the purge command, it is \textbf{not} automatically covered by \texttt{-o}. Instead, the internal default defined in the \LB server/proxy is used.
+
 A~job falling in one of the four categories is purged when it has not been
 touched (\ie an event arrived) for time longer than the specified category
 timeout.
