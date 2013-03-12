@@ -615,7 +615,7 @@ limit_cycle_cleanup:
 		glite_lbu_FreeStmt(&sh);
 	} while ( limit_loop );
 
-	if ( !n ) {
+	if ( !n && (ctx->errCode != EPERM) ) {
 		if(!jobid_only_query(conditions)) {
 			i = 0;
 			while(conditions[i]) {
