@@ -669,7 +669,7 @@ int edg_wll_log_proxy_read(edg_wll_Context ctx, edg_wll_PlainConnection *conn)
 				edg_wll_SetError(ctx, code, et);
 				break;
 			case LB_PERM:
-				edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "edg_wll_log_proxy_read(): operation not permitted");
+				edg_wll_SetError(ctx, EPERM, "edg_wll_log_proxy_read(): operation not permitted");
 				break;
 //			case LB_AUTH: // Defined but never used
 //			case LB_SYS: // Defined but never used
@@ -848,7 +848,7 @@ int edg_wll_log_direct_read(edg_wll_Context ctx, edg_wll_GssConnection *con)
 				edg_wll_SetError(ctx, code, et);
 				break;
 			case LB_PERM:
-				edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "edg_wll_log_direct_read(): operation not permitted");
+				edg_wll_SetError(ctx, EPERM, "edg_wll_log_direct_read(): operation not permitted");
 				break;
 //			case LB_AUTH: // Defined but never used
 //			case LB_SYS: // Defined but never used
