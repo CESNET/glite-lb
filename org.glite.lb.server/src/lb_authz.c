@@ -1244,6 +1244,7 @@ check_jobstat_authz(edg_wll_Context ctx,
     }
     if (check_authz_policy(&ctx->authz_policy, peer, STATUS_FOR_MONITORING)) {
 	*authz_flags |= STATUS_FOR_MONITORING;
+	return 1;
     }
 
     return 0;
