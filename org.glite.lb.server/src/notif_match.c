@@ -145,7 +145,6 @@ int edg_wll_NotifMatch(edg_wll_Context ctx, const edg_wll_JobStat *oldstat, cons
                                 		 getpid(),
                 		                 ju = glite_jobid_getUnique(newstat.jobId));
 		                free(ju);
-		                edg_wll_SetError(ctx, EPERM, NULL);
 				for (i=0; i<sizeof(jobc)/sizeof(jobc[0]); i++) free(jobc[i]);
 				continue;
         		}
