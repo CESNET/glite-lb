@@ -668,6 +668,12 @@ int edg_wll_log_proxy_read(edg_wll_Context ctx, edg_wll_PlainConnection *conn)
 				snprintf(et, sizeof(et), "edg_wll_log_proxy_read(): error details from L&B Proxy server: %s", answer);
 				edg_wll_SetError(ctx, code, et);
 				break;
+			case LB_PERM:
+				edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "edg_wll_log_proxy_read(): operation not permitted");
+				break;
+//			case LB_AUTH: // Defined but never used
+//			case LB_SYS: // Defined but never used
+//			case LB_TIME: // Defined but never used
 			default:
 				edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "edg_wll_log_proxy_read(): received unknown protocol response"); 
 				break;
@@ -838,9 +844,15 @@ int edg_wll_log_direct_read(edg_wll_Context ctx, edg_wll_GssConnection *con)
 				edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "edg_wll_log_direct_read(): received protocol error response"); 
 				break;
 			case LB_DBERR:
-				snprintf(et, sizeof(et), "edg_wll_log_direct_read: error details from L&B server: %s", answer);
+				snprintf(et, sizeof(et), "edg_wll_log_direct_read(): error details from L&B server: %s", answer);
 				edg_wll_SetError(ctx, code, et);
 				break;
+			case LB_PERM:
+				edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "edg_wll_log_direct_read(): operation not permitted");
+				break;
+//			case LB_AUTH: // Defined but never used
+//			case LB_SYS: // Defined but never used
+//			case LB_TIME: // Defined but never used
 			default:
 				edg_wll_SetError(ctx, EDG_WLL_IL_PROTO, "edg_wll_log_direct_read(): received unknown protocol response"); 
 				break;
