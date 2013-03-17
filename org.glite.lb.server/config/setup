@@ -116,6 +116,38 @@ EOF
 }
 
 
+setup_daemon() {
+	local name=$1
+	local id=$2
+	local enabled=$3
+
+@debian@	update-rc.d glite-lb-$name defaults >/dev/null
+@debian@	update-rc.d glite-lb-$name enable >/dev/null
+@debian@	grep -v ^RUN_ @defaultdir@/glite-lb-$name > /tmp/glite-lb-$name.$$
+@debian@	mv /tmp/glite-lb-$name.$$ @defaultdir@/glite-lb-$name
+	if test x"$enabled" = x"true"; then
+@fedora@		systemctl enable glite-lb-$name.service
+@fedora@		systemctl stop glite-lb-$name.service >/dev/null 2>&1 || :
+@fedora@		systemctl start glite-lb-$name.service || startup_error=1
+@debian@		echo "RUN_$id=yes" >> @defaultdir@/glite-lb-$name
+@debian@		/etc/init.d/glite-lb-$name stop >/dev/null 2>&1 || :
+@debian@		killall -9 glite-lb-$name >/dev/null 2>&1
+@debian@		/etc/init.d/glite-lb-$name start || startup_error=1
+@redhat@		/sbin/chkconfig glite-lb-$name on
+@redhat@		/sbin/service glite-lb-$name stop >/dev/null 2>&1 || :
+@redhat@		/sbin/service glite-lb-$name start || startup_error=1
+	else
+@fedora@		systemctl disable glite-lb-$name.service
+@fedora@		systemctl stop glite-lb-$name.service >/dev/null 2>&1 || :
+@debian@		/etc/init.d/glite-lb-$name stop >/dev/null 2>&1 || :
+@debian@		killall -9 glite-lb-$name >/dev/null 2>&1
+@debian@		echo "RUN_$id=no" >> @defaultdir@/glite-lb-$name
+@redhat@		/sbin/chkconfig glite-lb-$name off
+@redhat@		/sbin/service glite-lb-$name stop >/dev/null 2>&1 || :
+	fi
+}
+
+
 setup_all() {
 	setup_db=1
 	setup_certs=1
@@ -760,6 +792,9 @@ fi
 if test "$setup_startup" = "1" -a "$startup_error" != "1"; then
 	[  -d $GLITE_HOME/dump ] || mkdir $GLITE_HOME/dump && chown $GLITE_USER:$GLITE_GROUP $GLITE_HOME/dump
 	[  -d $GLITE_HOME/purge ] || mkdir $GLITE_HOME/purge && chown $GLITE_USER:$GLITE_GROUP $GLITE_HOME/purge
+
+	startup_error=0
+@fedora@
 @fedora@	case "$GLITE_LB_TYPE" in
 @fedora@	proxy)
 @fedora@		GLITE_LB_SERVER_PROXY_OPTIONS="-P "
@@ -787,93 +822,38 @@ if test "$setup_startup" = "1" -a "$startup_error" != "1"; then
 @fedora@	systemctl --system daemon-reload
 @fedora@
 @fedora@	systemctl enable mysqld.service
-@fedora@	systemctl enable glite-lb-bkserverd.service
-@fedora@	systemctl enable glite-lb-logd.service
-@fedora@	systemctl enable glite-lb-interlogd.service
-@fedora@	systemctl enable glite-lb-notif-interlogd.service
-@fedora@	if test x"$GLITE_LB_TYPE" = x"proxy" -o x"$GLITE_LB_TYPE" = x"both"; then
-@fedora@		systemctl enable glite-lb-proxy-interlogd.service
-@fedora@	else
-@fedora@		systemctl disable glite-lb-proxy-interlogd.service
-@fedora@	fi
-@fedora@	if test x"$GLITE_LB_HARVESTER_ENABLED" = x"true"; then
-@fedora@		systemctl enable glite-lb-harvester.service
-@fedora@	else
-@fedora@		systemctl disable glite-lb-harvester.service
-@fedora@	fi
-@fedora@
-@fedora@	startup_error=0
-@fedora@	systemctl restart glite-lb-bkserverd.service || startup_error=1
-@fedora@	systemctl restart glite-lb-logd.service || startup_error=1
-@fedora@	systemctl restart glite-lb-interlogd.service || startup_error=1
-@fedora@	systemctl restart glite-lb-notif-interlogd.service || startup_error=1
-@fedora@	if test x"$GLITE_LB_TYPE" = x"proxy" -o x"$GLITE_LB_TYPE" = x"both"; then
-@fedora@		systemctl restart glite-lb-proxy-interlogd.service || startup_error=1
-@fedora@	else
-@fedora@		systemctl stop glite-lb-proxy-interlogd.service >/dev/null 2>&1
-@fedora@	fi
-@fedora@	if test x"$GLITE_LB_HARVESTER_ENABLED" = x"true"; then
-@fedora@		systemctl restart glite-lb-harvester.service || startup_error=1
-@fedora@	else
-@fedora@		systemctl stop glite-lb-harvester.service >/dev/null 2>&1
-@fedora@	fi
-@debian@	run_proxy=no
-@debian@	run_harvester=no
-@debian@	if test x"$GLITE_LB_TYPE" = x"proxy" -o x"$GLITE_LB_TYPE" = x"both"; then
-@debian@		run_proxy=yes
-@debian@	fi
-@debian@	if test x"$GLITE_LB_HARVESTER_ENABLED" = x"true"; then
-@debian@		run_harvester=yes
-@debian@	fi
-@debian@	grep -v ^RUN_ @defaultdir@/glite-lb > /tmp/glite-lb
-@debian@	cat <<EOF >> /tmp/glite-lb
-@debian@RUN_SERVER=yes
-@debian@RUN_IL=yes
-@debian@RUN_PROXY_IL=$run_proxy
-@debian@RUN_NOTIF_IL=yes
-@debian@RUN_LOGD=yes
-@debian@RUN_HARVESTER=$run_harvester
-@debian@EOF
-@debian@	mv /tmp/glite-lb @defaultdir@/glite-lb
+@debian@	grep -v ^RUN_ @defaultdir@/glite-lb > /tmp/glite-lb.$$
+@debian@	mv /tmp/glite-lb.$$ @defaultdir@/glite-lb
 @debian@
-@debian@	startup_error=0
+@debian@	# legacy startup script
 @debian@	update-rc.d glite-lb-locallogger defaults >/dev/null 2>&1 || :
 @debian@	update-rc.d glite-lb-locallogger disable >/dev/null 2>&1 || :
-@debian@	for i in bkserverd logd interlogd notif-interlogd proxy-interlogd harvester; do
-@debian@		update-rc.d glite-lb-$i defaults
-@debian@		update-rc.d glite-lb-$i enable
-@debian@		$GLITE_LOCATION_ETC/init.d/glite-lb-$i restart || startup_error=1
-@debian@	done
+@debian@
 @redhat@	/sbin/chkconfig mysqld on
-@redhat@	/sbin/chkconfig glite-lb-locallogger off >/dev/null 2>&1 || :
-@redhat@	/sbin/chkconfig glite-lb-bkserverd on
-@redhat@	/sbin/chkconfig glite-lb-logd on
-@redhat@	/sbin/chkconfig glite-lb-interlogd on
-@redhat@	/sbin/chkconfig glite-lb-notif-interlogd on
-@redhat@	if test x"$GLITE_LB_TYPE" = x"proxy" -o x"$GLITE_LB_TYPE" = x"both"; then
-@redhat@		/sbin/chkconfig glite-lb-proxy-interlogd on
-@redhat@	else
-@redhat@		/sbin/chkconfig glite-lb-proxy-interlogd off
-@redhat@	fi
-@redhat@	if test x"$GLITE_LB_HARVETER_ENABLED" = x"true"; then
-@redhat@		/sbin/chkconfig glite-lb-harvester on
-@redhat@	else
-@redhat@		/sbin/chkconfig glite-lb-harvester off
-@redhat@	fi
 @redhat@
-@redhat@	startup_error=0
-@redhat@	for i in bkserverd logd interlogd notif-interlogd; do
-@redhat@		/sbin/service glite-lb-$i stop >/dev/null 2>&1 || :
-@redhat@		/sbin/service glite-lb-$i start || startup_error=1
-@redhat@        done
-@redhat@	/sbin/service glite-lb-proxy-interlogd stop >/dev/null 2>&1 || :
-@redhat@	if test x"$GLITE_LB_TYPE" = x"proxy" -o x"$GLITE_LB_TYPE" = x"both"; then
-@redhat@		/sbin/service glite-lb-proxy-interlogd start || startup_error=1
-@redhat@	fi
-@redhat@	/sbin/service glite-lb-proxy-harvester stop >/dev/null 2>&1 || :
-@redhat@	if test x"$GLITE_LB_HARVESTER_ENABLED" = x"true"; then
-@redhat@		/sbin/service glite-lb-harvester start || startup_error=1
-@redhat@	fi
+@redhat@	# legacy startup script
+@redhat@	/sbin/chkconfig glite-lb-locallogger off >/dev/null 2>&1 || :
+@redhat@
+	setup_daemon bkserverd SERVER true
+	setup_daemon notif-interlogd NOTIF_IL true
+	case "$GLITE_LB_TYPE" in
+	proxy)
+		setup_daemon logd LOGD false
+		setup_daemon interlogd IL false
+		setup_daemon proxy-interlogd PROXY_IL true
+		;;
+	both)
+		setup_daemon logd LOGD true
+		setup_daemon interlogd IL true
+		setup_daemon proxy-interlogd PROXY_IL true
+		;;
+	*)
+		setup_daemon logd LOGD true
+		setup_daemon interlogd IL true
+		setup_daemon proxy-interlogd PROXY_IL false
+		;;
+	esac
+	setup_daemon harvester HARVESTER "$GLITE_LB_HARVESTER_ENABLED"
 
 	if test "$startup_error" = "0"; then
 		qecho "Services started successfully"
