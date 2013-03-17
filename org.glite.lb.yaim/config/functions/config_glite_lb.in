@@ -146,8 +146,6 @@ function config_glite_lb() {
   lcas_plugin="$GLITE_LOCATION/$lcas_libarch/modules/lcas_lb.mod"
   echo "pluginname=\"$lcas_plugin\"" > ${GLITE_LOCATION_ETC}/glite-lb/lcas.db
 
-  # remove config file with defaults for yaim-less setup
-  rm -f @defaultdir@/glite-lb
   # main L&B setup
   . ${GLITE_LOCATION}/sbin/glite-lb-setup yaim
   if [ $? != 0 ]; then
