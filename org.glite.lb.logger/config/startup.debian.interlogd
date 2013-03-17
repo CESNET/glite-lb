@@ -41,7 +41,7 @@ if [ "x$RUN_IL" != "xyes" ]; then
 	echo "$DESC disabled."
 	echo "For automatic configuration, please run glite-lb-setup script."
 	echo "When configuring L&B manually, please also set RUN_IL to 'yes' in"
-	echo "/etc/default/glite-lb."
+	echo "/etc/default/glite-lb or /etc/default/glite-lb-interlogd."
 	exit 0
 fi
 
@@ -78,9 +78,6 @@ do_stop()
 	rm -f $PIDFILE
 	return "$RETVAL"
 }
-
-# upgrade from L&B <= 4.0.1
-[ -f /var/glite/glite-lb-interlogd.pid -a ! -f $PIDFILE ] && mv -v /var/glite/glite-lb-interlogd.pid /var/run/glite
 
 case "$1" in
   start)

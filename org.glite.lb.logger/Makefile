@@ -241,15 +241,25 @@ ifdef LB_PERF
 endif
 	( cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix} )
 	${INSTALL} -m 644 ${MAN_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man8
+ifeq ($(os_type),redhat)
+	mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/rc.d/init.d
+	${INSTALL} -m 755 startup ${DESTDIR}${PREFIX}${sysconfdir}/rc.d/init.d/glite-lb-locallogger
+	for d in logd interlogd notif-interlogd proxy-interlogd; do \
+		${INSTALL} -m 755 ${top_srcdir}/config/startup.redhat.$$d ${DESTDIR}${PREFIX}${sysconfdir}/rc.d/init.d/glite-lb-$$d; \
+	done
+endif
 ifeq ($(os_type),fedora)
 	mkdir -p ${DESTDIR}${PREFIX}${unitdir}
-	install -m 644 ${top_srcdir}/config/systemd.logd ${DESTDIR}${PREFIX}${unitdir}/glite-lb-logd.service
-	install -m 644 ${top_srcdir}/config/systemd.interlogd ${DESTDIR}${PREFIX}${unitdir}/glite-lb-interlogd.service
-	install -m 644 ${top_srcdir}/config/systemd.notif-interlogd ${DESTDIR}${PREFIX}${unitdir}/glite-lb-notif-interlogd.service
-	install -m 644 ${top_srcdir}/config/systemd.proxy-interlogd ${DESTDIR}${PREFIX}${unitdir}/glite-lb-proxy-interlogd.service
-else
-	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/init.d
+	for d in logd interlogd notif-interlogd proxy-interlogd; do \
+		install -m 644 ${top_srcdir}/config/systemd.$$d ${DESTDIR}${PREFIX}${unitdir}/glite-lb-$$d.service ; \
+	done
+endif
+ifeq ($(os_type),debian)
+	mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/init.d
 	${INSTALL} -m 755 startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-locallogger
+	for d in logd interlogd notif-interlogd proxy-interlogd; do \
+		${INSTALL} -m 755 ${top_srcdir}/config/startup.debian.$$d ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-$$d ; \
+	done
 endif
 
 ${INTERLOG_NOTIF_OBJS}: %.notif.lo: %.c

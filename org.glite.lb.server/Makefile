@@ -470,12 +470,17 @@ install:
 ifdef LB_PERF
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_proxy.sh ${DESTDIR}${PREFIX}${prefix}/sbin
 endif
+ifeq ($(os_type),redhat)
+	mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/rc.d/init.d
+	${INSTALL} -m 755 ${top_srcdir}/config/startup.redhat.bkserverd ${DESTDIR}${PREFIX}${sysconfdir}/rc.d/init.d/glite-lb-bkserverd
+endif
 ifeq ($(os_type),fedora)
 	mkdir -p ${DESTDIR}${PREFIX}${unitdir}
 	install -m 644 ${top_srcdir}/config/systemd.bkserverd ${DESTDIR}${PREFIX}${unitdir}/glite-lb-bkserverd.service
-else
+endif
+ifeq ($(os_type),debian)
 	mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/init.d
-	${INSTALL} -m 755 startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-bkserverd
+	${INSTALL} -m 755 ${top_srcdir}/config/startup.debian.bkserverd ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-bkserverd
 endif
 
 clean:

@@ -69,11 +69,7 @@ cat > ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d/glite-lb-logger.conf <<EOF
 d %{_localstatedir}/run/glite 0755 glite glite -
 EOF
 %else
-mkdir $RPM_BUILD_ROOT/etc/rc.d
-mv $RPM_BUILD_ROOT/etc/init.d $RPM_BUILD_ROOT/etc/rc.d
-for i in logd interlogd notif-interlogd proxy-interlogd; do
-	install -m 0755 config/startup.redhat.$i $RPM_BUILD_ROOT/etc/rc.d/init.d/glite-lb-$i
-done
+sed -i 's,\(lockfile=/var/lock\),\1/subsys,' $RPM_BUILD_ROOT/etc/rc.d/init.d/glite-lb-locallogger
 %endif
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
 mkdir -p $RPM_BUILD_ROOT/var/lib/glite
@@ -108,12 +104,23 @@ fi
 /sbin/chkconfig --add glite-lb-interlogd
 /sbin/chkconfig --add glite-lb-notif-interlogd
 /sbin/chkconfig --add glite-lb-proxy-interlogd
+
 if [ $1 -eq 1 ] ; then
-	/sbin/chkconfig glite-lb-logd off
-	/sbin/chkconfig glite-lb-interlogd off
-	/sbin/chkconfig glite-lb-notif-interlogd off
-	/sbin/chkconfig glite-lb-proxy-interlogd off
+  /sbin/chkconfig glite-lb-logd off
+  /sbin/chkconfig glite-lb-interlogd off
+  /sbin/chkconfig glite-lb-notif-interlogd off
+  /sbin/chkconfig glite-lb-proxy-interlogd off
 fi
+
+# upgrade from lb.logger <= 2.4.10 (L&B <= 4.0.1)
+for i in logd interlogd notif-interlogd proxy-interlogd; do
+  [ -f /var/glite/glite-lb-$i.pid -a ! -f /var/run/glite/glite-lb-$i.pid ] && cp -pv /var/glite/glite-lb-$i.pid /var/run/glite/ || :
+done
+
+# upgrade from lb.logger <= 2.4.15 (L&B <= 4.0.4)
+/sbin/chkconfig --del glite-lb-locallogger
+# notif and proxy interlogd deamons won't be restarted when upgrading from
+# L&B 4.0.4 (startup moved from lb.server to lb.logger)
 %endif
 
 
@@ -168,9 +175,6 @@ if [ "$1" -ge "1" ] ; then
     /sbin/service glite-lb-interlogd condrestart >/dev/null 2>&1 || :
     /sbin/service glite-lb-notif-interlogd condrestart >/dev/null 2>&1 || :
     /sbin/service glite-lb-proxy-interlogd condrestart >/dev/null 2>&1 || :
-
-    # upgrade from lb.logger <= 2.4.15 (L&B <= 4.0.4)
-    /sbin/chkconfig --del glite-lb-locallogger
 fi
 %endif
 

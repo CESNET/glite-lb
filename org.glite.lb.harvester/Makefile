@@ -102,12 +102,17 @@ install: compile
 	${INSTALL} -m 444 ${top_srcdir}/examples/test.sql ${DESTDIR}${PREFIX}${prefix}/share/glite/glite-lb-harvester-test-dbsetup.sql
 	${INSTALL} -m 444 ${top_srcdir}/doc/README ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 444 glite-lb-harvester.1 ${DESTDIR}${PREFIX}${prefix}/share/man/man1
+ifeq ($(os_type),redhat)
+	mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/rc.d/init.d
+	${INSTALL} -m 755 ${top_srcdir}/config/startup.redhat.harvester ${DESTDIR}${PREFIX}${sysconfdir}/rc.d/init.d/glite-lb-harvester
+endif
 ifeq ($(os_type),fedora)
 	mkdir -p ${DESTDIR}${PREFIX}${unitdir}
 	${INSTALL} -m 644 ${top_srcdir}/config/systemd.harvester ${DESTDIR}${PREFIX}${unitdir}/glite-lb-harvester.service
-else
+endif
+ifeq ($(os_type),debian)
 	mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/init.d
-	${INSTALL} -m 755 startup ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-harvester
+	${INSTALL} -m 755 ${top_srcdir}/config/startup.debian.harvester ${DESTDIR}${PREFIX}${sysconfdir}/init.d/glite-lb-harvester
 endif
 
 clean:

@@ -85,10 +85,6 @@ mkdir -p ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d
 cat > ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d/glite-lb-server.conf <<EOF
 d %{_localstatedir}/run/glite 0755 glite glite -
 EOF
-%else
-rm -rf $RPM_BUILD_ROOT/etc/init.d
-mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
-install -m 0755 config/startup.redhat.bkserverd $RPM_BUILD_ROOT/etc/rc.d/init.d/glite-lb-bkserverd
 %endif
 install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -rf {} \;
@@ -125,6 +121,9 @@ fi
 if [ $1 -eq 1 ] ; then
 	/sbin/chkconfig glite-lb-bkserverd off
 fi
+
+# upgrade from lb.server <= 3.0.1 (L&B <= 4.0.1)
+[ -f /var/glite/glite-lb-bkserverd.pid -a ! -f /var/run/glite/glite-lb-bkserverd.pid ] && cp -pv /var/glite/glite-lb-bkserverd.pid /var/run/glite/ || :
 %endif
 
 

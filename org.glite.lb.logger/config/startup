@@ -197,9 +197,9 @@ status()
 	return $retval
 }
 
-# upgrade from L&B <= 4.0.1
-if [ -f /var/glite/glite-lb-logd.pid -a ! -f $LL_PIDFILE ]; then mv /var/glite/glite-lb-logd.pid /var/run/glite 2>/dev/null; fi
-if [ -f /var/glite/glite-lb-interlogd.pid -a ! -f $IL_PIDFILE ]; then mv /var/glite/glite-lb-interlogd.pid /var/run/glite 2>/dev/null; fi
+# upgrade from lb.logger <= 2.4.10 (L&B <= 4.0.1)
+if [ -f /var/glite/glite-lb-logd.pid -a ! -f $LL_PIDFILE ]; then cp -vp /var/glite/glite-lb-logd.pid /var/run/glite; fi
+if [ -f /var/glite/glite-lb-interlogd.pid -a ! -f $IL_PIDFILE ]; then cp -vp /var/glite/glite-lb-interlogd.pid /var/run/glite; fi
 
 case x$1 in
 	xstart)	start;;

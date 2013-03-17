@@ -324,10 +324,10 @@ status()
 	return $retval
 }
 
-# upgrade from L&B <= 4.0.1
-if [ -f /var/glite/glite-lb-bkserverd.pid -a ! -f $BK_PIDFILE ]; then mv /var/glite/glite-lb-bkserverd.pid /var/run/glite 2>/dev/null; fi
-if [ -f /var/glite/glite-lb-notif-interlogd.pid -a ! -f $NOTIF_IL_PIDFILE ]; then mv /var/glite/glite-lb-notif-interlogd.pid /var/run/glite 2>/dev/null; fi
-if [ -f /var/glite/glite-lb-proxy-interlogd.pid -a ! -f $PROXY_IL_PIDFILE ]; then mv /var/glite/glite-lb-proxy-interlogd.pid /var/run/glite 2>/dev/null; fi
+# upgrade from lb.server <= 3.0.1 (L&B <= 4.0.1)
+if [ -f /var/glite/glite-lb-bkserverd.pid -a ! -f $BK_PIDFILE ]; then cp -vp /var/glite/glite-lb-bkserverd.pid /var/run/glite; fi
+if [ -f /var/glite/glite-lb-notif-interlogd.pid -a ! -f $NOTIF_IL_PIDFILE ]; then cp -vp /var/glite/glite-lb-notif-interlogd.pid /var/run/glite; fi
+if [ -f /var/glite/glite-lb-proxy-interlogd.pid -a ! -f $PROXY_IL_PIDFILE ]; then cp -vp /var/glite/glite-lb-proxy-interlogd.pid /var/run/glite; fi
 
 case x$1 in
 	xstart)	start;;

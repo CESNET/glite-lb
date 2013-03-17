@@ -1,0 +1,7 @@
+#!/bin/sh
+set -e
+
+# upgrade from L&B server <= 3.0.1 (L&B <= 4.0.1)
+[ -f /var/glite/glite-lb-bkserverd.pid -a ! -f /var/run/glite/glite-lb-bkserverd.pid ] && cp -pv /var/glite/glite-lb-bkserverd.pid /var/run/glite/ || :
+
+#DEBHELPER#

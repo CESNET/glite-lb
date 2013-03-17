@@ -55,6 +55,14 @@ start() {
 		echo "$0: WARNING: No credentials specified." >&2
 	fi
 
+	# upgrade from L&B <= 4.0.1 (renamed process name)
+	oldpidfile=/var/glite/glite-lb-proxy-interlogd.pid
+	oldprog=glite-lb-interlogd
+	if [ -f $oldpidfile ]; then
+		echo -n "Shutting down $oldprog for proxy: "
+		killproc -p $oldpidfile $oldprog
+	fi
+
 	echo -n "Starting $prog: "
 	daemon --user $GLITE_USER $env $exec $GLITE_LB_PROXY_IL_OPTIONS
 	retval=$?
@@ -65,15 +73,12 @@ start() {
 
 stop() {
 	echo -n "Shutting down $prog: "
-	killproc $prog
+	killproc -p /var/run/glite/glite-lb-proxy-interlogd.pid $prog
 	retval=$?
 	echo
 	[ $retval -eq 0 ] && rm -f $lockfile
 	return $retval
 }
-
-# upgrade from L&B <= 4.0.1
-[ -f /var/glite/glite-lb-proxy-interlogd.pid -a ! -f /var/run/glite/glite-lb-proxy-interlogd.pid ] && mv -v /var/glite/glite-lb-proxy-interlogd.pid /var/run/glite
 
 case "$1" in
     start)

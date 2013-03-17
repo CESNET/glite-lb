@@ -65,15 +65,12 @@ start() {
 
 stop() {
 	echo -n "Shutting down $prog: "
-	killproc $prog
+	killproc -p /var/run/glite/glite-lb-notif-interlogd.pid $prog
 	retval=$?
 	echo
 	[ $retval -eq 0 ] && rm -f $lockfile
 	return $retval
 }
-
-# upgrade from L&B <= 4.0.1
-[ -f /var/glite/glite-lb-notif-interlogd.pid -a ! -f /var/run/glite/glite-lb-notif-interlogd.pid ] && mv -v /var/glite/glite-lb-notif-interlogd.pid /var/run/glite
 
 case "$1" in
     start)

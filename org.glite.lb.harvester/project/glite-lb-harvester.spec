@@ -60,10 +60,6 @@ mkdir -p ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d
 cat > ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d/glite-lb-harvester.conf <<EOF
 d %{_localstatedir}/run/glite 0755 glite glite -
 EOF
-%else
-rm -rf $RPM_BUILD_ROOT/etc/init.d
-mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
-install -m 0755 config/startup.redhat.harvester $RPM_BUILD_ROOT/etc/rc.d/init.d/glite-lb-harvester
 %endif
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
 mkdir -p $RPM_BUILD_ROOT/var/lib/glite
@@ -92,6 +88,9 @@ fi
 if [ $1 -eq 1 ] ; then
 	/sbin/chkconfig glite-lb-harvester off
 fi
+
+# upgrade from L&B harvester <= 1.3.4 (L&B <= 4.0.1)
+[ -f /var/glite/glite-lb-harvester.pid -a ! -f /var/run/glite/glite-lb-harvester.pid ] && cp -pv /var/glite/glite-lb-harvester.pid /var/run/glite/ || :
 %endif
 
 

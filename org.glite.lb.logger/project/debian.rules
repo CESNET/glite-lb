@@ -45,10 +45,10 @@ install: build-stamp
 	mkdir -p debian/$(p_dev)/usr/share/doc
 	ln -s $(p_base) debian/$(p_dbg)/usr/share/doc/$(p_dbg)
 	ln -s $(p_base) debian/$(p_dev)/usr/share/doc/$(p_dev)
-	cp -p config/startup.debian.logd debian/glite-lb-logd.init
-	cp -p config/startup.debian.interlogd debian/glite-lb-interlogd.init
-	cp -p config/startup.debian.notif-interlogd debian/glite-lb-notif-interlogd.init
-	cp -p config/startup.debian.proxy-interlogd debian/glite-lb-proxy-interlogd.init
+	for d in logd interlogd notif-interlogd proxy-interlogd; do \
+		rm debian/tmp/etc/init.d/glite-lb-$$d; \
+		cp -p config/startup.debian.$$d debian/glite-lb-$$d.init; \
+	done
 
 binary-indep:
 

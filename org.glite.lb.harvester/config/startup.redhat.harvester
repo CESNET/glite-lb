@@ -69,7 +69,7 @@ start() {
 
 stop() {
 	echo -n "Shutting down $prog: "
-	killproc $prog
+	killproc -p /var/run/glite/glite-lb-harvester.pid $prog
 	retval=$?
 	echo
 	[ $retval -eq 0 ] && rm -f $lockfile

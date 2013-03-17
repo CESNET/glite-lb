@@ -46,7 +46,7 @@ install: build-stamp
 	mv debian/tmp/usr/share/doc/glite-lb-server-@MAJOR@.@MINOR@.@REVISION@ debian/$(p_base)/usr/share/doc/$(p_base)
 	mkdir -p debian/$(p_dbg)/usr/share/doc
 	ln -s $(p_base) debian/$(p_dbg)/usr/share/doc/$(p_dbg)
-	rm debian/tmp/etc/init.d/glite-lb-bkserverd
+	rm -rf debian/tmp/etc/init.d
 	cp -p config/startup.debian.bkserverd debian/glite-lb-bkserverd.init
 
 binary-indep:
