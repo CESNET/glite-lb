@@ -233,7 +233,7 @@ install:
 	${INSTALL} -m 755 ${LOGD} ${DESTDIR}${PREFIX}${prefix}/bin
 	${INSTALL} -m 755 ${INTERLOGD} ${DESTDIR}${PREFIX}${prefix}/bin
 	${INSTALL} -m 755 ${NOTIF_INTERLOGD} ${DESTDIR}${PREFIX}${prefix}/bin
-	ln -sf ${INTERLOGD} ${DESTDIR}${PREFIX}${prefix}/bin/glite-lb-proxy-interlogd
+	${INSTALL} -m 755 ${INTERLOGD} ${DESTDIR}${PREFIX}${prefix}/bin/glite-lb-proxy-interlogd
 ifdef LB_PERF
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_ll.sh ${DESTDIR}${PREFIX}${prefix}/sbin
