@@ -84,10 +84,6 @@ mkdir -p $RPM_BUILD_ROOT/var/spool/glite/lb-proxy
 touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-interlogger.sock
 touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-notif.sock
 touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-proxy.sock
-touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-interlogd.pid
-touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-logd.pid
-touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-notif-interlogd.pid
-touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-proxy-interlogd.pid
 
 
 %clean
@@ -191,10 +187,6 @@ fi
 %ghost %{_localstatedir}/run/glite/glite-lb-interlogger.sock
 %ghost %{_localstatedir}/run/glite/glite-lb-notif.sock
 %ghost %{_localstatedir}/run/glite/glite-lb-proxy.sock
-%ghost %{_localstatedir}/run/glite/glite-lb-interlogd.pid
-%ghost %{_localstatedir}/run/glite/glite-lb-logd.pid
-%ghost %{_localstatedir}/run/glite/glite-lb-notif-interlogd.pid
-%ghost %{_localstatedir}/run/glite/glite-lb-proxy-interlogd.pid
 %if 0%{?fedora}
 %{_prefix}/lib/tmpfiles.d/glite-lb-logger.conf
 %{_unitdir}//glite-lb-logd.service

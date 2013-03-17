@@ -101,7 +101,6 @@ mkdir -p $RPM_BUILD_ROOT/var/run/glite
 mkdir -p $RPM_BUILD_ROOT/var/spool/glite/lb-locallogger
 mkdir -p $RPM_BUILD_ROOT/var/spool/glite/lb-notif
 mkdir -p $RPM_BUILD_ROOT/var/spool/glite/lb-proxy
-touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-bkserverd.pid
 
 
 %clean
@@ -180,7 +179,6 @@ fi
 %config(noreplace) %{_sysconfdir}/logrotate.d/glite-lb-server
 %config(noreplace) %{_sysconfdir}/mysql/conf.d/glite-lb-server.cnf
 %config(noreplace missingok) %{_sysconfdir}/sysconfig/glite-lb
-%ghost %{_localstatedir}/run/glite/glite-lb-bkserverd.pid
 %{_docdir}/%{name}-%{version}/ChangeLog
 %{_docdir}/%{name}-%{version}/LICENSE
 %{_docdir}/%{name}-%{version}/glite-lb

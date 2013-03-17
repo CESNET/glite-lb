@@ -68,7 +68,6 @@ install -m 0755 config/startup.redhat.harvester $RPM_BUILD_ROOT/etc/rc.d/init.d/
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
 mkdir -p $RPM_BUILD_ROOT/var/lib/glite
 mkdir -p $RPM_BUILD_ROOT/var/run/glite
-touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-harvester.pid
 
 
 %clean
@@ -136,7 +135,6 @@ fi
 %dir %{_libdir}/glite-lb/
 %dir %{_libdir}/glite-lb/examples/
 %dir %{_datadir}/glite/
-%ghost %{_localstatedir}/run/glite/glite-lb-harvester.pid
 %if 0%{?fedora}
 %{_prefix}/lib/tmpfiles.d/glite-lb-harvester.conf
 %{_unitdir}/glite-lb-harvester.service
