@@ -7,7 +7,7 @@ License: ASL 2.0
 Vendor: EMI
 Group: System Environment/Daemons
 BuildArch: noarch
-Requires: glite-lb-client
+Requires: glite-lb-client-progs
 Requires: glite-lb-utils
 Requires: glite-lb-ws-test
 Requires: globus-proxy-utils
