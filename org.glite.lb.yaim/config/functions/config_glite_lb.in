@@ -83,6 +83,7 @@ function config_glite_lb_setenv(){
       fi
     fi
   else
+    GLITE_LB_TYPE="`echo $GLITE_LB_TYPE | tr '[:upper:]' '[:lower:]'`"
     # override if needed
     if [ $use_proxy -eq 1 ]; then
       case "$GLITE_LB_TYPE" in
@@ -95,6 +96,7 @@ function config_glite_lb_setenv(){
     fi
   fi
   yaimgridenv_set GLITE_LB_TYPE ${GLITE_LB_TYPE:-server}
+  [ "x${GLITE_LB_TYPE}" = "xboth" -o -n "$GLITE_WMS_PARAM_LBPROXY_SERVERNAME" ] && yaimgridenv_set GLITE_WMS_PARAM_LBPROXY_SERVERNAME "${GLITE_WMS_PARAM_LBPROXY_SERVERNAME:-`hostname -f`:9000}"
 
   config_glite_lb_libs_append ${INSTALL_ROOT:-'/opt'}/c-ares
   config_glite_lb_libs_append ${INSTALL_ROOT:-'/opt'}/classads
