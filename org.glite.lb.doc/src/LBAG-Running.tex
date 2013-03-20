@@ -162,6 +162,7 @@ However, due to implementation internals, the second job cannot be registered.}.
 Though it may have little sense to run multiple \LB proxy instances, it is possible too.
 Non-default listening socket have to be specified via \verb'-p' option then.
 
+Note that in more recent \LB versions, clients observe the \texttt{GLITE\_WMS\_LBPROXY\_SERVERNAME} environmental variable, which holds the \texttt{hostname:port} of the \LB server local to their \LB proxy. This allows them to avoid redundant job registrations through the proxy as well as directly to the \LB server. If multiple instances are used, it is necessary to make sure that this variable is either unset, or points to the appropriate \LB server instance.
 
 
 \subsubsection{Backup dumps}

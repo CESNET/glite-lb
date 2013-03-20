@@ -808,14 +808,24 @@ static int edg_wll_RegisterJobMaster(
         edg_wlc_JobId **        subjobs,
 	char **			wms_dn)
 {
-	char	*seq,*type_s,*parent_s,*wms_dn_s;
+	char	*seq,*type_s,*parent_s,*wms_dn_s,*comparesrvname;
 	int	err = 0,i;
+	unsigned int comparesrvport;
 	struct timeval sync_to;
 
 	seq = type_s = parent_s = wms_dn_s = NULL;
 
 	edg_wll_ResetError(ctx);
 	memcpy(&sync_to, &ctx->p_sync_timeout, sizeof sync_to);
+
+	// Cancel proxy flag if both direct and proxy flags are specified and the target server is local to the proxy
+	if ((flags & EDG_WLL_LOGFLAG_PROXY) && ctx->p_lbproxy_servername && (flags & EDG_WLL_LOGFLAG_DIRECT)) {
+		glite_jobid_getServerParts(job, &comparesrvname, &comparesrvport);
+		if ((comparesrvport == ctx->p_lbproxy_servername_port) && (!strcmp(comparesrvname, ctx->p_lbproxy_servername))) {
+			flags = flags & (0 ^ EDG_WLL_LOGFLAG_PROXY);
+		}
+		free(comparesrvname);
+	}
 
 	if ( ((flags & (EDG_WLL_LOGFLAG_DIRECT | EDG_WLL_LOGFLAG_LOCAL)) == 
 				(EDG_WLL_LOGFLAG_DIRECT | EDG_WLL_LOGFLAG_LOCAL)) ||

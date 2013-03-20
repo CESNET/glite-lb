@@ -187,6 +187,9 @@ glite_lb_padded_struct(_edg_wll_Context,150,
 	int             count_server_stats;
 
 	char 		*authz_policy_file;
+
+	char		*p_lbproxy_servername;
+	unsigned int	p_lbproxy_servername_port;
 )
 
 /* to be used internally: set, update and and clear the error information in 

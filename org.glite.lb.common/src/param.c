@@ -58,6 +58,7 @@ static const char *myenv[] = {
 	"%sLBPROXY_SERVE_SOCK",
 	"%sLBPROXY_USER",
 	"%sJPREG_TMPDIR",
+	"%sLBPROXY_SERVERNAME",
 };
 
 /* XXX: does not parse URL, just hostname[:port] */
@@ -203,6 +204,12 @@ int edg_wll_SetParamString(edg_wll_Context ctx,edg_wll_ContextParam param,const 
 			if (!val) val = mygetenv(param);
 			free(ctx->jpreg_dir);
 			ctx->jpreg_dir = val ? strdup(val) : NULL;
+			break;
+		case EDG_WLL_PARAM_LBPROXY_SERVERNAME:
+			if (!val) val = mygetenv(param);
+			free(ctx->p_lbproxy_servername);
+			ctx->p_lbproxy_servername = val ? extract_host(param, NULL) : NULL;
+			ctx->p_lbproxy_servername_port = val ? extract_port(param, GLITE_JOBID_DEFAULT_PORT) : 0;
 			break;
 		default:
 			return edg_wll_SetError(ctx,EINVAL,"unknown parameter");
@@ -355,6 +362,7 @@ int edg_wll_SetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 		case EDG_WLL_PARAM_LBPROXY_SERVE_SOCK:
 		case EDG_WLL_PARAM_LBPROXY_USER:
 		case EDG_WLL_PARAM_JPREG_TMPDIR:
+		case EDG_WLL_PARAM_LBPROXY_SERVERNAME:
 			return edg_wll_SetParamString(ctx,param,va_arg(ap,char *));
 		case EDG_WLL_PARAM_LOG_TIMEOUT:      
 		case EDG_WLL_PARAM_LOG_SYNC_TIMEOUT: 
@@ -467,6 +475,12 @@ int edg_wll_GetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 		case EDG_WLL_PARAM_JPREG_TMPDIR:
 			p_string = va_arg(ap, char **);
 			*p_string = estrdup(ctx->jpreg_dir);
+			break;
+		case EDG_WLL_PARAM_LBPROXY_SERVERNAME:
+			p_string = va_arg(ap, char **);
+			if (ctx->p_lbproxy_servername) 
+				asprintf(p_string,"%s:%d", ctx->p_lbproxy_servername, ctx->p_lbproxy_servername_port);
+			else *p_string = NULL;
 			break;
 		case EDG_WLL_PARAM_LOG_TIMEOUT:      
 			p_tv = va_arg(ap,struct timeval *);
