@@ -7,6 +7,7 @@ License: ASL 2.0
 Vendor: EMI
 Group: System Environment/Daemons
 BuildArch: noarch
+Requires: nagios-common
 Requires: glite-lb-client-progs
 Requires: glite-lb-utils
 Requires: glite-lb-ws-test
@@ -44,20 +45,14 @@ make install DESTDIR=$RPM_BUILD_ROOT
 rm -rf $RPM_BUILD_ROOT
 
 
-%post
-chown nagios:nagios /usr/libexec/grid-monitoring/probes/emi.lb >/dev/null 2>&1 || :
-exit 0
-
-
 %files
 %defattr(-,root,root)
 %dir /usr/share/doc/%{name}-%{version}/
-%dir /usr/libexec/
 %dir /usr/libexec/grid-monitoring/
 %dir /usr/libexec/grid-monitoring/probes/
 %dir /usr/libexec/grid-monitoring/probes/emi.lb/
 %dir /var/lib/grid-monitoring/
-%dir /var/lib/grid-monitoring/emi.lb/
+%dir %attr(0755, nagios, nagios) /var/lib/grid-monitoring/emi.lb/
 /usr/share/doc/%{name}-%{version}/package.summary
 /usr/share/doc/%{name}-%{version}/ChangeLog
 /usr/share/doc/%{name}-%{version}/package.description
