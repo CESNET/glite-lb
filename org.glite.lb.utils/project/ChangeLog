@@ -125,3 +125,6 @@
   - fix dependency of msg-plugin
   - no runtime dependencies for build
 
+2.2.4-1
+- Clean of legacy build files
+
