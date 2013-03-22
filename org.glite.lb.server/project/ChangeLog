@@ -419,3 +419,17 @@
   - fix dependency of msg-plugin
   - no runtime dependencies for build
 
+2.3.9-1
+- Clean of legacy build files
+- Server and proxy purge enabled only on proper L&B service type (SB #99276)
+- Cron scripts portability - this fixes purge on Debian (backported from HEAD)
+- Initialize default purge timeout properly in LB Proxy (Fixes SB #100808)
+- Forgotten true value return for STATUS_FOR_MONITORING auth rule
+- Possible buffer overflow in HTML generator fixed
+- Do not set ErrCode to EPERM in case event matches notification criteria but permission check failed
+  - This is a normal operating condition, not an error to be reported
+- Memleaks in lb.server fixed 
+- Zombie jobs query refactored to avoid the resource-intensive CONCAT() clause.
+  - Replaced with a series of (... AND ... AND ...) OR (...)... conditions
+- Do not look for a zombie in case the result set is empty due to EPERM (Partial fix for SB #100381)
+
