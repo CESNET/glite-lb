@@ -220,6 +220,10 @@
   - fix dependency of msg-plugin
   - no runtime dependencies for build
 
+2.3.8-1
+- Clean of legacy build files
+- Small memleak in locallogger fixed
+
 2.4.0-1
 - Merge from branch_3_2
 - Torque jobs support

@@ -23,6 +23,7 @@ install:
 	-chown nagios:nagios ${DESTDIR}${PREFIX}/var/lib/grid-monitoring/emi.lb
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/libexec/grid-monitoring/probes/emi.lb
 	${INSTALL} -m 0755 src/LB-probe ${DESTDIR}${PREFIX}${prefix}/libexec/grid-monitoring/probes/emi.lb
+	${INSTALL} -m 0755 src/IL-probe ${DESTDIR}${PREFIX}${prefix}/libexec/grid-monitoring/probes/emi.lb
 
 stage:
 	$(MAKE) install PREFIX=${stagedir}

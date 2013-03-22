@@ -319,18 +319,20 @@ int wait_for_confirmation(struct timeval *timeout, int *code)
 int do_listen(int port)
 {
 	int                ret;
-	int                sock;
+	int                sock = -1;
 	char 		*portstr = NULL;
 
 	asprintf(&portstr, "%d", port);
 	if (portstr == NULL) {
 		glite_common_log(LOG_CATEGORY_CONTROL,LOG_PRIORITY_FATAL,"do_listen(): ENOMEM converting port number\n");
-		return -1;
+		goto err;
 	}
 
 	if (daemon_listen(NULL, portstr, &sock) != 0)
-		return -1;
+		goto err;
 
+err:
+	free(portstr);
 	return sock;
 }
 

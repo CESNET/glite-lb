@@ -147,6 +147,9 @@
   - fix dependency of msg-plugin
   - no runtime dependencies for build
 
+3.1.7-1
+- Clean of legacy build files
+
 3.2.0-1
 - -L/usr/lib not added explicitly to link options
 - Merge from branch_3_2

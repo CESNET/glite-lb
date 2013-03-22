@@ -109,6 +109,11 @@ GLITE\_WMS\_LBPROXY\_SERVE\_SOCK &
 GLITE\_WMS\_LBPROXY\_USER &
    user credentials (DN) when communicating with LB Proxy,  
    there is no default value \\
+GLITE\_WMS\_LBPROXY\_SERVERNAME &
+   in collocated \LB Proxy/Server installations, this holds the
+   \texttt{hostname:port} of the server local (!) to the proxy. This 
+   information is used on job registration to avoid redundand 
+   registration through both the proxy and directly to the server.\\
 X509\_USER\_CERT, X509\_USER\_KEY & 
    location of user credentials (certificate and private key),
    default values are \texttt{~/.globus/user{cert,key}.pem} \\

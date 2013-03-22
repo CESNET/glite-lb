@@ -190,6 +190,14 @@
   - fix dependency of msg-plugin
   - no runtime dependencies for build
 
+1.3.7-1
+- Clean of legacy build files
+- Support fqan ACLs by yaim explained
+- Use of EDG_WLL_PARAM_LBPROXY_SERVERNAME explained
+- More detailed explanation of purge options
+- New options to the L&BServer Nagios probe documented
+- L&B InterLogger Nagios probe documented
+
 1.4.0-1
 - Merge from branch_3_2
 

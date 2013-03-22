@@ -11,7 +11,8 @@ Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.nag
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildArch:      noarch
-Requires:       glite-lb-client
+Requires:       nagios-common
+Requires:       glite-lb-client-progs
 Requires:       glite-lb-utils
 Requires:       glite-lb-ws-test
 Requires:       globus-proxy-utils
@@ -53,6 +54,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir /var/lib/grid-monitoring/
 %dir /var/lib/grid-monitoring/emi.lb/
 %{_libexecdir}/grid-monitoring/probes/emi.lb/LB-probe
+%{_libexecdir}/grid-monitoring/probes/emi.lb/IL-probe
 
 
 %changelog

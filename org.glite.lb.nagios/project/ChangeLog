@@ -25,6 +25,16 @@
 1.1.1-6
 - Module rebuilt
 
+1.1.2-1
+- New IL Nagios probe
+- Clean of legacy build files
+- Fixed directory ownership in Debian
+  - user nagios created by nagios3-common dependency now
+  - typo in directory name (SB #100945, part 2)
+- Fixed dependency on L&B client programs (GGUS #91901)
+- Support for the -a option (specify endpoint to receive notifications)
+- Support for the -x option (specify proxy certificate location)
+
 1.2.0-1
 - Merge from branch_3_2
 

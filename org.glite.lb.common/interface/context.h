@@ -75,6 +75,7 @@ typedef enum _edg_wll_ContextParam {
 	EDG_WLL_PARAM_JPREG_TMPDIR,		/**< maildir storage path */
 	EDG_WLL_PARAM_LOG_FILE_PREFIX,  /**< logging file prefix */
 	EDG_WLL_PARAM_LOG_IL_SOCK,      /**< interlogger socket path */
+	EDG_WLL_PARAM_LBPROXY_SERVERNAME,	/**< name and port of LB server running collocated with proxy */
 	EDG_WLL_PARAM__LAST,		/**< marker, LB internal use only */
 } edg_wll_ContextParam;
 

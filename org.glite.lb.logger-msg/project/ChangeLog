@@ -71,6 +71,10 @@
   - fix dependency of msg-plugin
   - no runtime dependencies for build
 
+1.1.6-1
+- Clean of legacy build files
+- Compatibility with slight API change of ActiveMQ (backported from HEAD)
+
 1.2.0-1
 - Merge from branch_3_2
 

@@ -447,6 +447,7 @@ int edg_wll_QueryJobsServerStream(
 	glite_lbu_Statement		sh;
 	int					i = 0,
 						j = 0,
+						k = 0, l = 0,
 						ret = 0,
 						eidrm = 0,
 						limit = 0, offset = 0,
@@ -615,43 +616,90 @@ limit_cycle_cleanup:
 		glite_lbu_FreeStmt(&sh);
 	} while ( limit_loop );
 
-	if ( !n ) {
+	if ( !n && (ctx->errCode != EPERM) ) {
 		if(!jobid_only_query(conditions)) {
 			i = 0;
-			while(conditions[i]) {
-				asprintf(&zomb_where_temp,"%s%s", zomb_where ? zomb_where : "(", zomb_where ? " AND (" : "");
-				free(zomb_where); 
-				zomb_where = zomb_where_temp; zomb_where_temp = NULL;
+			char *out[2], *uniq, *ss;
+			char **prefix, **prefix_id, **suffix, **suffix_id;
+			int s,lendiff;
 
-				first_or = 0;
+			//Load up prefixes and suffixes from the DB
+			trio_asprintf(&zquery,"SELECT prefix_id,prefix FROM zombie_prefixes");
+			glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, zquery);
+			if (!(j = edg_wll_ExecSQL(ctx,zquery,&sh))) {
+				glite_common_log_msg(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_ERROR, "zombie_prefixes table is empty");
+				free(zquery);
+				goto cleanup;
+			}
+			i = 0;
+			prefix=(char**)calloc(sizeof(char*), j+1);
+			prefix_id=(char**)calloc(sizeof(char*), j+1);
+			while(edg_wll_FetchRow(ctx, sh, sizeof(out)/sizeof(out[0]), NULL, out)) {
+				asprintf(&(prefix[i]),"https://%s", out[1]);
+				prefix_id[i++]=strdup(out[0]);
+			}
+
+			glite_lbu_FreeStmt(&sh);
+			free(zquery);
+
+                        trio_asprintf(&zquery,"SELECT suffix_id,suffix FROM zombie_suffixes");
+                        glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, zquery);
+                        if (!(j = edg_wll_ExecSQL(ctx,zquery,&sh))) {
+                                glite_common_log_msg(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_ERROR, "zombie_suffixes table is empty");
+				free(zquery);
+                                goto cleanup;
+                        } 
+                        i = 0;
+                        suffix=(char**)calloc(sizeof(char*), j+1);
+                        suffix_id=(char**)calloc(sizeof(char*), j+1);
+                        while(edg_wll_FetchRow(ctx, sh, sizeof(out)/sizeof(out[0]), NULL, out)) {
+                                suffix[i]=strdup(out[1]);
+                                suffix_id[i++]=strdup(out[0]);
+                        }
+
+                        glite_lbu_FreeStmt(&sh);
+                        free(zquery);
+
+
+			i = 0;
+			s = 0;
+			while(conditions[i]) {
 				j = 0;
 				while(conditions[i][j].attr) {
 				
 					if(conditions[i][j].attr == EDG_WLL_QUERY_ATTR_JOBID) {
 						dbjob = glite_jobid_unparse(conditions[i][j].value.j);
-						trio_asprintf(&zomb_where_temp,"%s%s(result.dg_jobid='%|Ss')",
-							zomb_where,
-							first_or ? " OR " : "", 
-							dbjob);
-						free(dbjob); 
-						free(zquery);
-						free(zomb_where);
-						zomb_where = zomb_where_temp; zomb_where_temp = NULL;
-						first_or++;
+						for (k = 0; prefix[k]; k++) {
+							if (!strncmp(prefix[k], dbjob, strlen(prefix[k]))) {
+								uniq = dbjob+strlen(prefix[k]);
+								for (l = 0; suffix[l]; l++) {
+									lendiff=strlen(uniq)-strlen(suffix[l]);
+									if ((lendiff>0) && (!strcmp(uniq+lendiff,suffix[l]))) {
+										ss=strdup(uniq);
+										ss[lendiff]=0;
+										asprintf(&zomb_where_temp,"%s%s((prefix_id=%s) AND (jobid='%s') AND (suffix_id=%s))",
+											zomb_where ? zomb_where : "",
+											s ? " OR " : "",
+											prefix_id[k],
+											ss,
+											suffix_id[l]);
+										free(ss);
+										free(zomb_where);
+										zomb_where=zomb_where_temp;
+										s++;
+									}
+								}
+							}
+						}
 					}
 					j++;
 				}
-				asprintf(&zomb_where_temp,"%s)", zomb_where ? zomb_where : "");
-				free(zomb_where); 
-				zomb_where = zomb_where_temp; zomb_where_temp = NULL;
 				i++;
 			}
+			for (i=0; prefix[i]; i++) { free(prefix[i]); free(prefix_id[i]); } free(prefix); free(prefix_id);
+			for (i=0; suffix[i]; i++) { free(suffix[i]); free(suffix_id[i]); } free(suffix); free(suffix_id);
 
-			trio_asprintf(&zquery,"SELECT * FROM "
-						"(SELECT  concat('https://',p.prefix,j.jobid,s.suffix) AS dg_jobid FROM "
-						"zombie_suffixes AS s, zombie_jobs AS j, zombie_prefixes AS p WHERE "
-						"(s.suffix_id = j.suffix_id) AND (p.prefix_id = j.prefix_id)) AS result "
-						"WHERE %s", zomb_where);	
+			trio_asprintf(&zquery,"SELECT * FROM zombie_jobs WHERE %s", zomb_where);
 
 			glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, 
 				LOG_PRIORITY_DEBUG, zquery);

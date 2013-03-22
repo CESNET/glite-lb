@@ -90,7 +90,12 @@ static void get_name_and_port(const char *address, char **name, int *port)
 		*port = atoi(p+1);
 		*p = 0;
 	}
-	*name = strdup(n);
+	if (p = strrchr(n, '[')) {
+		int len = strcspn(p+1, "]");
+		*name = (char*)malloc(sizeof(char*) * (len+1));
+		strncpy(*name, p+1, len);
+	}
+	else *name = strdup(n);
 	free(n);
 }	
 
@@ -102,7 +107,7 @@ static int daemon_listen(edg_wll_Context ctx, const char *name, char *port, int 
 	int 	gaie;
 
 	memset (&hints, '\0', sizeof (hints));
-	hints.ai_flags = AI_NUMERICHOST | AI_NUMERICSERV | AI_PASSIVE | AI_ADDRCONFIG;
+	hints.ai_flags = AI_NUMERICSERV | AI_PASSIVE | AI_ADDRCONFIG;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_family = AF_INET6;
 
