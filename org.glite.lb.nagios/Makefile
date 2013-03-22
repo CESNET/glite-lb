@@ -12,8 +12,8 @@ default: all
 
 version=${module.version}
 
-SOURCES=src/LB-probe Makefile
-SOURCES_EXEC=src/LB-probe
+SOURCES=src/*-probe Makefile
+SOURCES_EXEC=src/*-probe
 
 all:
 
