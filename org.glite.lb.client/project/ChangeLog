@@ -242,3 +242,13 @@
   - fix dependency of msg-plugin
   - no runtime dependencies for build
 
+5.1.7-1
+- Clean of legacy build files
+- Notification client can bind to addresses specified by hostname (Fixes SB #100721)
+- Notification client recognizes square brackets enclosing host address in endpoint specification
+- Error code for LB_PERM ersult fixed.
+- Clients uses parameter to recognize LB server local to the available LB proxy.
+  - Fixes bug #100869
+  - Relies on environmental variable EDG_WLL_PARAM_LBPROXY_SERVERNAME
+- Crash during handling options in register_sandbox fixed
+
