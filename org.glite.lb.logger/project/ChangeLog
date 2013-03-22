@@ -220,3 +220,7 @@
   - fix dependency of msg-plugin
   - no runtime dependencies for build
 
+2.3.8-1
+- Clean of legacy build files
+- Small memleak in locallogger fixed
+
