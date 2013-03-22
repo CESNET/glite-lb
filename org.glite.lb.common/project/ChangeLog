@@ -198,3 +198,9 @@
   - fix dependency of msg-plugin
   - no runtime dependencies for build
 
+8.1.6-1
+- Clean of legacy build files
+- Using parameter to recognize LB server local to the available LB proxy
+  - Fixes bug #100869
+  - Relies on environmental variable EDG_WLL_PARAM_LBPROXY_SERVERNAME
+
