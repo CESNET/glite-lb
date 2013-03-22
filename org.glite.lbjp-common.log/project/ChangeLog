@@ -86,3 +86,8 @@
 1.2.1-1
 - Using thread-safe log4c layouts
 
+1.2.2-1
+- Clean of legacy build files
+- Remove log4c revision from config file (required for newer log4c)
+- Fixed test with log4c version > 1.2.1 (backported from HEAD)
+
