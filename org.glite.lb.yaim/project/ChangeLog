@@ -115,3 +115,11 @@
   - fix dependency of msg-plugin
   - no runtime dependencies for build
 
+4.4.5-1
+- Clean of legacy build files
+- Setting of GLITE_WMS_PARAM_LBPROXY_SERVERNAME by YAIM (bug #100869, deployment part)
+- Using /etc/gLiteservices when using YAIM (SB #99839)
+- Support fqan ACLs by yaim
+- Possibility to set socket paths directly by yaim. Part 3 of SB #97911
+- pidfile location fixed for BDII provider
+
