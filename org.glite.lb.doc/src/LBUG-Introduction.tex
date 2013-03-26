@@ -285,15 +285,15 @@ the major job state back
 it still may carry valuable information to update the job state attributes.
 
 % typy jobu
-Jobs monitored by \LB service may have different type. For gLite jobs, \LB supports
-simple jobs and jobs representing \emph{set of jobs} -- \emph{DAGs} (with dependencies between 
-subjobs described by direct acyclic graph) and \emph{collections} (without dependencies 
+Jobs monitored by the \LB service may have different types. For gLite jobs, \LB supports
+simple jobs and representations of \emph{sets of jobs} -- \emph{DAGs} (with dependencies between 
+subjobs described by a direct acyclic graph) and \emph{collections} (without dependencies 
 between subjobs). 
-In these cases, subjobs are monitored in standard way, with one extensions - when job
-status is changed, information is propagated also to the job representing corresponding 
+In these cases, subjobs are monitored in a standard way, with one addition -- when job
+status changes, information is propagated also to the parent job representing the corresponding 
 collection or DAG.
-Job representing collection or DAG can be used to monitor status of the set, including
-information like how many subjobs is already finished etc.
+A parent job representing a collection or a DAG can be used to monitor the overall status of the set, including
+information such as how many subjobs have already finished, etc.
 Support for non-gLite jobs, namely for PBS or Condor systems, is described in section
 \ref{sec:nonglite}
 
