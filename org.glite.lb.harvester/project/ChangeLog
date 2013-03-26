@@ -180,3 +180,10 @@ gLite L&B setup script:
 1.3.8-1
 - Fixes to follow recent Debian updates
 
+1.3.9-1
+- Fixes and improvements of the new startup scripts:
+  - better upgrade from EMI-2 (changed pidfiles location)
+  - better upgrade from EMI-3 (changed startup scripts)
+- shutdown old daemon in start action of proxy interlogger (process changed the name)
+- moving pidfiles rather in postinstall scripts (deb, rpm)
+
