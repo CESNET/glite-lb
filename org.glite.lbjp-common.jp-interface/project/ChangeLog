@@ -126,3 +126,7 @@ Clean of legacy build files
 2.3.6-1
 - Fixes to follow recent Debian updates
 
+2.3.7-1
+- Merge from branch_3_2, round 7
+- Debugging packages of subpackages in Debian.
+
