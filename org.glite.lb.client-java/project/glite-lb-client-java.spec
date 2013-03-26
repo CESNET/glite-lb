@@ -1,3 +1,5 @@
+%global with_trustmanager 0
+
 Name:           glite-lb-client-java
 Version:        @MAJOR@.@MINOR@.@REVISION@
 Release:        @AGE@%{?dist}
@@ -17,8 +19,10 @@ BuildRequires:  axis
 BuildRequires:  axis1.4
 %endif
 BuildRequires:  chrpath
+%if %{with_trustmanager}
 BuildRequires:  emi-trustmanager
 BuildRequires:  emi-trustmanager-axis
+%endif
 BuildRequires:  glite-jobid-api-java
 BuildRequires:  glite-lb-types
 BuildRequires:  glite-lb-ws-interface
@@ -39,8 +43,10 @@ Requires:       jpackage-utils
 Summary:        Axis 1.4 flavor of Java L&B client
 Group:          System Environment/Libraries
 Requires:       %{name} = %{version}-%{release}
+%if %{with_trustmanager}
 Requires:       emi-trustmanager-axis
 Requires:       emi-trustmanager
+%endif
 Requires:       glite-jobid-api-java
 Requires:       jakarta-commons-lang
 Requires:       jpackage-utils
@@ -52,6 +58,7 @@ BuildArch:      noarch
 This package contains java L&B client library based on Axis 1.4.
 
 
+%if %{with_trustmanager}
 %package        examples
 Summary:        Java L&B client examples
 Group:          Applications/Communications
@@ -69,6 +76,7 @@ BuildArch:      noarch
 %description    examples
 This package contains java L&B client examples for Axis 1.4. For the
 communication is used trustmanager or pure SSL.
+%endif
 
 
 %package        javadoc
@@ -91,6 +99,10 @@ L&B client.
 
 %build
 /usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.client-java --with-axis=/usr/local/axis1.4
+if [ "%with_trustmanager" == "0" ]; then
+    echo >> Makefile.inc
+    echo "trustmanager_prefix=no" >> Makefile.inc
+fi
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 
@@ -132,9 +144,11 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 %{_javadir}/%{name}-axis.jar
 
+%if %{with_trustmanager}
 %files examples
 %defattr(-,root,root)
 %{_javadir}/%{name}-examples.jar
+%endif
 
 %files javadoc
 %defattr(-,root,root)

@@ -2,7 +2,7 @@ Source: glite-lb-client-java
 Priority: extra
 Maintainer: @MAINTAINER@
 Uploaders: @UPLOADERS@
-Build-Depends: debhelper (>= 7.0.50~), ant, default-jdk, emi-trustmanager, emi-trustmanager-axis, libglite-jobid-api-java, glite-lb-types, glite-lb-ws-interface, libaxis-java, libcommons-lang-java, liblog4j1.2-java, libtool
+Build-Depends: debhelper (>= 7.0.50~), ant, default-jdk, libglite-jobid-api-java, glite-lb-types, glite-lb-ws-interface, libaxis-java, libcommons-lang-java, liblog4j1.2-java, libtool
 Standards-Version: 3.9.1
 Section: java
 Homepage: @URL@
@@ -19,17 +19,9 @@ Description: @SUMMARY@
 Package: libglite-lb-client-axis-java
 Section: java
 Architecture: all
-Depends: ${misc:Depends}, emi-trustmanager-axis, emi-trustmanager, libglite-jobid-api-java, libcommons-lang-java, libglite-lb-client-java
+Depends: ${misc:Depends}, libglite-jobid-api-java, libcommons-lang-java, libglite-lb-client-java
 Description: Axis 1.4 flavor of Java L&B client
  This package contains java L&B client library based on Axis 1.4.
-
-Package: glite-lb-client-java-examples
-Section: java
-Architecture: all
-Depends: ${misc:Depends}, emi-trustmanager-axis, emi-trustmanager, libglite-jobid-api-java, libglite-lb-client-java, libglite-lb-client-axis, liblog4j1.2-java
-Description: Java L&B client examples
- This package contains java L&B client examples for Axis 1.4. For the
- communication is used trustmanager or pure SSL.
 
 Package: libglite-lb-client-java-doc
 Section: doc

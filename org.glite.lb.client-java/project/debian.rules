@@ -7,7 +7,6 @@ p_base=glite-lb-client-java
 p_lib=libglite-lb-client-java
 p_axis=libglite-lb-client-axis-java
 p_doc=libglite-lb-client-java-doc
-p_examples=glite-lb-client-java-examples
 
 # Uncomment this to turn on verbose mode.
 export DH_VERBOSE=1
@@ -15,7 +14,7 @@ export DH_VERBOSE=1
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
-	/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=lib --project=emi --module lb.client-java
+	/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=lib --project=emi --module lb.client-java --with-trustmanager=no
 	touch $@
 
 build: build-indep
@@ -44,11 +43,9 @@ install: build-stamp
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
 	mkdir -p debian/$(p_axis)/usr/share/doc
 	mkdir -p debian/$(p_doc)/usr/share/doc
-	mkdir -p debian/$(p_examples)/usr/share/doc
 	mkdir -p debian/$(p_lib)/usr/share/doc
 	mv debian/tmp/usr/share/doc/$(p_base)-@MAJOR@.@MINOR@.@REVISION@ debian/$(p_doc)/usr/share/doc/$(p_lib)
 	ln -s $(p_lib) debian/$(p_axis)/usr/share/doc/$(p_axis)
-	ln -s $(p_lib) debian/$(p_examples)/usr/share/doc/$(p_examples)
 	rm -vf debian/tmp/usr/lib/*.la
 	rm -vf debian/tmp/usr/lib/*.a
 
