@@ -123,8 +123,8 @@ int main(int argc,char *argv[])
 		case 'J': jobsLimit = atoi(optarg); break;
 		case 'E': eventsLimit = atoi(optarg); break;
 		case 'R': resultsLimit = atoi(optarg); break;
-		case 'C': flags = flags | EDG_WLL_STAT_CHILDSTAT; break;
-		case 'S': flags = flags | EDG_WLL_STAT_CLASSADS; break;
+		case 'S': flags = flags | EDG_WLL_STAT_CHILDSTAT; break;
+		case 'C': flags = flags | EDG_WLL_STAT_CLASSADS; break;
 		case 'N': flags = flags | 1024; break; //crude, I know
 		case -1: ret = 1; break;
 		}

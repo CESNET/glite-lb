@@ -34,7 +34,7 @@ limitations under the License.
 #include "glite/lb/events_parse.h"
 
 static void dgerr(edg_wll_Context,char *);
-static void printstat(edg_wll_JobStat,int);
+static void printstat(edg_wll_JobStat,int,int);
 
 #define MAX_SERVERS	20
 
@@ -47,7 +47,7 @@ int main(int argc,char *argv[])
 {
 	edg_wll_Context	sctx[MAX_SERVERS];
 	char		*servers[MAX_SERVERS];
-	int		i, result=0, nsrv=0, histflags = 0;
+	int		i, result=0, nsrv=0, histflags = 0, childflags = EDG_WLL_STAT_CHILDREN | EDG_WLL_STAT_CHILDSTAT;
 
 	
 	myname = argv[0];
@@ -67,7 +67,7 @@ int main(int argc,char *argv[])
 		jobsOut = NULL;
 		statesOut = NULL;
 		if ( (result = query_all(sctx[0], &statesOut, &jobsOut)) ) dgerr(sctx[0], "edg_wll_QueryJobs");
-		else for ( i = 0; statesOut[i].state; i++ ) printstat(statesOut[i],0);
+		else for ( i = 0; statesOut[i].state; i++ ) printstat(statesOut[i],0,childflags);
 
 		if ( jobsOut ) {
 			for (i=0; jobsOut[i]; i++) edg_wlc_JobIdFree(jobsOut[i]);
@@ -98,9 +98,9 @@ int main(int argc,char *argv[])
 				fprintf(stderr,"%s: %s: cannot parse jobId\n", myname, argv[i]);
 				continue;
 			}
-			if ( edg_wll_JobStatusProxy(sctx[0], job, EDG_WLL_STAT_CLASSADS | EDG_WLL_STAT_CHILDREN |  EDG_WLL_STAT_CHILDSTAT, &status)) {
+			if ( edg_wll_JobStatusProxy(sctx[0], job, EDG_WLL_STAT_CLASSADS | childflags | histflags, &status)) {
 				dgerr(sctx[0], "edg_wll_JobStatusProxy"); result = 1;
-			} else printstat(status, 0);
+			} else printstat(status, 0, childflags);
 
 			if ( job ) edg_wlc_JobIdFree(job);
 			if ( status.state ) edg_wll_FreeStatus(&status);
@@ -119,6 +119,10 @@ int main(int argc,char *argv[])
                 if ( !strcmp(argv[i], "-fasthist") ) {
                         histflags = EDG_WLL_STAT_CHILDHIST_FAST;
                         printf("\nFound a FASTHIST flag\n\n");
+                }    
+
+                if ( !strcmp(argv[i], "-nochildrenstates") ) {
+			childflags = 0;
                 }    
 	}
 
@@ -148,9 +152,9 @@ int main(int argc,char *argv[])
 	                        servers[j] = bserver;
         	        }
 
-			if (edg_wll_JobStatus(sctx[j], job, EDG_WLL_STAT_CLASSADS | EDG_WLL_STAT_CHILDREN |  EDG_WLL_STAT_CHILDSTAT | histflags, &status)) {
+			if (edg_wll_JobStatus(sctx[j], job, EDG_WLL_STAT_CLASSADS | childflags | histflags, &status)) {
 				dgerr(sctx[j],"edg_wll_JobStatus"); result = 1; 
-			} else printstat(status,0);
+			} else printstat(status,0,childflags);
 
 			if (job) edg_wlc_JobIdFree(job);
 			if (status.state) edg_wll_FreeStatus(&status);
@@ -164,7 +168,7 @@ int main(int argc,char *argv[])
 static void
 usage(char *name)
 {
-	fprintf(stderr,"Usage: %s [-x lb_proxy_serve_sock] [-fasthist|-fullhist] [job_id [...]]\n", name);
+	fprintf(stderr,"Usage: %s [-x lb_proxy_serve_sock] [-fasthist|-fullhist] [-nochildrenstates] [job_id [...]]\n", name);
 	fprintf(stderr,"       %s -all\n", name);
 }
 
@@ -206,7 +210,7 @@ dgerr(edg_wll_Context ctx,char *where)
 	free(etxt); free(edsc);
 }
 
-static void printstat(edg_wll_JobStat stat, int level)
+static void printstat(edg_wll_JobStat stat, int level, int printchildren)
 {
 	char		*s, *j1,*j2, ind[10];
 	int 		i;
@@ -232,10 +236,12 @@ static void printstat(edg_wll_JobStat stat, int level)
 		if (stat.children) 
 			for  (i=0; stat.children[i]; i++) 
 				printf("%s\tchildren : %s\n", ind, stat.children[i]);
-		printf("%schildren_states :\n", ind);
-		if (stat.children_states)
-		 	for  (i=0; stat.children_states[i].state; i++)
-		 		printstat(stat.children_states[i], level+1);
+		if (printchildren) {
+			printf("%schildren_states :\n", ind);
+			if (stat.children_states)
+			 	for  (i=0; stat.children_states[i].state; i++)
+		 			printstat(stat.children_states[i], level+1, printchildren);
+		}
 		printf("%schildren_hist :\n",ind);
 		if (stat.children_hist) 
 			for (i=1; i<=stat.children_hist[0]; i++) 
