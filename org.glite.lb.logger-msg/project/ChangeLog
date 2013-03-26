@@ -123,3 +123,7 @@ Fixed dependency of msg-plugin for Debian
 1.2.8-1
 - Fixes to follow recent Debian updates
 
+1.2.9-1
+- Merge from branch_3_2, round 7
+- Debugging packages of subpackages in Debian
+
