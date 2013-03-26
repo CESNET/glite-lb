@@ -265,3 +265,10 @@
 9.0.5-1
 - Missing lb.types function declarations added
 
+9.0.6-1
+- Merge from branch_3_2, round 7
+- First attempt at asynchronous event registration
+- Debugging packages of subpackages in Debian
+- Memory leak fixes
+- CREAM status codes added and naming conflicts with other enums fixed
+
