@@ -120,3 +120,15 @@
 - Fixes to follow recent Debian updates
 - Modifications to follow updated jobid.api-java packaging
 
+2.0.3-1
+- Conditional build of axis and trustmanager code
+- Build, install and package java doc for gLite jobid and java L&B client. Rename jobid package on Debian.
+- Proper listing in jar files.
+- Separation of axis+trustmanager-specific code:
+  - jar file split to client, axis and examples
+  - jar files renamed
+  - subpackages for rpm and Debian
+- L&B java client "core" doesn't need trustmanager and axis 1.4 dependencies anymore
+- Possibility to set owner/group and permissions dynamically, default still g+rw
+- Group permissions on IL files set (for interlogd/tomcat interaction)
+
