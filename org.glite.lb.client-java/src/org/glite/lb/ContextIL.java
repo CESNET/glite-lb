@@ -31,6 +31,8 @@ public class ContextIL extends Context {
     private int repeatWriteToFile = 5;
     private int connAttempts = 3;
     private int timeout = 3;
+    private String owner = null;
+    private String permissions = "g+rw";
 
     //tutorial http://java.sun.com/developer/onlineTraining/Programming/JDCBook/jni.html
     //native method which is written in C and imported to Java
@@ -85,7 +87,7 @@ public class ContextIL extends Context {
 
 	String file = prefix + "." + getJobid().getUnique();
 
-        Long fileLength = ILFileWriter.write(file, message, repeatWriteToFile);
+        Long fileLength = ILFileWriter.write(file, message, repeatWriteToFile, owner, permissions);
 
 	if (socket != null) sendToSocket(socket,fileLength.longValue(),message,message.length(),connAttempts,timeout);
     }
@@ -158,6 +160,22 @@ public class ContextIL extends Context {
         }
 
         this.timeout = timeout;
+    }
+
+    public String getPermissions() {
+        return permissions;
+    }
+
+    public void setPermissions(String permissions) {
+        this.permissions = permissions;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
     }
 
 }

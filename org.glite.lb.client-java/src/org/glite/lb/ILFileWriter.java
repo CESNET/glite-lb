@@ -43,13 +43,14 @@ public class ILFileWriter {
      * @param message message which will be written
      * @param repeatWriteToFile count of attempts to write to file in case of failure
      */
-    public static Long write(String prefix, String message, int repeatWriteToFile) throws LBException {
+    public static Long write(String prefix, String message, int repeatWriteToFile, String owner, String permissions) throws LBException {
         FileWriter fileWriter = null;
         long fileLength = 0;
         FileLock fileLock = null;
         File file;
-	Runtime run = Runtime.getRuntime();
-	String cmd[] = {"chmod", "g+rw", null};
+        Runtime run = Runtime.getRuntime();
+        String cmd_owner[] = {"chown", owner, null};
+        String cmd_perm[] = {"chmod", permissions, null};
 
         for (int i = 0; i < repeatWriteToFile; i++) {
             try {
@@ -68,9 +69,15 @@ public class ILFileWriter {
 		    out.close();
 
                     if (file.exists()) {
-			cmd[2] = prefix;
-			run.exec(cmd);
-                        break;
+			if (owner != null) {
+				cmd_owner[2] = prefix;
+				run.exec(cmd_owner);
+			}
+			if (permissions != null) {
+				cmd_perm[2] = prefix;
+				run.exec(cmd_perm);
+			}
+			break;
                     }
                 }
             } catch (Throwable ex) {
@@ -84,5 +91,16 @@ public class ILFileWriter {
         }
 
         return new Long(fileLength);
+    }
+
+    /**
+     * Writes message to a file and returns size of this file before writing the
+     * data
+     * @param prefix file path
+     * @param message message which will be written
+     * @param repeatWriteToFile count of attempts to write to file in case of failure
+     */
+    public static Long write(String prefix, String message, int repeatWriteToFile) throws LBException {
+        return ILFileWriter.write(prefix, message, repeatWriteToFile, null, null);
     }
 }

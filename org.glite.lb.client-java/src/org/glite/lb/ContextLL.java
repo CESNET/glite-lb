@@ -32,6 +32,8 @@ public class ContextLL extends Context {
     private int repeatWriteToFile = 5;
     private int timeout = 30000; //in milliseconds
     private LBCredentials cred;
+    private String owner = null;
+    private String permissions = "g+rw";
     private SSLSend sslSend = null;
 
     public ContextLL() {
@@ -97,7 +99,7 @@ public class ContextLL extends Context {
         
         String message = super.createMessage(event);
 
-        ILFileWriter.write(prefix, message, repeatWriteToFile);
+        ILFileWriter.write(prefix, message, repeatWriteToFile, owner, permissions);
         
         
         sslSend.send(cred, address, port, timeout, message);
@@ -174,5 +176,20 @@ public class ContextLL extends Context {
         this.cred = cred;
     }
 
-    
+    public String getPermissions() {
+        return permissions;
+    }
+
+    public void setPermissions(String permissions) {
+        this.permissions = permissions;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
+    }
+
 }
