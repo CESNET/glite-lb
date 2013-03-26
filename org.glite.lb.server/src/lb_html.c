@@ -144,6 +144,7 @@ int edg_wll_ConfigurationToHTML(edg_wll_Context ctx, int admin, char **message, 
 	add_row(&out, "server_version", "Server version", VERSION, NULL, text);
 
 	add_row(&out, "server_identity", "Server identity", ctx->serverIdentity, NULL, text);
+	add_row(&out, "client_identity", "Client identity", ctx->peerName, NULL, text);
 
 	for (i = 0; ctx->job_index && ctx->job_index[i]; i++){
 		char *idx_title = edg_wll_QueryRecToColumn(ctx->job_index[i]);
@@ -235,6 +236,7 @@ int edg_wll_ConfigurationToHTML(edg_wll_Context ctx, int admin, char **message, 
 		if (a) add_row(&out, "id_mapping", "ID Mapping", a, NULL, text);
 		free(a);
 
+		add_row(&out, "usability", "Usability", "Improved", NULL, text);
         }
 
         if (!text) {
