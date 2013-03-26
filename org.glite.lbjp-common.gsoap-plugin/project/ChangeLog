@@ -159,3 +159,7 @@
 3.2.7-1
 - Fixes to follow recent Debian updates
 
+3.2.8-1
+- Merge from branch_3_2, round 7
+- Debugging packages of subpackages in Debian
+
