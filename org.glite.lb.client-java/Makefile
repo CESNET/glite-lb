@@ -42,7 +42,20 @@ jobid_classpath:=${stagedir}${prefix}/share/java/glite-jobid-api-java.jar
 axis_classpath:=$(shell ${top_srcdir}/project/list-jars.sh ${axis_prefix}/lib ${axis_prefix}/share/java ${axis_prefix}/share/java/axis /usr/share/java /usr/lib/java /usr/lib/java/axis)
 trustmanager_classpath:=$(shell ls -1 ${trustmanager_prefix}/share/java/glite-security-trustmanager.jar ${trustmanager_prefix}/share/java/trustmanager.jar ${trustmanager_prefix}/share/java/trustmanager-axis.jar ${stagedir}${prefix}/share/java/trustmanager.jar ${stagedir}${prefix}/share/java/trustmanager-axis.jar 2>/dev/null | tr '\012' :)
 
-JARS:=glite-lb-client-java.jar glite-lb-client-java-axis.jar glite-lb-client-java-examples.jar
+JARS:=glite-lb-client-java.jar
+
+DOC_SOURCES=$(CORE_SOURCES)
+AXIS_TARGETS=build/classes/axis
+ifneq (${axis_prefix},no)
+# with axis generate the axis jar
+JARS+=glite-lb-client-java-axis.jar
+ifneq (${trustmanager_prefix},no)
+# with trustmanager include the security code
+DOC_SOURCES+=$(AXIS_SOURCES)
+AXIS_TARGETS+=build/classes/security
+JARS+=glite-lb-client-java-examples.jar
+endif
+endif
 
 all compile: $(JARS) doc build/c
 
@@ -89,9 +102,11 @@ glite-lb-client-java.jar: build/classes/core
 	cd build/classes/core && ${jdk_prefix}/bin/jar cf ../../$@ org/glite/lb
 	cd build && ${jdk_prefix}/bin/jar i $@
 
-glite-lb-client-java-axis.jar: build/classes/axis build/classes/security
-	cd build/classes/security && ${jdk_prefix}/bin/jar cf ../../$@ $(addprefix org/glite/lb/,$(AXIS_CLASSES))
-	cd build/classes/axis && ${jdk_prefix}/bin/jar uf ../../$@ .
+glite-lb-client-java-axis.jar: $(AXIS_TARGETS)
+	cd build/classes/axis && ${jdk_prefix}/bin/jar cf ../../$@ .
+	if test -d build/classes/security; then \
+		cd build/classes/security && ${jdk_prefix}/bin/jar uf ../../$@ $(addprefix org/glite/lb/,$(AXIS_CLASSES)); \
+	fi
 	cd build && ${jdk_prefix}/bin/jar i $@
 
 build/c:
@@ -122,7 +137,7 @@ build/axis:
 	${JAVA} -classpath ${axis_classpath} org.apache.axis.wsdl.WSDL2Java -o build/axis ${stagedir}${prefix}/share/wsdl/glite-lb/LB.wsdl
 
 build/javadoc: build/gen
-	${JAVADOC} -d build/javadoc -classpath build/classes/axis:build/classes/core:build/classes/security:${jobid_classpath}:${axis_classpath}:${trustmanager_classpath} src/org/glite/lb/*.java build/gen/*.java examples/*.java examples/*/*.java
+	${JAVADOC} -d build/javadoc -classpath build/classes/axis:build/classes/core:build/classes/security:${jobid_classpath}:${axis_classpath}:${trustmanager_classpath} $(addprefix ${top_srcdir}/src/org/glite/lb/,$(DOC_SOURCES)) build/gen/*.java
 
 check:
 	@echo "No check"
@@ -134,9 +149,9 @@ doc: build/javadoc
 
 install:
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/java ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/api
-	cp build/glite-lb-client-java.jar ${DESTDIR}${PREFIX}${prefix}/share/java
-	cp build/glite-lb-client-java-axis.jar ${DESTDIR}${PREFIX}${prefix}/share/java
-	cp build/glite-lb-client-java-examples.jar ${DESTDIR}${PREFIX}${prefix}/share/java
+	for j in $(JARS); do \
+		cp build/$$j ${DESTDIR}${PREFIX}${prefix}/share/java; \
+	done
 	cd build/c && $(MAKE) install PREFIX=${PREFIX}
 	cp -rp build/javadoc/* ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/api
 
