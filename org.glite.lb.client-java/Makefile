@@ -32,7 +32,7 @@ compile-java-axis: genws
 		-d build \
 		build/axis/org/glite/wsdl/services/lb/*.java \
 		build/axis/org/glite/wsdl/services/lb4agu/*.java \
-		`find build/axis/org/ogf/schemas/glue -name *.java -print` \
+		`find build/axis/org/ogf/schemas/glue -name \*.java -print` \
 		build/axis/org/glite/wsdl/types/lb/*.java \
 		build/axis/org/glite/wsdl/types/lb/holders/*.java \
 		build/axis/org/glite/wsdl/elements/lb/*.java \
