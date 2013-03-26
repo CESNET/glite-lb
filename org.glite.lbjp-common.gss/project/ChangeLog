@@ -199,3 +199,7 @@
 3.2.11-1
 - Fixes to follow recent Debian updates
 
+3.2.12-1
+- Merge from branch_3_2, round 7
+- Debugging packages of subpackages in Debian
+
