@@ -140,3 +140,6 @@
 4.0.4-1
 - Fixes to follow recent Debian updates
 
+4.0.5-1
+- Merge from branch_3_2, round 7
+
