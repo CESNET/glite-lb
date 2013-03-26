@@ -136,3 +136,8 @@ Clean of legacy build files
 2.3.8-1
 - Fixed build-time warnings
 
+2.3.9-1
+- Build-time warnings fixed
+- Merge from branch_3_2, round 7
+- Debugging packages of subpackages in Debian
+
