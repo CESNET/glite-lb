@@ -128,18 +128,18 @@ my %externs = (
 		prefix => ''
 	},
 	voms => {
-		prefix => '/opt/glite',
+		prefix => '/usr',
 		pkg => 'voms-2.0'
 	},
 	gridsite => {
-		prefix => '/opt/glite',
+		prefix => '/usr',
 		pkg => 'gridsite-openssl'
 	},
 	trustmanager => {
-		prefix => '/opt/glite'
+		prefix => '/usr'
 	},
 	trustmanager_axis => {
-		prefix => '/opt/glite'
+		prefix => '/usr'
 	},
 	utiljava => {
 		prefix=> '/opt/glite'

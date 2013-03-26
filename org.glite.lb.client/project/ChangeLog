@@ -317,3 +317,8 @@
 6.0.5-1
 - Missing lb.types function declarations added
 
+6.0.6-1
+- Support for histogram flags in examples
+- Merge from branch_3_2, round 7
+- Debugging packages of subpackages in Debian
+
