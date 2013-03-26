@@ -1,8 +1,0 @@
-Document: libglite-jobid-api-java
-Title: Programmer API for gLite jobid java library
-Abstract: JAVA implementation of library handling gLite jobid.
-Section: Network/Monitoring
-
-Format: HTML
-Index: /usr/share/doc/libglite-jobid-api-java/api/index.html
-Files: /usr/share/doc/libglite-jobid-api-java/api/*
