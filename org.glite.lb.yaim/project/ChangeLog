@@ -166,3 +166,8 @@
 4.5.8-1
 - Fixes to follow recent Debian updates
 
+4.5.9-1
+- Merge from branch_3_2, round 7
+- Startup scripts improvements - daemons can be started individually now
+- Fixed missing messaging environment variables in profile files. This fixes setup stage and cron scripts.
+
