@@ -296,3 +296,11 @@ gLite L&B setup script:
 2.4.15-1
 - Thread-safe error reporting
 
+2.4.16-1
+- Fixes and improvements of the new startup scripts:
+  - better upgrade from EMI-2 (changed pidfiles location)
+  - better upgrade from EMI-3 (changed startup scripts)
+  - shutdown old daemon in start action of proxy interlogger (process changed the name)
+  - moving pidfiles rather in postinstall scripts (deb, rpm)
+- Merge from branch_3_2, round 7
+
