@@ -116,3 +116,6 @@
 2.2.7-1
 - Fixes to follow recent Debian updates
 
+2.2.8-1
+- Debugging packages of subpackages in Debian
+
