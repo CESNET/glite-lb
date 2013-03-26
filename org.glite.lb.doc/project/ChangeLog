@@ -241,3 +241,8 @@
 - Installation docs update -- not showing the option as shell variable
 - Integration of EMIR setup in L&B with yaim
 
+1.4.12-1
+- Merge from branch_3_2, round 7
+- Installation documentation updated (obsoleted or not recommended setup variables)
+- Improved explanation of DAG status computation
+
