@@ -186,3 +186,7 @@
 2.0.4-1
 - Fixes to follow recent Debian updates
 
+2.0.5-1
+- Merge from branch_3_2, round 7
+- Debugging packages of subpackages in Debian
+
