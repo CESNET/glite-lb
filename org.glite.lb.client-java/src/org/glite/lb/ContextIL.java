@@ -47,7 +47,7 @@ public class ContextIL extends Context {
      * Creates new instance of ContextIL.
      */
     public ContextIL() {
-	this.prefix = "/var/glite/log/dglogd.log";
+	this.prefix = "/var/spool/glite/lb-locallogger/dglogd.log";
     }
 
     public ContextIL(String prefix) {
