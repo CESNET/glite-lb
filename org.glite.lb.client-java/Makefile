@@ -29,7 +29,7 @@ SOURCES=\
 	Makefile
 SOURCES_EXEC=project/list-jars.sh project/genEventTypes.pl
 
-VPATH := ${top_srcdir}/src/org/glite/lb ${top_srcdir}/examples ${top_srcdir}/examples/simple-ssl ${top_srcdir}/examples/simple-trustmanager build/org/glite/lb build/classes/org/glite/lb
+VPATH := ${top_srcdir}/src/org/glite/lb ${top_srcdir}/examples ${top_srcdir}/examples/simple-ssl ${top_srcdir}/examples/simple-trustmanager
 
 JAVAC:=${jdk_prefix}/bin/javac
 JAVAH:=${jdk_prefix}/bin/javah
@@ -42,15 +42,18 @@ jobid_classpath:=${stagedir}${prefix}/share/java/glite-jobid-api-java.jar
 axis_classpath:=$(shell ${top_srcdir}/project/list-jars.sh ${axis_prefix}/lib ${axis_prefix}/share/java ${axis_prefix}/share/java/axis /usr/share/java /usr/lib/java /usr/lib/java/axis)
 trustmanager_classpath:=$(shell ls -1 ${trustmanager_prefix}/share/java/glite-security-trustmanager.jar ${trustmanager_prefix}/share/java/trustmanager.jar ${trustmanager_prefix}/share/java/trustmanager-axis.jar ${stagedir}${prefix}/share/java/trustmanager.jar ${stagedir}${prefix}/share/java/trustmanager-axis.jar 2>/dev/null | tr '\012' :)
 
-all compile: compile-java-axis compile-java-lb compile-java-gen compile-java-lb2 build-jar examples doc build-c
+JARS:=glite-lb-client-java.jar glite-lb-client-java-axis.jar glite-lb-client-java-examples.jar
+
+all compile: $(JARS) doc build/c
 
 wtf:
 	echo "axis_classpath: ${axis_classpath}"
 
-compile-java-axis: genws
+build/classes/axis: build/axis
+	-mkdir -p build/classes/axis
 	${JAVAC} \
-		-classpath ${jakarta-commons-lang_jar}:${jobid_classpath}:${trustmanager_classpath}:${utiljava_prefix}/share/java/glite-security-util-java.jar:${axis_classpath} \
-		-d build \
+		-classpath ${jakarta-commons-lang_jar}:${jobid_classpath}:${axis_classpath} \
+		-d build/classes/axis \
 		build/axis/org/glite/wsdl/services/lb/*.java \
 		build/axis/org/glite/wsdl/services/lb4agu/*.java \
 		`find build/axis/org/ogf/schemas/glue -name \*.java -print` \
@@ -59,68 +62,67 @@ compile-java-axis: genws
 		build/axis/org/glite/wsdl/elements/lb/*.java \
 		build/axis/holders/StringArrayHolder.java
 
-compile-java-lb: $(CORE_SOURCES)
-	-mkdir -p build/classes
-	${JAVAC} \
-		-classpath ${jakarta-commons-lang_jar}:${jobid_classpath}:${trustmanager_classpath}:${utiljava_prefix}/share/java/glite-security-util-java.jar:${axis_classpath}:build/classes \
-		-d build $+
+build/classes/core: compile-java-lb compile-java-gen
 
-compile-java-gen: genevents
+compile-java-lb: $(CORE_SOURCES)
+	-mkdir -p build/classes/core
 	${JAVAC} \
-		-classpath ${jakarta-commons-lang_jar}:${jobid_classpath}:${trustmanager_classpath}:${utiljava_prefix}/share/java/glite-security-util-java.jar:${axis_classpath}:build:build/classes \
-		-d build \
+		-classpath ${jobid_classpath} \
+		-d build/classes/core $+
+
+compile-java-gen: build/gen
+	-mkdir -p build/classes/core
+	${JAVAC} \
+		-classpath ${jobid_classpath}:build/classes/core \
+		-d build/classes/core \
 		build/gen/*.java
 
-compile-java-lb2: $(AXIS_SOURCES)
+build/classes/security: build/classes/axis build/classes/core compile-java-security
+
+compile-java-security: $(AXIS_SOURCES)
+	-mkdir -p build/classes/security
 	${JAVAC} \
-		-classpath ${jakarta-commons-lang_jar}:${jobid_classpath}:${trustmanager_classpath}:${utiljava_prefix}/share/java/glite-security-util-java.jar:${axis_classpath}:build:build/classes \
-		-d build/classes $+
+		-classpath ${jakarta-commons-lang_jar}:${jobid_classpath}:${axis_classpath}:${trustmanager_classpath}:build/classes/core:build/classes/axis \
+		-d build/classes/security $+
 
-build-jar: glite-lb-client-java.jar glite-lb-client-java-axis.jar glite-lb-client-java-examples.jar
-
-glite-lb-client-java.jar: compile-java-lb
-	cd build && ${jdk_prefix}/bin/jar cf $@ org/glite/lb
+glite-lb-client-java.jar: build/classes/core
+	cd build/classes/core && ${jdk_prefix}/bin/jar cf ../../$@ org/glite/lb
 	cd build && ${jdk_prefix}/bin/jar i $@
 
-glite-lb-client-java-axis.jar: genws compile-java-lb2
-	cd build/classes && ${jdk_prefix}/bin/jar cf ../$@ $(addprefix org/glite/lb/,$(AXIS_CLASSES))
-	cd build && ${jdk_prefix}/bin/jar uf $@ holders org/glite/wsdl
+glite-lb-client-java-axis.jar: build/classes/axis build/classes/security
+	cd build/classes/security && ${jdk_prefix}/bin/jar cf ../../$@ $(addprefix org/glite/lb/,$(AXIS_CLASSES))
+	cd build/classes/axis && ${jdk_prefix}/bin/jar uf ../../$@ .
 	cd build && ${jdk_prefix}/bin/jar i $@
 
-build-c:
-	${JAVAH} -classpath build:build/classes -jni -d build org.glite.lb.ContextIL
+build/c:
+	${JAVAH} -classpath build/classes/core -jni -d build org.glite.lb.ContextIL
 	-mkdir -p build/c
 	-ln -s ${top_srcdir}/src_c .
 	-ln -s ../../src_c/Makefile build/c
 	cd build/c && $(MAKE) PREFIX=${PREFIX} JAVA_HOME=${jdk_prefix} topdir=../..
 
-examples: build/classes/examples
-
-build/classes/examples: ${FULL_EXAMPLES} ${SSL_EXAMPLES} ${TM_EXAMPLES}
+build/classes/examples: ${FULL_EXAMPLES} ${SSL_EXAMPLES} ${TM_EXAMPLES} build/classes/axis build/classes/core build/classes/security
 	-mkdir -p build/classes/examples/src/simple-ssl build/classes/examples/src/simple-trustmanager
-	${jdk_prefix}/bin/javac -d build/classes/examples -cp build:build/classes:build/classes/examples:${jobid_classpath}:${axis_classpath} ${FULL_EXAMPLES}
-	${jdk_prefix}/bin/javac -d build/classes/examples -cp build:build/classes:build/classes/examples:${axis_classpath} ${SSL_EXAMPLES}
-	${jdk_prefix}/bin/javac -d build/classes/examples -cp build:build/classes:${trustmanager_classpath}:${axis_classpath} ${TM_EXAMPLES}
+	${jdk_prefix}/bin/javac -d build/classes/examples -cp build/classes/axis:build/classes/core:build/classes/security:${jobid_classpath}:${axis_classpath} ${FULL_EXAMPLES}
+	${jdk_prefix}/bin/javac -d build/classes/examples -cp build/classes/axis:build/classes/core:${axis_classpath} ${SSL_EXAMPLES}
+	${jdk_prefix}/bin/javac -d build/classes/examples -cp build/classes/axis:build/classes/core:build/classes/security:${axis_classpath}:${trustmanager_classpath} ${TM_EXAMPLES}
 	cp ${FULL_EXAMPLES} build/classes/examples/src
 	cp ${SSL_EXAMPLES} build/classes/examples/src/simple-ssl
 	cp ${TM_EXAMPLES} build/classes/examples/src/simple-trustmanager
 
-glite-lb-client-java-examples.jar: examples
-	cd build/classes/examples && ${jdk_prefix}/bin/jar cf $@ src org $(addsuffix .class,$(basename $(notdir ${FULL_EXAMPLES}))) && ${jdk_prefix}/bin/jar i $@
-
-genevents: build/gen
+glite-lb-client-java-examples.jar: build/classes/examples
+	cd build/classes/examples && ${jdk_prefix}/bin/jar cf ../../$@ src org $(addsuffix .class,$(basename $(notdir ${FULL_EXAMPLES})))
+	cd build && ${jdk_prefix}/bin/jar i $@
 
 build/gen:
 	-mkdir -p build/gen
 	${GEN} build/gen
 
-genws: build/axis
-
 build/axis:
 	${JAVA} -classpath ${axis_classpath} org.apache.axis.wsdl.WSDL2Java -o build/axis ${stagedir}${prefix}/share/wsdl/glite-lb/LB.wsdl
 
 build/javadoc: build/gen
-	${JAVADOC} -d build/javadoc -classpath ${jobid_classpath} src/org/glite/lb/*.java build/gen/*.java examples/*.java examples/*/*.java
+	${JAVADOC} -d build/javadoc -classpath build/classes/axis:build/classes/core:build/classes/security:${jobid_classpath}:${axis_classpath}:${trustmanager_classpath} src/org/glite/lb/*.java build/gen/*.java examples/*.java examples/*/*.java
 
 check:
 	@echo "No check"
@@ -134,7 +136,7 @@ install:
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/java ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/api
 	cp build/glite-lb-client-java.jar ${DESTDIR}${PREFIX}${prefix}/share/java
 	cp build/glite-lb-client-java-axis.jar ${DESTDIR}${PREFIX}${prefix}/share/java
-	cp build/classes/examples/glite-lb-client-java-examples.jar ${DESTDIR}${PREFIX}${prefix}/share/java
+	cp build/glite-lb-client-java-examples.jar ${DESTDIR}${PREFIX}${prefix}/share/java
 	cd build/c && $(MAKE) install PREFIX=${PREFIX}
 	cp -rp build/javadoc/* ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/api
 
@@ -145,4 +147,4 @@ clean:
 distclean:
 	rm -rvf project/changelog Makefile.inc *.spec debian/
 
-.PHONY: default all compile compile-java-axis compile-java-lb compile-java-gen compile-java-lb2 build-jar build-c doc examples genevents genws check stage install clean distclean wtf dist distcheck
+.PHONY: default all compile compile-java-lb compile-java-gen compile-java-security doc check stage install clean distclean wtf dist distcheck
