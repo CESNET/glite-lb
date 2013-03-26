@@ -41,7 +41,8 @@ public:
 
 void TrioTest::escapeULM()
 {
-	char	*e, *r = "START we have =, \\\", and \\n in the string END";
+	const char	*r = "START we have =, \\\", and \\n in the string END";
+	char	*e;
 
 	trio_asprintf(&e,"START %|Us END", "we have =, \", and \n in the string"),
 	std::cerr << e << std::endl;
@@ -53,7 +54,8 @@ void TrioTest::escapeULM()
 
 void TrioTest::escapeXML()
 {
-	char	*e, *r = "START there is a &lt;tag&gt; containing &amp;something; &lt;/tag&gt; END";
+	const char	*r = "START there is a &lt;tag&gt; containing &amp;something; &lt;/tag&gt; END";
+	char	*e;
 
 	trio_asprintf(&e,"START %|Xs END", "there is a <tag> containing &something; </tag>"),
 	std::cerr << e << std::endl;
@@ -65,7 +67,8 @@ void TrioTest::escapeXML()
 
 void TrioTest::escapeSQL()
 {
-	char	*e, *r = "START SQL doesn''t like '' END";
+	const char	*r = "START SQL doesn''t like '' END";
+	char	*e;
 
 	trio_asprintf(&e,"START %|Ss END", "SQL doesn't like '"),
 	std::cerr << e << std::endl;
@@ -76,7 +79,8 @@ void TrioTest::escapeSQL()
 }
 
 void TrioTest::escapeJSON() {
-	char	*e, *r = "START Jason doesn't like: \\\\\\n\\r\\b\\r\\t\\f and \\u001b END";
+	const char	*r = "START Jason doesn't like: \\\\\\n\\r\\b\\r\\t\\f and \\u001b END";
+	char	*e;
 	int	ret;
 
 	ret = trio_asprintf(&e, "START %|Js END", "Jason doesn't like: \\\n\r\b\r\t\f and \x1B");

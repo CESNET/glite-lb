@@ -802,7 +802,7 @@ static double
 TrioGenerateNaN(void)
 {
 #if defined(TRIO_COMPILER_SUPPORTS_C99)
-  return nan(NULL);
+  return nan("");
 #elif defined(DBL_QNAN)
   return DBL_QNAN;
 #elif defined(PLATFORM_UNIX)

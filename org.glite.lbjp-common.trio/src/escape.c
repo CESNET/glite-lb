@@ -315,7 +315,7 @@ char *glite_lbu_EscapeJSON(const char *in) {
 
 char *glite_lbu_UnescapeURL(const char *in) {
 	char *out;
-	char *spec = in;
+	const char *spec = in;
 	char *reserved;
 	unsigned int val;
 
@@ -324,7 +324,7 @@ char *glite_lbu_UnescapeURL(const char *in) {
 
 	strncpy(out, spec, strcspn(spec, "%")); // Copy the first part of the string up to the first '%'
 
-	while ((spec = strchr(spec, '%'))) {
+	while ((spec = (const char *)strchr(spec, '%'))) {
 		if(sscanf(spec+1, "%02X", &val)) { //Treat as percent-escaped hex if the format is right
 			asprintf(&reserved,"%c", val);
 			strcat(out, reserved);

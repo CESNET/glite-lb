@@ -22,7 +22,7 @@ VPATH=${top_srcdir}/src:${top_srcdir}/test
 
 CC=gcc
 
-DEBUG:=-g -O0 -Wall
+DEBUG:=-g -O0 -W -Wall
 
 CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface -I. -DDATAGRID_EXTENSION ${CFLAGS}
 
