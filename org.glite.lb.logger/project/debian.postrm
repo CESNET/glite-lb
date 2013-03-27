@@ -1,7 +1,9 @@
 #!/bin/sh
 set -e
 
-getent passwd glite >/dev/null && userdel glite
-getent group glite >/dev/null && groupdel glite
+if [ "$1" = "purge" -a ! \( -x /usr/bin/glite-lb-bkserverd -o -x /usr/bin/glite-lb-harvester \) ]; then
+	getent passwd glite >/dev/null && userdel glite
+	getent group glite >/dev/null && groupdel glite
+fi
 
 #DEBHELPER#
