@@ -104,7 +104,7 @@ INSTALL:=libtool --mode=install install
 HDRS:=interlogd.h il_error.h
 
 COMMON_LIB:=-lglite_lb_common
-GLITE_GSS_LIB:=-lglite_security_gss_${thrflavour}
+GLITE_GSS_LIB:=-lglite_security_gss${default_thrflavour}
 
 EXT_LIB:=-lglite_lbu_trio -lglite_lbu_log ${GLITE_GSS_LIB} -lglite_jobid
 
