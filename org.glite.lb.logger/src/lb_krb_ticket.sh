@@ -4,7 +4,7 @@
 
 if [ "x$GLITE_GSS_MECH" != "xkrb5" ]
 then
-    exit
+    exit 0
 fi
 
 GLITE_USER=${GLITE_USER:-'glite'}
@@ -21,14 +21,28 @@ KRB5CCNAME="FILE:$ticket"
 
 [ -d $GLITE_HOME ] || mkdir -p $GLITE_HOME
 
-KTUTIL="/usr/sbin/ktutil"
-HOSTNAME="/bin/hostname"
-KINIT="/usr/bin/kinit"
+KTUTIL=${KTUTIL:-"/usr/sbin/ktutil"}
+HOSTNAME=${HOSTNAME:-"/bin/hostname"}
+KINIT=${KINIT:-"/usr/bin/kinit"}
+KLIST=${KLIST:-"/usr/bin/klist"}
+
+[ -x ${KTUTIL} ] && [ -x ${HOSTNAME} ] && [ -x ${KINIT} ] && [ -x ${KLIST} ] || exit 1
 
 PRINCIPAL=`${KTUTIL} list 2>/dev/null | grep $($HOSTNAME -f) | grep host | awk '//{print $3}'|uniq`
 
-KRB5CCNAME="FILE:${ticket}0" ${KINIT} -k $PRINCIPAL
+try=5
+while [ $try -gt 0 ]
+do 
+  KRB5CCNAME="FILE:${ticket}0" ${KINIT} -k $PRINCIPAL
 
-chown $GLITE_USER:$GLITE_GROUP ${ticket}0
+  if  ${KLIST} -c  "FILE:${ticket}0" -s 
+  then
+      chown $GLITE_USER:$GLITE_GROUP ${ticket}0
+      mv ${ticket}0 $ticket
+      exit 0
+  else 
+      try = $(( $try - 1 ))
+      sleep 10
+  fi
+done
 
-mv ${ticket}0 $ticket
