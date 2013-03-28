@@ -12,6 +12,7 @@ then
     case $PWENTRY in
 	*:/bin/false)
 	userdel glite
+	getent group glite >/dev/null || groupadd -r glite
 	useradd -r -g glite -d /var/lib/glite -c "gLite user" glite
 	;;
     esac
