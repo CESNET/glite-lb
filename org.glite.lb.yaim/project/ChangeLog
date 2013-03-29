@@ -171,3 +171,6 @@
 - Startup scripts improvements - daemons can be started individually now
 - Fixed missing messaging environment variables in profile files. This fixes setup stage and cron scripts.
 
+4.5.10-1
+- locallogger and interloger up to glite_locallogger YAIM function
+
