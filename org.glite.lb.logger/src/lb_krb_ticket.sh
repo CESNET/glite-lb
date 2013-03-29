@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 [ -f /etc/default/glite-lb ] && . /etc/default/glite-lb
 
@@ -22,13 +22,15 @@ KRB5CCNAME="FILE:$ticket"
 [ -d $GLITE_HOME ] || mkdir -p $GLITE_HOME
 
 KTUTIL=${KTUTIL:-"/usr/sbin/ktutil"}
-HOSTNAME=${HOSTNAME:-"/bin/hostname"}
+HOSTNAMECMD=${HOSTNAMECMD:-"/bin/hostname"}
 KINIT=${KINIT:-"/usr/bin/kinit"}
 KLIST=${KLIST:-"/usr/bin/klist"}
 
-[ -x ${KTUTIL} ] && [ -x ${HOSTNAME} ] && [ -x ${KINIT} ] && [ -x ${KLIST} ] || exit 1
+[ -x ${KTUTIL} ] && [ -x ${HOSTNAMECMD} ] && [ -x ${KINIT} ] && [ -x ${KLIST} ] || exit 1
 
-PRINCIPAL=`${KTUTIL} list 2>/dev/null | grep $($HOSTNAME -f) | grep host | awk '//{print $3}'|uniq`
+PRINCIPAL=`${KTUTIL} list 2>/dev/null | grep $($HOSTNAMECMD -f) | grep host | awk '//{print $3}'|uniq`
+
+[ -z "${PRINCIPAL}" ] && exit 1
 
 try=5
 while [ $try -gt 0 ]
@@ -41,7 +43,7 @@ do
       mv ${ticket}0 $ticket
       exit 0
   else 
-      try = $(( $try - 1 ))
+      try=$(( $try - 1 ))
       sleep 10
   fi
 done
