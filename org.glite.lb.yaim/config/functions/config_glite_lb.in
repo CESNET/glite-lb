@@ -168,8 +168,6 @@ function config_glite_lb() {
   grep -v 'glite-lb-' @glite_etc@/gLiteservices 2>/dev/null > /tmp/gLiteservices
   mv /tmp/gLiteservices @glite_etc@/gLiteservices
   echo "${GLITE_LOCATION_ETC}/init.d/glite-lb-bkserverd" >> @glite_etc@/gLiteservices
-  echo "${GLITE_LOCATION_ETC}/init.d/glite-lb-logd" >> @glite_etc@/gLiteservices
-  echo "${GLITE_LOCATION_ETC}/init.d/glite-lb-interlogd" >> @glite_etc@/gLiteservices
   echo "${GLITE_LOCATION_ETC}/init.d/glite-lb-notif-interlogd" >> @glite_etc@/gLiteservices
   if [ x"$GLITE_LB_TYPE" = x"proxy" -o x"$GLITE_LB_TYPE" = x"both" ]; then
     echo "${GLITE_LOCATION_ETC}/init.d/glite-lb-proxy-interlogd" >> @glite_etc@/gLiteservices
