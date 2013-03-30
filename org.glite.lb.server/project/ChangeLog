@@ -629,3 +629,6 @@
 - Memory handling fixes
 - Fixed crash in html code when missing sandbox event on transfer job
 
+3.0.10-1
+- Messaging options for bkserver and notif-interlogd (for Debian, Fedora and Redhat startup scripts)
+
