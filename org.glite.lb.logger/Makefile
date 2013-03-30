@@ -104,7 +104,7 @@ INSTALL:=libtool --mode=install install
 HDRS:=interlogd.h il_error.h
 
 COMMON_LIB:=-lglite_lb_common
-GLITE_GSS_LIB:=-lglite_security_gss${default_thrflavour}
+GLITE_GSS_LIB:=-lglite_security_gss
 
 EXT_LIB:=-lglite_lbu_trio -lglite_lbu_log ${GLITE_GSS_LIB} -lglite_jobid
 
@@ -230,12 +230,10 @@ install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/glite/lb
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/glite-lb-logger
 	${INSTALL} -m 755 ${LOGD} ${DESTDIR}${PREFIX}${prefix}/bin
 	${INSTALL} -m 755 ${INTERLOGD} ${DESTDIR}${PREFIX}${prefix}/bin
 	${INSTALL} -m 755 ${NOTIF_INTERLOGD} ${DESTDIR}${PREFIX}${prefix}/bin
 	${INSTALL} -m 755 ${INTERLOGD} ${DESTDIR}${PREFIX}${prefix}/bin/glite-lb-proxy-interlogd
-	${INSTALL} -m 755 ${top_srcdir}/src/lb_krb_ticket.sh ${DESTDIR}${PREFIX}${prefix}/share/glite-lb-logger
 ifdef LB_PERF
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_ll.sh ${DESTDIR}${PREFIX}${prefix}/sbin

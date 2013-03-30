@@ -208,7 +208,6 @@ fi
 %{_bindir}/glite-lb-logd
 %{_bindir}/glite-lb-notif-interlogd
 %{_bindir}/glite-lb-proxy-interlogd
-%{_datadir}/glite-lb-logger/lb_krb_ticket.sh
 %{_mandir}/man8/glite-lb-interlogd.8.gz
 %{_mandir}/man8/glite-lb-logd.8.gz
 
