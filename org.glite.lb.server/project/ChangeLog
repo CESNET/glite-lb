@@ -631,4 +631,5 @@
 
 3.0.10-1
 - Messaging options for bkserver and notif-interlogd (for Debian, Fedora and Redhat startup scripts)
+- Startup scripts are cautious (according to the distribution templates), but kill all daemons in the setup stage
 
