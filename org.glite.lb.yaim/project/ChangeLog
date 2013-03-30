@@ -174,3 +174,6 @@
 4.5.10-1
 - locallogger and interloger up to glite_locallogger YAIM function
 
+4.5.11-1
+- Support additional daemon options with the new startup scripts
+
