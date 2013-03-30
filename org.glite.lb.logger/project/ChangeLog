@@ -304,3 +304,6 @@ gLite L&B setup script:
   - moving pidfiles rather in postinstall scripts (deb, rpm)
 - Merge from branch_3_2, round 7
 
+2.4.17-1
+- Messaging options for bkserver and notif-interlogd (for Debian, Fedora and Redhat startup scripts)
+
