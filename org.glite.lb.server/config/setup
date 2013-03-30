@@ -128,22 +128,26 @@ setup_daemon() {
 	if test x"$enabled" = x"true"; then
 @fedora@		systemctl enable glite-lb-$name.service
 @fedora@		systemctl stop glite-lb-$name.service >/dev/null 2>&1 || :
+@fedora@		killall -9 glite-lb-$name >/dev/null 2>&1 || :
 @fedora@		systemctl start glite-lb-$name.service || startup_error=1
 @debian@		echo "RUN_$id=yes" >> @defaultdir@/glite-lb-$name
 @debian@		/etc/init.d/glite-lb-$name stop >/dev/null 2>&1 || :
-@debian@		killall -9 glite-lb-$name >/dev/null 2>&1
+@debian@		killall -9 glite-lb-$name >/dev/null 2>&1 || :
 @debian@		/etc/init.d/glite-lb-$name start || startup_error=1
 @redhat@		/sbin/chkconfig glite-lb-$name on
 @redhat@		/sbin/service glite-lb-$name stop >/dev/null 2>&1 || :
+@redhat@		killall -9 glite-lb-$name >/dev/null 2>&1 || :
 @redhat@		/sbin/service glite-lb-$name start || startup_error=1
 	else
 @fedora@		systemctl disable glite-lb-$name.service
 @fedora@		systemctl stop glite-lb-$name.service >/dev/null 2>&1 || :
+@fedora@		killall -9 glite-lb-$name >/dev/null 2>&1 || :
 @debian@		/etc/init.d/glite-lb-$name stop >/dev/null 2>&1 || :
-@debian@		killall -9 glite-lb-$name >/dev/null 2>&1
+@debian@		killall -9 glite-lb-$name >/dev/null 2>&1 || :
 @debian@		echo "RUN_$id=no" >> @defaultdir@/glite-lb-$name
 @redhat@		/sbin/chkconfig glite-lb-$name off
 @redhat@		/sbin/service glite-lb-$name stop >/dev/null 2>&1 || :
+@redhat@		killall -9 glite-lb-$name >/dev/null 2>&1 || :
 	fi
 }
 
