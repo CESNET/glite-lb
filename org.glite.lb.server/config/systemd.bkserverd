@@ -16,7 +16,7 @@ EnvironmentFile=-/etc/profile.d/grid-env.sh
 EnvironmentFile=-/etc/sysconfig/glite-lb
 PIDFile=/var/run/glite/glite-lb-bkserverd.pid
 ExecStartPre=/bin/rm -f /tmp/lb_proxy_serve.sock /tmp/lb_proxy_store.sock
-ExecStart=/usr/bin/glite-lb-bkserverd --dump-prefix=/var/lib/glite/dump --purge-prefix=/var/lib/glite/purge --policy /etc/glite-lb/glite-lb-authz.conf $GLITE_LB_SERVER_PROXY_OPTIONS $GLITE_LB_SERVER_OPTIONS
+ExecStart=/usr/bin/glite-lb-bkserverd --dump-prefix=/var/lib/glite/dump --purge-prefix=/var/lib/glite/purge --policy /etc/glite-lb/glite-lb-authz.conf --msg-conf /etc/glite-lb/msg.conf $GLITE_LB_SERVER_PROXY_OPTIONS $GLITE_LB_SERVER_OPTIONS
 
 [Install]
 WantedBy=multi-user.target

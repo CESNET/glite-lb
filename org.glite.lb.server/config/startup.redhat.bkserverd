@@ -57,6 +57,7 @@ start() {
 
 	args="--dump-prefix=$GLITE_HOME/dump --purge-prefix=$GLITE_HOME/purge"
 	[ -f /etc/glite-lb/glite-lb-authz.conf ] && args="$args --policy /etc/glite-lb/glite-lb-authz.conf"
+	[ -f /etc/glite-lb/msg.conf ] && args="$args --msg-conf /etc/glite-lb/msg.conf"
 	case "$GLITE_LB_TYPE" in
 	proxy)
 		args="$args -P"

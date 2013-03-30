@@ -55,8 +55,10 @@ start() {
 		echo "$0: WARNING: No credentials specified." >&2
 	fi
 
+	[ -f /etc/glite-lb/msg.conf ] && args="$args --conf /etc/glite-lb/msg.conf"
+
 	echo -n "Starting $prog: "
-	daemon --user $GLITE_USER $env $exec -M 10485760 $GLITE_LB_NOTIF_IL_OPTIONS
+	daemon --user $GLITE_USER $env $exec -M 10485760 $args $GLITE_LB_NOTIF_IL_OPTIONS
 	retval=$?
 	echo
 	[ $retval -eq 0 ] && touch $lockfile

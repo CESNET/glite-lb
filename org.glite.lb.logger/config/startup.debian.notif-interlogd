@@ -56,12 +56,14 @@ do_start()
 		echo "$0: WARNING: No credentials specified." >&2
 	fi
 
+	[ -f /etc/glite-lb/msg.conf ] && args="$args --conf /etc/glite-lb/msg.conf"
+
 	start-stop-daemon --start --quiet --pidfile $PIDFILE \
 		--chuid $GLITE_USER --exec $DAEMON --test > /dev/null \
 		|| return 1
 	start-stop-daemon --start --quiet --pidfile $PIDFILE \
 		--chuid $GLITE_USER --exec /usr/bin/env $env $DAEMON -- \
-		-M 10485760 $GLITE_LB_NOTIF_IL_OPTIONS \
+		-M 10485760 $args $GLITE_LB_NOTIF_IL_OPTIONS \
 		|| return 2
 }
 
