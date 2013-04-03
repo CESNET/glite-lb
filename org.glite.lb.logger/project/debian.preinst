@@ -1,28 +1,9 @@
 #!/bin/sh
 set -e
 
-
-getent group glite >/dev/null || addgroup --system glite
-
-# sanitize passwd entry if it exists
-PWENTRY=`getent passwd glite` || :
-if [ "x$PWENTRY" != "x" ]
-then 
-    # we need a valid shell
-    case $PWENTRY in
-	*:/bin/false)
-	userdel glite
-	getent group glite >/dev/null || groupadd -r glite
-	adduser --system --group glite --home /var/lib/glite --disabled-password --disabled-login 
-	#useradd -r -g glite -d /var/lib/glite -c "gLite user" glite
-	;;
-    esac
-else 
-    adduser --system --group glite --home /var/lib/glite --disabled-password --disabled-login 
-    #useradd -r -g glite -d /var/lib/glite -c "gLite user" glite
-fi
-
+getent group glite >/dev/null || groupadd -r glite
+getent passwd glite >/dev/null || useradd -r -g glite -d /var/lib/glite -c "gLite user" glite
 mkdir -p /var/lib/glite /var/run/glite /var/spool/glite/lb-locallogger /var/spool/glite/lb-notif /var/spool/glite/lb-proxy 2>/dev/null || :
-chown -R glite:glite /var/lib/glite /var/run/glite /var/spool/glite/lb-locallogger /var/spool/glite/lb-notif /var/spool/glite/lb-proxy
+chown glite:glite /var/lib/glite /var/run/glite /var/spool/glite/lb-locallogger /var/spool/glite/lb-notif /var/spool/glite/lb-proxy
 
 #DEBHELPER#
