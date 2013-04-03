@@ -1549,7 +1549,19 @@ int bk_accept_serve(int conn, struct timeval *timeout, void *cdata)
 	gettimeofday(&before, NULL);
 	err = edg_wll_AcceptHTTP(ctx, &body, &resp, &hdrOut, &bodyOut, &httpErr);
 	if (err && (err = handle_server_error(ctx))){
-		edg_wll_DoneHTTP(ctx, resp, hdrOut, bodyOut);
+		switch (err) {
+			case EIO:
+				glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_INFO, "I/O error on answer to client '%s'", ctx->connections->serverConnection->peerName);
+				break;
+			case ECONNREFUSED:
+				glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_INFO, "Connection refused on answer to client '%s'", ctx->connections->serverConnection->peerName);
+				break;
+			case ENOTCONN:
+				glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_INFO, "Client '%s' closed connection", ctx->connections->serverConnection->peerName);
+				break;
+			default:
+				edg_wll_DoneHTTP(ctx, resp, hdrOut, bodyOut);
+		}
 	        free(resp);
 	        free(bodyOut);
                 if (body)
