@@ -1,4 +1,4 @@
 #!/bin/sh
 set -e
-chown nagios:nagios /var/lib/grid-monitoring/emi.lb >/dev/null 2>&1 || :
+chown -R nagios:nagios /var/lib/grid-monitoring/emi.lb >/dev/null 2>&1 || :
 #DEBHELPER#
