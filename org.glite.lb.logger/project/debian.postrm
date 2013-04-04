@@ -1,9 +1,0 @@
-#!/bin/sh
-set -e
-
-if [ "x$1" = "xpurge" -a ! \( -x /usr/bin/glite-lb-bkserverd -o -x /usr/bin/glite-lb-harvester \) ]; then
-	getent passwd glite >/dev/null && userdel glite
-	getent group glite >/dev/null && groupdel glite
-fi
-
-#DEBHELPER#
