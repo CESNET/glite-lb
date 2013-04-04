@@ -633,3 +633,11 @@
 - Messaging options for bkserver and notif-interlogd (for Debian, Fedora and Redhat startup scripts)
 - Startup scripts are cautious (according to the distribution templates), but kill all daemons in the setup stage
 
+3.0.11-1
+- Improved handling of connections lost or dropped by the client
+
+3.0.12-1
+- Compatibility with older startup scripts for now (glite user with shell)
+- Preferred way of creating system users on Debian
+- Taking glite home dir ownership recursively (in case of package reinstall), delete glite user only in "purge" stage.
+
