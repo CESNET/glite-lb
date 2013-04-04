@@ -187,3 +187,8 @@ gLite L&B setup script:
 - shutdown old daemon in start action of proxy interlogger (process changed the name)
 - moving pidfiles rather in postinstall scripts (deb, rpm)
 
+1.3.10-1
+- Compatibility with older startup scripts for now (glite user with shell)
+- Preferred way of creating system users on Debian
+- Taking glite home dir ownership recursively (in case of package reinstall), delete glite user only in "purge" stage
+
