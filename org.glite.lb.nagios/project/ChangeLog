@@ -71,3 +71,7 @@
 1.2.10-1
 - Merge from branch_3_2, round 7
 
+1.2.11-1
+- Proper directory owned by nagios
+  - Own the working directory recursivelly, just in case
+
