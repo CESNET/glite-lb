@@ -50,9 +50,9 @@ rm -rf $RPM_BUILD_ROOT
 %doc LICENSE project/ChangeLog
 %dir %{_libexecdir}/grid-monitoring/
 %dir %{_libexecdir}/grid-monitoring/probes/
-%dir %attr(0755, nagios, nagios) %{_libexecdir}/grid-monitoring/probes/emi.lb/
+%dir %{_libexecdir}/grid-monitoring/probes/emi.lb/
 %dir /var/lib/grid-monitoring/
-%dir /var/lib/grid-monitoring/emi.lb/
+%dir %attr(0755, nagios, nagios) /var/lib/grid-monitoring/emi.lb/
 %{_libexecdir}/grid-monitoring/probes/emi.lb/LB-probe
 %{_libexecdir}/grid-monitoring/probes/emi.lb/IL-probe
 
