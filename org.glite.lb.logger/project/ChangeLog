@@ -307,3 +307,12 @@ gLite L&B setup script:
 2.4.17-1
 - Messaging options for bkserver and notif-interlogd (for Debian, Fedora and Redhat startup scripts)
 
+2.4.18-1
+- New ticket refresh script
+- Installation of lb_krb5_ticket.sh
+- Compatibility with older startup scripts for now (glite user with shell)
+- Preferred way of creating system users on Debian
+- Using adduser instead of useradd (better handles uid of system accounts)
+- Lintian "command-with-path-in-maintainer-script"
+- Taking glite home dir ownership recursively (in case of package reinstall), delete glite user only in "purge" stage
+
