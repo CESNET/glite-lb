@@ -13,13 +13,11 @@ then
 	*:/bin/false)
 	userdel glite
 	getent group glite >/dev/null || groupadd -r glite
-	adduser --system --group glite --home /var/lib/glite --disabled-password --disabled-login 
-	#useradd -r -g glite -d /var/lib/glite -c "gLite user" glite
+	adduser --system --group --home /var/lib/glite --shell /bin/sh --disabled-password glite
 	;;
     esac
 else 
-    adduser --system --group glite --home /var/lib/glite --disabled-password --disabled-login 
-    #useradd -r -g glite -d /var/lib/glite -c "gLite user" glite
+    adduser --system --group --home /var/lib/glite --shell /bin/sh --disabled-password glite
 fi
 
 mkdir -p /var/lib/glite /var/run/glite /var/spool/glite/lb-locallogger /var/spool/glite/lb-notif /var/spool/glite/lb-proxy 2>/dev/null || :
