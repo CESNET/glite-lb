@@ -316,3 +316,6 @@ gLite L&B setup script:
 - Lintian "command-with-path-in-maintainer-script"
 - Taking glite home dir ownership recursively (in case of package reinstall), delete glite user only in "purge" stage
 
+2.4.19-1
+- Missing dependency on adduser added (for preinstal scripts)
+
