@@ -641,3 +641,6 @@
 - Preferred way of creating system users on Debian
 - Taking glite home dir ownership recursively (in case of package reinstall), delete glite user only in "purge" stage.
 
+3.0.13-1
+- Missing dependency on adduser added (for preinstal scripts)
+
