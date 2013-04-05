@@ -1,1 +1,0 @@
-50 */4 * * *	root	@glite_prefix@/sbin/glite-lb-msg-config @glite_etc@/glite-lb/msg.conf >/tmp/msg-config.log.$$ 2>&1; if test $? -eq 0; then pri=user.notice; else pri=user.error; fi; logger -t glite-lb-msg-config -f /tmp/msg-config.log.$$ -p $pri; rm -f /tmp/msg-config.log.$$
