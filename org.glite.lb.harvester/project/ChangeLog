@@ -192,3 +192,6 @@ gLite L&B setup script:
 - Preferred way of creating system users on Debian
 - Taking glite home dir ownership recursively (in case of package reinstall), delete glite user only in "purge" stage
 
+1.3.11-1
+- Missing dependency on adduser add (for preinstal scripts)
+
