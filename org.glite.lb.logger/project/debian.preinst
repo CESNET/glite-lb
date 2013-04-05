@@ -12,7 +12,7 @@ then
     case $PWENTRY in
 	*:/bin/false)
 	userdel glite
-	getent group glite >/dev/null || groupadd -r glite
+	getent group glite >/dev/null || addgroup --system glite
 	adduser --system --group --home /var/lib/glite --shell /bin/sh --disabled-password glite
 	;;
     esac
