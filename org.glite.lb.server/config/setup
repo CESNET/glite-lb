@@ -655,6 +655,8 @@ if test "$setup_upgrade_files" = "1"; then
 	fi
 	# (old crons)
 	rm -fv /etc/cron.d/glite-lb-purge.cron /etc/logrotate.d/lb-purger /etc/logrotate.d/lb-lcas
+	# old crons in L&B <= 4.0.9 (L&B server <= 3.0.13)
+	rm -fv /etc/cron.d/glite-lb-proxy-purge /etc/cron.d/glite-lb-notif-keeper
 fi
 
 if test "$setup_upgrade_logger" = "1"; then

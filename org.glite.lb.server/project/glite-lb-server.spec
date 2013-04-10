@@ -42,6 +42,7 @@ BuildRequires:  expat-devel
 BuildRequires:  bison
 BuildRequires:  chrpath
 BuildRequires:  pkgconfig
+Requires:       crontabs
 Requires:       mysql-server
 # for upgrade from EMI-1:
 # new function glite_srvbones_daemon_listen() in 2.2.0
@@ -171,9 +172,8 @@ fi
 %dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-proxy
 %dir %{_datadir}/glite/
 %dir %{_docdir}/%{name}-%{version}
-%dir %{_sysconfdir}/cron.d/
 %dir %{_sysconfdir}/glite-lb/
-%config(noreplace) %{_sysconfdir}/cron.d/*
+%config(noreplace) %{_sysconfdir}/cron.d/%{name}-*
 %config(noreplace) %{_sysconfdir}/glite-lb/*
 %config(noreplace) %{_sysconfdir}/logrotate.d/glite-lb-server
 %config(noreplace) %{_sysconfdir}/mysql/conf.d/glite-lb-server.cnf

@@ -21,6 +21,7 @@ BuildRequires:  glite-lbjp-common-log-devel%{?_isa}
 BuildRequires:  glite-lbjp-common-trio-devel%{?_isa}
 BuildRequires:  libtool
 BuildRequires:  pkgconfig
+Requires:       crontabs
 Requires:       perl-LDAP
 Requires:       glite-lb-logger
 
@@ -60,7 +61,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_sysconfdir}/glite-lb/
 %dir %{_libdir}/glite-lb/
 %dir %{_libdir}/glite-lb/examples/
-%{_sysconfdir}/cron.d/glite-lb-logger-msg
+%config(noreplace) %{_sysconfdir}/cron.d/%{name}
 %{_libdir}/activemq_cpp_plugin.so
 %{_libdir}/activemq_cpp_plugin.so.0
 %{_libdir}/activemq_cpp_plugin.so.0.0.0

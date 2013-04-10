@@ -458,9 +458,9 @@ install:
 	${INSTALL} -m 644 ${top_srcdir}/config/site-notif.conf ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 
 	${INSTALL} -m 755 setup ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-setup
-	${INSTALL} -m 644 glite-lb-server-purge.cron ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/glite-lb-server-purge
-	${INSTALL} -m 644 glite-lb-proxy-purge.cron ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/glite-lb-proxy-purge
-	${INSTALL} -m 644 glite-lb-notif-keeper.cron ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/glite-lb-notif-keeper
+	${INSTALL} -m 644 glite-lb-server-purge.cron ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/${package}-purge
+	${INSTALL} -m 644 glite-lb-proxy-purge.cron ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/${package}-purge-proxy
+	${INSTALL} -m 644 glite-lb-notif-keeper.cron ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/${package}-notif-keeper
 	${INSTALL} -m 644 ${top_srcdir}/config/glite-lb-server.logrotate ${DESTDIR}${PREFIX}${sysconfdir}/logrotate.d/glite-lb-server
 	${INSTALL} -m 644 ${top_srcdir}/config/my.cnf ${DESTDIR}${PREFIX}${sysconfdir}/mysql/conf.d/glite-lb-server.cnf
 	${INSTALL} -m 644 glite-lb ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/glite-lb
