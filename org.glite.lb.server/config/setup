@@ -23,7 +23,7 @@ GLITE_HOST_CERT=${GLITE_HOST_CERT:-"$GLITE_HOME/.certs/hostcert.pem"}
 GLITE_HOST_KEY=${GLITE_HOST_KEY:-"$GLITE_HOME/.certs/hostkey.pem"}
 
 
-ACTIONS="db certs msg authz harvester bdii emir_info emir_daemon upgrade_files upgrade_logger upgrade_notif upgrade_proxy crl startup krb krbgsi"
+ACTIONS="db certs msg authz harvester bdii emir_info emir_daemon upgrade_files upgrade_logger upgrade_notif upgrade_proxy upgrade_log4c crl startup krb krbgsi"
 GROUP_ACTIONS="all none yaim logger upgrade emir"
 
 qecho() {
@@ -165,6 +165,7 @@ setup_all() {
 	setup_upgrade_logger=1
 	setup_upgrade_notif=1
 	setup_upgrade_proxy=1
+	setup_upgrade_log4c=1
 	setup_crl=1
 	setup_startup=1
 }
@@ -186,7 +187,7 @@ ACTIONS are:
 	db certs msg authz harvester bdii
 	emir_info .... prepare service info file
 	emir_daemon .. configure EMIR client daemon
-	upgrade_files upgrade_logger upgrade_notif upgrade_proxy
+	upgrade_files upgrade_logger upgrade_notif upgrade_proxy upgrade_log4rc
 	crl startup
 	krb    ....... setup Kerberos
 	krbgsi ....... setup Kerberos and enable GSI autentization
@@ -228,6 +229,7 @@ EOF
 		setup_upgrade_logger=1;
 		setup_upgrade_notif=1;
 		setup_upgrade_proxy=1
+		setup_upgrade_log4c=1
 		;;
 	emir)
 		setup_emir_info=1
@@ -245,6 +247,7 @@ EOF
 	upgrade_logger) setup_upgrade_logger=1 ;;
 	upgrade_notif) setup_upgrade_notif=1 ;;
 	upgrade_proxy) setup_upgrade_proxy=1 ;;
+	upgrade_log4c) setup_upgrade_log4c=1 ;;
 	crl)	setup_crl=1 ;;
 	startup) setup_startup=1 ;;
 	krb)	setup_krb=1 ;;
@@ -680,6 +683,18 @@ if test "$setup_upgrade_proxy" = "1"; then
 	rm -f /tmp/glite-lbproxy-ilog.sock
 	if test -d /var/spool/lb-proxy; then
 		find /tmp -type f -name glite-lbproxy-ilog_events.\* -exec mv {} /var/spool/lb-proxy \;
+	fi
+fi
+
+if test "$setup_upgrade_log4c" = "1"; then
+	# check/fix log4c config file (if not updated from package) - remove log4c version
+	if grep 'log4c\s\+version' $GLITE_LOCATION_ETC/glite-lb/log4crc >/dev/null 2>&1; then
+		sed -i 's/\(log4c\).*version.*>/\1>/' $GLITE_LOCATION_ETC/glite-lb/log4crc
+		if test $? -eq 0; then
+			qecho "log4crc fixed"
+		else
+			error="$error upgrade_log4c"
+		fi
 	fi
 fi
 
