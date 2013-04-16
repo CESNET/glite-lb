@@ -3,7 +3,7 @@ Version:        @MAJOR@.@MINOR@.@REVISION@
 Release:        @AGE@%{?dist}
 Summary:        @SUMMARY@
 
-Group:          Development/Tools
+Group:          Documentation
 License:        ASL 2.0
 Url:            @URL@
 Vendor:         EMI
@@ -11,12 +11,17 @@ Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.doc
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildArch:      noarch
+BuildRequires:  glite-lb-types
 %if 0%{?fedora} >= 9 || 0%{?rhel} >= 6
 BuildRequires:  tex(latex)
 %else
 BuildRequires:  tetex-latex
 %endif
-BuildRequires:  glite-lb-types
+%if 0%{?fedora} >= 18
+BuildRequires:  tex(comment.sty)
+BuildRequires:  tex(lastpage.sty)
+BuildRequires:  tex(multirow.sty)
+%endif
 
 %description
 @DESCRIPTION@
