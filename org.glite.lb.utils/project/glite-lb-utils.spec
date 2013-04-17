@@ -21,6 +21,7 @@ BuildRequires:  glite-lbjp-common-maildir-devel
 BuildRequires:  glite-lbjp-common-trio-devel
 BuildRequires:  libtool
 BuildRequires:  pkgconfig
+Requires:       glite-lb-state-machine-plugins
 
 %description
 @DESCRIPTION@

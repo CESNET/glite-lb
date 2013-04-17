@@ -12,7 +12,7 @@ DM-Upload-Allowed: yes
 Package: glite-lb-utils
 Section: misc
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, glite-lb-state-machine-plugins
 Description: @SUMMARY@
 @DEBIAN_DESCRIPTION@
 
