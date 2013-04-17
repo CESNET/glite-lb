@@ -119,6 +119,10 @@ start()
 		return 0
 	esac
 
+	if [ "x$GLITE_GSS_MECH" = "xkrb5" -a -x /usr/share/glite-lb-logger/lb_krb_ticket.sh ]; then
+		/usr/share/glite-lb-logger/lb_krb_ticket.sh
+	fi
+
 	if [ -n "$LOG4C_RCPATH" ]; then env="$env LOG4C_RCPATH='$LOG4C_RCPATH'"; fi
 	if [ -n "$KRB5_KTNAME" ]; then env="$env KRB5_KTNAME='$KRB5_KTNAME'"; fi
 	if [ -n "$KRB5CCNAME" ]; then env="$env KRB5CCNAME='$KRB5CCNAME'"; fi

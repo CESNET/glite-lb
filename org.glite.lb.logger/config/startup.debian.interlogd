@@ -47,6 +47,10 @@ fi
 
 do_start()
 {
+	if [ "x$GLITE_GSS_MECH" = "xkrb5" -a -x /usr/share/glite-lb-logger/lb_krb_ticket.sh ]; then
+		/usr/share/glite-lb-logger/lb_krb_ticket.sh
+	fi
+
 	[ -n "$LOG4C_RCPATH" ] && env="$env LOG4C_RCPATH='$LOG4C_RCPATH'"
 	[ -n "$KRB5_KTNAME" ] && env="$env KRB5_KTNAME='$KRB5_KTNAME'"
 	[ -n "$KRB5CCNAME" ] && env="$env KRB5CCNAME='$KRB5CCNAME'"
