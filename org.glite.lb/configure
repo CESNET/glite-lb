@@ -1441,7 +1441,7 @@ distcheck: ${package}-${version}.tar.gz
 	a=`(cd dist/${package}-${version}; find . -type f | sort)`; \
 	b=`(cd ${top_srcdir}; find . -path ./dist -prune -or -type f -print | sort)`; \
 	echo "$$a" >dist/files-dist; \
-	echo "$$b" | egrep -v "(^./Makefile.inc$$|^./${package}-${version}.tar.gz$$|^./debian|^./[^/]*.spec$$|\.cvsignore|^\./project/changelog$$|/CVS)" >dist/files-original
+	echo "$$b" | egrep -v "(^./Makefile.inc$$|^./${package}-${version}.tar.gz$$|^./debian|^./[^/]*.spec$$|\.cvsignore|^\./project/changelog$$|/CVS|^\./\.git|^\./config\.status$$)" >dist/files-original
 	diff -U0 dist/files-dist dist/files-original
 
 rpm: ${package}-${version}.tar.gz
