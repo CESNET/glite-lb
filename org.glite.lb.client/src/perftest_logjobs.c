@@ -30,7 +30,7 @@ extern int edg_wll_DoLogEvent(edg_wll_Context context, edg_wll_LogLine logline);
 extern int edg_wll_DoLogEventProxy(edg_wll_Context context, edg_wll_LogLine logline);
 extern int edg_wll_DoLogEventDirect(edg_wll_Context context, edg_wll_LogLine logline);
 
-#define DEFAULT_SOCKET "/tmp/interlogger.sock"
+#define DEFAULT_SOCKET EDG_WLL_LOG_SOCKET_DEFAULT
 #define DEFAULT_PREFIX EDG_WLL_LOG_PREFIX_DEFAULT
 
 #define EVENTS_USER_PRESENT

@@ -40,7 +40,7 @@ limitations under the License.
 
 #define FCNTL_ATTEMPTS		5
 #define FCNTL_TIMEOUT		1
-#define DEFAULT_SOCKET "/tmp/interlogger.sock"
+#define DEFAULT_SOCKET		EDG_WLL_LOG_SOCKET_DEFAULT
 
 #ifdef FAKE_VERSION
 int edg_wll_DoLogEvent(edg_wll_Context ctx, edg_wll_LogLine logline);
