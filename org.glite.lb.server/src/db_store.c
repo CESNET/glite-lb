@@ -1,4 +1,4 @@
-#ident "$Header$"
+#ident "$Header: /cvs/glite/org.glite.lb.server/src/db_store.c,v 1.53 2012/08/24 14:47:01 jfilipov Exp $"
 /*
 Copyright (c) Members of the EGEE Collaboration. 2004-2010.
 See http://www.eu-egee.org/partners for details on the copyright holders.
@@ -34,6 +34,9 @@ limitations under the License.
 #include "jobstat.h"
 #include "db_supp.h"
 #include "il_notification.h"
+#include "glite/lbu/trio.h"
+#include "glite/lbu/log.h"
+#include "glite/lb/process_event.h"
 
 #ifdef LB_PERF
 #include "glite/lb/lb_perftest.h"
@@ -50,12 +53,14 @@ static int log_connectjob_event(edg_wll_Context ctx, glite_jobid_const_t jobif_f
 static int log_disconnectjob_event(edg_wll_Context ctx, glite_jobid_const_t jobif_from, glite_jobid_const_t jobid_to);
 static enum edg_wll_StatJobtype get_jobtype_from_connectjob(enum edg_wll_ConnectJobJobtype  jobtype);
 static enum edg_wll_ConnectJobJobtype get_connectjobtype_from_jobtype(enum edg_wll_StatJobtype jobtype);
+static int get_seqno_for_event(edg_wll_Context ctx, edg_wll_Event *e);
 
 int
 db_store(edg_wll_Context ctx, char *event)
 {
   edg_wll_Event 	*ev = NULL;
   int			seq, reg_to_JP = 0, local_job;
+  intJobStat 	       *ijsp;
   edg_wll_JobStat	newstat;
   edg_wll_JobStat	oldstat;
   int			ret;
@@ -100,7 +105,26 @@ db_store(edg_wll_Context ctx, char *event)
 		goto commit;
   	}
 
-	ret = edg_wll_StoreEvent(ctx, ev, event, &seq);
+	
+	seq = get_seqno_for_event(ctx, ev);
+	if(edg_wll_LoadIntState(ctx, ev->any.jobId, 0 /* DONT_LOCK */, seq - 1, &ijsp)) {
+		/* StepIntState is going to recompute the job status by itself */
+		ijsp = NULL;
+	}
+	switch(edg_wll_FilterEvent(ctx, ijsp, ev, seq)) {
+		
+	case GLITE_LB_EVENT_FILTER_DROP:
+		glite_common_log_msg(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_INFO, "event filtered out, dropping it");
+		goto commit;
+
+	case GLITE_LB_EVENT_FILTER_REPLACE:
+		/* TODO: replace not implemented yet, store it as usual */
+
+	default:
+		ret = edg_wll_StoreEvent(ctx, ev, event, &seq);
+		break;
+
+	}
 	if (ret ) {
 		if (ret == EEXIST) edg_wll_ResetError(ctx);
 		goto rollback;
@@ -125,7 +149,11 @@ db_store(edg_wll_Context ctx, char *event)
 			edg_wll_FreeStatus(&newstat);
 			newstat.state = EDG_WLL_JOB_UNDEF;
 		}
-		if (edg_wll_StepIntState(ctx,ev->any.jobId, ev, seq, &oldstat, &newstat)) goto rollback;
+		if (edg_wll_StepIntState(ctx,ev->any.jobId, ijsp, ev, seq, &oldstat, &newstat)) goto rollback;
+		else {
+			/* not needed anymore, but signalize we do not have to free the parts - this was done in StepIntState() */			
+			if(ijsp) { free(ijsp); ijsp = NULL; }
+		}
 		
 		if (proxy_purge && newstat.remove_from_proxy) 
 			if (edg_wll_PurgeServerProxy(ctx, ev->any.jobId)) goto rollback;
@@ -186,6 +214,8 @@ db_store(edg_wll_Context ctx, char *event)
 
 commit:
 rollback:;
+	if(ijsp) {  destroy_intJobStat(ijsp); free(ijsp); ijsp = NULL; }
+
   } while (edg_wll_TransNeedRetry(ctx));
 
   if (edg_wll_Error(ctx, NULL, NULL)) goto err;
@@ -195,6 +225,7 @@ rollback:;
 
 
 err:
+  if(ijsp) free(ijsp); 
   if(ev) { edg_wll_FreeEvent(ev); free(ev); }
   if ( newstat.state ) edg_wll_FreeStatus(&newstat);
   if ( oldstat.state ) edg_wll_FreeStatus(&oldstat);
@@ -527,4 +558,32 @@ static enum edg_wll_ConnectJobJobtype get_connectjobtype_from_jobtype(enum edg_w
         }
 
 	return ret;
+}
+
+
+static int get_seqno_for_event(edg_wll_Context ctx, edg_wll_Event *e)
+{
+	char			*jobid, *stmt, *max;
+	glite_lbu_Statement	sh = NULL;
+	int                     next = 0;
+
+	jobid = stmt = max = NULL;
+
+/* obtain number of stored events */
+	jobid = edg_wlc_JobIdGetUnique(e->any.jobId);
+	trio_asprintf(&stmt,
+		"select nevents from jobs "
+		"where jobid = '%|Ss'",jobid);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, stmt);
+
+	if (edg_wll_ExecSQL(ctx,stmt,&sh) < 0 ||
+	    edg_wll_FetchRow(ctx,sh,1,NULL,&max) < 0) goto clean;
+	next = (max && *max) ? atoi(max) : 0;
+	free(max);
+
+clean:
+	if(sh) glite_lbu_FreeStmt(&sh); 
+	free(stmt);
+
+	return next;
 }

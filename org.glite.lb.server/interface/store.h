@@ -1,4 +1,4 @@
-#ident "$Header$"
+#ident "$Header: /cvs/glite/org.glite.lb.server/interface/store.h,v 1.20 2012/08/29 08:15:38 zsustr Exp $"
 /*
 Copyright (c) Members of the EGEE Collaboration. 2004-2010.
 See http://www.eu-egee.org/partners for details on the copyright holders.
@@ -39,6 +39,16 @@ int edg_wll_StoreEvent(
 void edg_wll_StoreAnonymous(
 	edg_wll_Context,    /* INOUT */
 	int		/* IN (boolean) */
+);
+
+/* check if the event should be added, replace the last event of this
+ * type or be dropped 
+ */
+int edg_wll_FilterEvent(
+	edg_wll_Context,        /* INOUT */
+	intJobStat *,           /* IN */
+	edg_wll_Event *,        /* IN */
+	int                     /* IN */
 );
 
 int db_store(edg_wll_Context, char *);

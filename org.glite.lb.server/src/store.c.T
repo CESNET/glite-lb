@@ -1,4 +1,4 @@
-#ident "$Header$"
+#ident "$Header: /cvs/glite/org.glite.lb.server/src/store.c.T,v 1.75 2013/03/22 10:07:03 zsustr Exp $"
 /*
 Copyright (c) Members of the EGEE Collaboration. 2004-2010.
 See http://www.eu-egee.org/partners for details on the copyright holders.
@@ -189,6 +189,53 @@ clean:
 	free(stamp);
 	return edg_wll_Error(ctx,NULL,NULL);
 }
+
+
+int edg_wll_FilterEvent(edg_wll_Context ctx, intJobStat *ijsp, edg_wll_Event *ev, int seq)
+{
+	char	               *q = NULL, *ssrc = NULL;
+	glite_lbu_Statement	sh = NULL;
+	edg_wll_Event          *prev_ev = NULL;
+	int                     ret = 0, prev_seq, i;
+	char                   *res[2];
+
+	ssrc = edg_wll_SourceToString(ev->any.source);
+	memset(res, 0, sizeof(res));
+
+	/* get the most recent event of this type from this source stored in the database */
+	trio_asprintf(&q, 
+		      "SELECT ef.ulm, events.seqcode "
+		      "FROM events, events_flesh ef "
+		      "WHERE events.jobid = ef.jobid AND events.event = ef.event AND events.code = %d AND events.prog = '%s' AND events.host = '%s' "
+		      "ORDER BY events.arrived DESC "
+		      "LIMIT 1",
+		      ev->any.type,
+		      ssrc,
+		      ev->any.host
+		);
+	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
+
+	if (edg_wll_ExecSQL(ctx, q, &sh) >= 0 &&
+	    edg_wll_FetchRow(ctx, sh, sizeof(res)/sizeof(res[0]), NULL, res) >= 0) {
+		prev_seq = atoi(res[1]);
+		if(edg_wll_ParseEvent(ctx, res[0], &prev_ev) < 0) goto cleanup;
+	}
+
+	ret = filterEvent(ijsp, ev, seq, prev_ev, prev_seq);
+
+cleanup:
+	if(ssrc) free(ssrc);
+	for(i=0; i < sizeof(res)/sizeof(res[0]); i++) if(res[i]) free(res[i]);
+	if(q) free(q);
+	if(sh) glite_lbu_FreeStmt(&sh);
+	if(prev_ev) {
+		edg_wll_FreeEvent(prev_ev);
+		free(prev_ev);
+	}
+
+	return ret;
+}
+
 
 static int store_user(edg_wll_Context ctx,const char *userid,const char *subj)
 {

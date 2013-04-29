@@ -1,4 +1,4 @@
-#ident "$Header$"
+#ident "$Header: /cvs/glite/org.glite.lb.server/src/jobstat.h,v 1.49 2012/08/29 08:15:38 zsustr Exp $"
 /*
 Copyright (c) Members of the EGEE Collaboration. 2004-2010.
 See http://www.eu-egee.org/partners for details on the copyright holders.
@@ -45,7 +45,7 @@ edg_wll_ErrorCode edg_wll_RestoreSubjobState(edg_wll_Context , glite_jobid_const
 
 
 /* update stored job state according to new event */
-edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx, glite_jobid_const_t job, edg_wll_Event *e, int seq, edg_wll_JobStat *old_stat, edg_wll_JobStat *stat_out);
+edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx, glite_jobid_const_t job, intJobStat *ijsp, edg_wll_Event *e, int seq, edg_wll_JobStat *old_stat, edg_wll_JobStat *stat_out);
 
 edg_wll_ErrorCode edg_wll_StepIntStateParent(edg_wll_Context,glite_jobid_const_t,edg_wll_Event *,int,intJobStat *, edg_wll_JobStat *old_stat, edg_wll_JobStat *);
 

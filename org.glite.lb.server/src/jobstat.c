@@ -1,4 +1,4 @@
-#ident "$Header$"
+#ident "$Header: /cvs/glite/org.glite.lb.server/src/jobstat.c,v 1.108 2012/09/06 10:24:36 jfilipov Exp $"
 /*
 Copyright (c) Members of the EGEE Collaboration. 2004-2010.
 See http://www.eu-egee.org/partners for details on the copyright holders.
@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ident "$Header$"
+#ident "$Header: /cvs/glite/org.glite.lb.server/src/jobstat.c,v 1.108 2012/09/06 10:24:36 jfilipov Exp $"
 
 #include <inttypes.h>
 #include <stdio.h>
@@ -1382,13 +1382,13 @@ edg_wll_ErrorCode edg_wll_StepIntStateParent(edg_wll_Context ctx,
  */
 
 edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
-					glite_jobid_const_t job,
-					edg_wll_Event *e,
-					int seq,
-					edg_wll_JobStat	*oldstat,
-					edg_wll_JobStat	*stat_out)
+				       glite_jobid_const_t job,
+				       intJobStat 	*ijsp,
+				       edg_wll_Event *e,
+				       int seq,
+				       edg_wll_JobStat	*oldstat,
+				       edg_wll_JobStat	*stat_out)
 {
-	intJobStat 	*ijsp;
 	int		flags = 0;
 	int		res;
 	int		be_strict = 0;
@@ -1397,7 +1397,7 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 	char 		*oldstat_rgmaline = NULL;
 
 
-	if (!edg_wll_LoadIntState(ctx, job, DONT_LOCK, seq - 1, &ijsp)) {
+	if (NULL != ijsp) {
 		edg_wll_CpyStatus(intJobStat_to_JobStat(ijsp),oldstat);
 
 		if (ctx->rgma_export) oldstat_rgmaline = write2rgma_statline(ijsp);
@@ -1432,7 +1432,9 @@ edg_wll_ErrorCode edg_wll_StepIntState(edg_wll_Context ctx,
 			destroy_intJobStat_extension(ijsp);
 		}
 		else destroy_intJobStat(ijsp);
-		free(ijsp);
+		/* IMPORTANT: intJobStat ijsp is not destroyed if there was an error earlier on, 
+		   in that case the calling function db_store() must destroy it itself */
+		/* moved to db_store(): free(ijsp); */
 	}
 	else if (!edg_wll_intJobStatus(ctx, job, flags,&jobstat, js_enable_store, 1)) 
 	{
@@ -1586,4 +1588,3 @@ edg_wll_ErrorCode edg_wll_getConnectedJobs(edg_wll_Context ctx, glite_jobid_cons
 
 	return edg_wll_Error(ctx, NULL, NULL);
 }
-
