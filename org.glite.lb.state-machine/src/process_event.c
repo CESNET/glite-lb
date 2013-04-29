@@ -1,4 +1,4 @@
-#ident "$Header$"
+#ident "$Header: /cvs/glite/org.glite.lb.state-machine/src/process_event.c,v 1.38 2013/02/19 11:53:53 jfilipov Exp $"
 /*
 Copyright (c) Members of the EGEE Collaboration. 2004-2010.
 See http://www.eu-egee.org/partners for details on the copyright holders.
@@ -50,6 +50,8 @@ int processData_Cream(intJobStat *js, edg_wll_Event *e);
 int processEvent_FileTransfer(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring);
 int processEvent_FileTransferCollection(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring);
 int processEvent_VirtualMachine(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring);
+
+int filterEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, edg_wll_Event *prev_ev, int prev_seq);
 
 int add_stringlist(char ***lptr, const char *new_item);
 
@@ -1268,3 +1270,12 @@ void init_intJobStat(intJobStat *p)
 	/* TBD: generate */
 }
 
+
+int filterEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, edg_wll_Event *prev_ev, int prev_seq) 
+{
+	switch (js->pub.jobtype) {
+		case EDG_WLL_STAT_PBS: 
+			return filterEvent_PBS(js, e, ev_seq, prev_ev, prev_seq);
+	}
+	return 0;
+}

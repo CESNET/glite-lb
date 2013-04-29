@@ -1,4 +1,4 @@
-#ident "$Header$"
+#ident "$Header: /cvs/glite/org.glite.lb.state-machine/src/process_event_pbs.c,v 1.10 2012/08/28 09:29:44 mvocu Exp $"
 /*
 Copyright (c) Members of the EGEE Collaboration. 2004-2010.
 See http://www.eu-egee.org/partners for details on the copyright holders.
@@ -30,6 +30,7 @@ limitations under the License.
 
 #include "intjobstat.h"
 #include "seqcode_aux.h"
+#include "process_event.h"
 
 /* TBD: share in whole logging or workload */
 #ifdef __GNUC__
@@ -37,6 +38,8 @@ limitations under the License.
 #else
 #define UNUSED_VAR
 #endif
+
+#define RESOURCE_USAGE_RATE_LIMIT 10*60
 
 // XXX: maybe not needed any more
 // if not, remove also last_pbs_event_timestamp from intJobStat
@@ -172,6 +175,8 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 		if (USABLE_DATA(res)) {
 			/* this is going to be the first server taking care of the job */
 			rep(js->pub.network_server, e->regJob.ns);
+			if(!js->pub.pbs_owner) 
+				rep(js->pub.pbs_owner, e->any.user);
 		}
 		break;
 
@@ -367,6 +372,10 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 		if (USABLE(res)) {
 			// signalize state done, done_code uknown
 			/* nonsense: js->pub.state = EDG_WLL_JOB_DONE; */
+			if(e->PBSResourceUsage.usage == EDG_WLL_PBSRESOURCEUSAGE_USED) {
+				/* if it consumes resources, it must be running */
+				js->pub.state = EDG_WLL_JOB_RUNNING;
+			}
 		}
 		if (USABLE_DATA(res)) {
 			/*trio_asprintf(&new_resource_usage,"%s%s\t%s = %f [%s]",
@@ -448,3 +457,19 @@ int processEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, c
 	return RET_OK;
 }
 
+
+int filterEvent_PBS(intJobStat *js, edg_wll_Event *e, int ev_seq, edg_wll_Event *prev_ev, int prev_seq)
+{
+	if(EDG_WLL_EVENT_PBSRESOURCEUSAGE == e->any.type &&
+	   EDG_WLL_PBSRESOURCEUSAGE_USED == e->PBSResourceUsage.usage &&
+	   (EDG_WLL_SOURCE_PBS_MOM == e->any.source ||
+	    EDG_WLL_SOURCE_PBS_SMOM == e->any.source)) {
+		/* for now apply just rate limiting to resource usage events from mom */
+		if(NULL != prev_ev &&
+		   e->any.timestamp.tv_sec - prev_ev->any.timestamp.tv_sec < RESOURCE_USAGE_RATE_LIMIT)
+			return GLITE_LB_EVENT_FILTER_DROP;
+		else
+			return GLITE_LB_EVENT_FILTER_REPLACE;
+	}
+	return GLITE_LB_EVENT_FILTER_STORE;
+}

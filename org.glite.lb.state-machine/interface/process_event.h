@@ -18,6 +18,13 @@ limitations under the License.
 #ifndef GLITE_LB_PROCESS_EVENT_H
 #define GLITE_LB_PROCESS_EVENT_H
 
+enum {
+	GLITE_LB_EVENT_FILTER_STORE=0,
+	GLITE_LB_EVENT_FILTER_REPLACE,
+	GLITE_LB_EVENT_FILTER_DROP,
+};
+
+int filterEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, edg_wll_Event *prev_ev, int prev_seq);
 int processEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring);
 int add_stringlist(char ***lptr, const char *new_item);
 
