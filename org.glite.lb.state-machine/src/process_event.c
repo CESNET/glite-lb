@@ -1273,6 +1273,10 @@ void init_intJobStat(intJobStat *p)
 
 int filterEvent(intJobStat *js, edg_wll_Event *e, int ev_seq, edg_wll_Event *prev_ev, int prev_seq) 
 {
+	if(NULL == js) {
+		/* job type not specified yet */
+		return 0;
+	}
 	switch (js->pub.jobtype) {
 		case EDG_WLL_STAT_PBS: 
 			return filterEvent_PBS(js, e, ev_seq, prev_ev, prev_seq);

@@ -216,7 +216,8 @@ int edg_wll_FilterEvent(edg_wll_Context ctx, intJobStat *ijsp, edg_wll_Event *ev
 	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
 
 	if (edg_wll_ExecSQL(ctx, q, &sh) >= 0 &&
-	    edg_wll_FetchRow(ctx, sh, sizeof(res)/sizeof(res[0]), NULL, res) >= 0) {
+	    edg_wll_FetchRow(ctx, sh, sizeof(res)/sizeof(res[0]), NULL, res) >= 0 && 
+	    res[0] && res[1]) {
 		prev_seq = atoi(res[1]);
 		if(edg_wll_ParseEvent(ctx, res[0], &prev_ev) < 0) goto cleanup;
 	}
