@@ -27,7 +27,7 @@ limitations under the License.
 
 static char mbuf[33];
 static const char* b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-static char *b64r;
+#include "b64r.c"
 
 int base64_encode(const void *enc, int enc_size, char *out, int out_max_size)
 {
@@ -76,13 +76,6 @@ int base64_decode(const char *enc,char *out,int max_out_size)
 	unsigned int	bits = 0;
 	int	shift = 0;
 	int	out_size = 0;
-
-	if (!b64r) {
-		int	i;
-		b64r = calloc(128,1);
-
-		for (i=0; b64[i]; i++) b64r[(int)b64[i]] = i;
-	}
 
 	while (*enc && *enc != '=') {
 		bits <<= 6;
