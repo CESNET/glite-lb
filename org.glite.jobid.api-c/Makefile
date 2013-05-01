@@ -93,8 +93,12 @@ install: ${LIB}
 	${INSTALL} -m 755 ${LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	(cd ${top_srcdir}/interface; ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${jobidprefix})
 
+b64r.c: ${top_srcdir}/gen-b64r.pl
+	${top_srcdir}/gen-b64r.pl > $@
+
+strmd5.o: b64r.c strmd5.c
 
 %.lo %.o: %.c
-	${COMPILE} -o $@ -c $< 
+	${COMPILE} -o $@ -I. -c $<
 
 .PHONY: default all compile check stage install clean distclean dist distcheck
