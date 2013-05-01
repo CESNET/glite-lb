@@ -22,11 +22,7 @@ limitations under the License.
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MD5_JOBID_PROTO static
-#include "md5.h"
-#include "strmd5.h"
-
-#include "md5_dgst.c"
+#include <openssl/md5.h>
 
 
 static char mbuf[33];
