@@ -244,12 +244,13 @@ char* glite_jobid_unparse(glite_jobid_const_t jobid)
     if (!jobid)
 	return NULL;
 
-    asprintf(&out, GLITE_JOBID_PROTO_PREFIX"%s:%d/%s%s%s",
+    if (asprintf(&out, GLITE_JOBID_PROTO_PREFIX"%s:%d/%s%s%s",
 	     jobid->BShost,
 	     jobid->BSport? jobid->BSport : GLITE_JOBID_DEFAULT_PORT,
 	     jobid->id,
 	     (jobid->info ? "?" : ""),
-	     (jobid->info ? jobid->info : ""));
+	     (jobid->info ? jobid->info : "")) == -1)
+	return NULL;
 
     return out;
 }
@@ -259,9 +260,12 @@ char* glite_jobid_getServer(glite_jobid_const_t jobid)
 {
     char *bs = NULL;
 
-    if (jobid)
-	asprintf(&bs, "%s:%u", jobid->BShost,
-		 jobid->BSport ? jobid->BSport : GLITE_JOBID_DEFAULT_PORT);
+    if (!jobid)
+	return NULL;
+
+    if (asprintf(&bs, "%s:%u", jobid->BShost,
+	     jobid->BSport ? jobid->BSport : GLITE_JOBID_DEFAULT_PORT) == -1)
+	return NULL;
 
     return bs;
 }
