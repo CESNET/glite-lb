@@ -119,3 +119,7 @@
 2.2.8-1
 - Debugging packages of subpackages in Debian
 
+2.2.9
+- Removed bundled libcrypto files and using external library instead
+- Fixed small memleak and race-condition in base64_decode()
+- Deleting rpath using chrpath not needed in rpm
