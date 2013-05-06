@@ -101,7 +101,7 @@ int edg_wll_UnparseEventJSON(edg_wll_Context ctx, edg_wll_Event *event, char **r
 				gen "$indent	if (";
 				gen isNULL $f "$source";
 				gen ") {\n";
-				gen "$indent		if (json_add_rawconst(&json, \"$fname: null\")) goto err;\n";
+				gen "$indent		if (json_add_rawconst(&json, \"\\\"$fname\\\" : null\")) goto err;\n";
 				gen "$indent	} else {\n";
 				$indent = "$indent\t";
 			}
@@ -113,14 +113,14 @@ int edg_wll_UnparseEventJSON(edg_wll_Context ctx, edg_wll_Event *event, char **r
 			}
 			elsif ($f->{type} eq 'bool') {
 				gen "$indent	str = $source ? \"true\" : \"false\";";
-				gen "$indent	if (asprintf(&str, \"$fname: %s\", str) == -1 || json_add_raw(&json, str)) goto err;\n";
+				gen "$indent	if (asprintf(&str, \"\\\"$fname\\\" : \\\"%s\\\"\", str) == -1 || json_add_raw(&json, str)) goto err;\n";
 			}
 			elsif ($f->{type} eq 'int'
 			    or $f->{type} eq 'float'
 			    or $f->{type} eq 'double'
 			    or $f->{type} eq 'port'
 			) {
-				gen "$indent	if (asprintf(&str, \"$fname: ".(toFormatString $f)."\", $source) == -1 || json_add_raw(&json, str)) goto err;\n";
+				gen "$indent	if (asprintf(&str, \"\\\"$fname\\\" : ".(toFormatString $f)."\", $source) == -1 || json_add_raw(&json, str)) goto err;\n";
 			}
 			elsif ($f->{type} eq 'string') {
 				gen "$indent	if (json_add_string(&json, \"$fname\", $source)) goto err;\n";
@@ -216,7 +216,7 @@ static int json_add_string(json_t *json, const char *key, char *value) {
 	char *s = NULL;
 	int ret;
 
-	if (value) ret = trio_asprintf(&s, "%s: \"%|Js\"", key, value);
-	else ret = asprintf(&s, "%s: null", key);
+	if (value) ret = trio_asprintf(&s, "\"%s\" : \"%|Js\"", key, value);
+	else ret = asprintf(&s, "\"%s\" : null", key);
 	return s && ret != -1 ? json_add_raw(json, s) : -1;
 }
