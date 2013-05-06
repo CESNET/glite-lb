@@ -25,6 +25,7 @@ limitations under the License.
  */
 
 extern "C" {
+#include "glite/lbu/trio.h"
 #include "glite/lb/interlogd.h"
 #include "glite/lb/events_parse.h"
 #include "glite/lb/context.h"
@@ -128,66 +129,70 @@ OutputPlugin::createMessage(edg_wll_JobStat &state_out)
 	/* jobid */
 	s = glite_jobid_unparse(state_out.jobId);
 	if(s) {
-		body << "jobid: \"" << s << "\", ";
+		body << "\"jobid\" : \"" << s << "\", ";
 		free(s);
 	}
 	/* ownerDn */
 	if(state_out.owner) {
-		body << "ownerDn: \"" << state_out.owner << "\", ";
+		body << "\"ownerDn\" : \"" << state_out.owner << "\", ";
 		// cms_msg->setStringProperty("ownerDn", val);
 	}
 	/* voname */
 	s = edg_wll_JDLField(&state_out,"VirtualOrganisation");
 	if(s) {
-		body << "VirtualOrganisation: \"" << s << "\", ";
+		body << "\"VirtualOrganisation\" : \"" << s << "\", ";
 		free(s);
 	}
 	/* bkHost */
 	glite_jobid_getServerParts(state_out.jobId, &s, &i);
 	if(s) {
-		body << "bkHost: \"" << s << "\", ";
+		body << "\"bkHost\" : \"" << s << "\", ";
 		free(s);
 	}
 	/* networkServer */
 	/* TODO: XXX cut out hostname */
 	if(state_out.network_server) {
-		body << "networkHost: \"" << state_out.network_server << "\", ";
+		body << "\"networkHost\" : \"" << state_out.network_server << "\", ";
 	}
 	timeval2str(&state_out.lastUpdateTime, &s);
 	if(s) {
-		body << "lastUpdateTime: \"" << s << "\", ";
+		body << "\"lastUpdateTime\" : \"" << s << "\", ";
 		free(s);
 	}
 	/* stateName */
 	s = edg_wll_StatToString(state_out.state);
 	if(s) {
-		body << "stateName: \"" << s << "\", ";
+		body << "\"stateName\" : \"" << s << "\", ";
 		free(s);
 	}
 	timeval2str(&state_out.stateEnterTime, &s);
 	if(s) {
-		body << "stateStartTime: \"" << s << "\", ";
+		body << "\"stateStartTime\" : \"" << s << "\", ";
 		free(s);
 	}
 	/* condorId */
 	if(state_out.condorId) {
-		body << "condorId: \"" << state_out.condorId << "\", ";
+		body << "\"condorId\" : \"" << state_out.condorId << "\", ";
 	}
 	/* destSite */
 	if(state_out.destination) {
-		body << "destSite: \"" << state_out.destination << "\", ";
+		if (trio_asprintf(&s, "%|Js", state_out.destination) == -1) s = NULL;
+		body << "\"destSite\" : \"" << s << "\", ";
+		free(s);
 	}
 	/* exitCode */
-	body << "exitCode: " << state_out.exit_code <<  ", ";
+	body << "\"exitCode\" : " << state_out.exit_code <<  ", ";
 	/* doneCode */
-	body << "doneCode: " << state_out.done_code << ", ";
+	body << "\"doneCode\" : " << state_out.done_code << ", ";
 	/* statusReason */
 	if(state_out.reason) {
-		body << "statusReason: \"" << state_out.reason << "\", ";
+		if (trio_asprintf(&s, "%|Js", state_out.reason) == -1) s = NULL;
+		body << "\"statusReason\" : \"" << s << "\", ";
+		free(s);
 	}
 	/* summaries */
 	if(state_out.history) {
-		body << "history: " << state_out.history << ", ";
+		body << "\"history\" : " << state_out.history;
 	}
 	body << "}";
 
@@ -358,7 +363,7 @@ event_queue_send(struct event_queue *eq, struct queue_thread *me)
 
 	while(!event_queue_empty(eq)) {
 	    struct server_msg *msg;
-	    cms::Message *cms_msg;
+	    cms::Message *cms_msg = NULL;
 
 	    if(event_queue_get(eq, me, &msg) == 0) {
 		    break;
