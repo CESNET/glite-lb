@@ -51,6 +51,7 @@ extern FILE *yyin;
 
 edg_wll_QueryRec	**indices_out;
 
+extern int yylex(void);
 %}
 
 %term JOB_INDICES
