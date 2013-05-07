@@ -21,6 +21,8 @@ extern unsigned lineno;
 
 extern FILE *yyin;
 
+extern int yylex(void);
+
 struct _rules {
     struct _edg_wll_authz_rule *rule;
     struct _rules *next;
