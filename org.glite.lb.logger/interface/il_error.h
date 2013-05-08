@@ -40,7 +40,7 @@ struct error_inf {
 };
 
 int init_errors();
-int set_error(int, long, char *);
+int set_error(int, long, const char *);
 int clear_error();
 int error_get_maj();
 long error_get_min();
