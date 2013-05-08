@@ -379,7 +379,7 @@ plugin_init(char *config)
 			}
 		} catch(cms::CMSException &e) {
 		}
-		set_error(IL_DL, 0, (char*)e.what());
+		set_error(IL_DL, 0, e.what());
 		return -1;
 	}
 

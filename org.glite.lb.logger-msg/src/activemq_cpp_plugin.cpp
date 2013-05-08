@@ -350,7 +350,7 @@ event_queue_connect(struct event_queue *eq, struct queue_thread *me)
 				 eq->dest_name);
 		output->connect(topicName);
 	} catch(cms::CMSException &e) {
-		set_error(IL_DL, 0, (char*)e.what());
+		set_error(IL_DL, 0, e.what());
 		me->timeout = TIMEOUT;
 		return 0;
 	}
@@ -386,7 +386,7 @@ event_queue_send(struct event_queue *eq, struct queue_thread *me)
 
 	    if(0 == msg->len) {
 		    glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG,
-				     "    not sending empty message at offset %d for job %s",
+				     "    not sending empty message at offset %ld for job %s",
 				     msg->offset, msg->job_id_s);
 		    if(event_store_commit(msg->es, msg->ev_len, 0, msg->generation) < 0) {
 			    /* failure committing message, this is bad */
@@ -397,7 +397,7 @@ event_queue_send(struct event_queue *eq, struct queue_thread *me)
 	    }
 
 	    glite_common_log(IL_LOG_CATEGORY, LOG_PRIORITY_DEBUG, 
-			     "    trying to deliver event at offset %d for job %s", 
+			     "    trying to deliver event at offset %ld for job %s",
 			     msg->offset, msg->job_id_s);
 	    
 	    if(decode_il_msg(&event, msg->msg + 17) < 0) {
@@ -444,7 +444,7 @@ event_queue_send(struct event_queue *eq, struct queue_thread *me)
 		    }
 		    me->timeout = TIMEOUT;
 		    edg_wll_FreeContext(context);
-		    set_error(IL_DL, 0, (char*)e.what());
+		    set_error(IL_DL, 0, e.what());
 		    return 0;
 	    }
 	    event_queue_remove(eq, me);
@@ -485,7 +485,7 @@ event_queue_close(struct event_queue *eq, struct queue_thread *me)
 	try { 
 		output->close();
 	} catch(cms::CMSException &e) {
-		set_error(IL_DL, 0, (char*)e.what());
+		set_error(IL_DL, 0, e.what());
 		return -1;
 	}
 	me->first_event_sent = 0;
@@ -531,7 +531,7 @@ plugin_init(char *config)
 	try {
 		OutputPlugin::initialize(brokerURI);
 	} catch(cms::CMSException &e) {
-		set_error(IL_DL, 0, (char*)e.what());
+		set_error(IL_DL, 0, e.what());
 		return -1;
 	}
 

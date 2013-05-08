@@ -54,7 +54,7 @@ int glite_common_log_fini(void) {
  * @param a_priority The priority of this log message.
  * @param msg message
  **/
-void glite_common_log_msg(char *catName,int a_priority, char *msg) {
+void glite_common_log_msg(const char *catName,int a_priority, const char *msg) {
 #ifndef WITHOUT_LOG4C
         const log4c_category_t* a_category = log4c_category_get(catName);
 
@@ -73,7 +73,7 @@ void glite_common_log_msg(char *catName,int a_priority, char *msg) {
  * @param a_format Format specifier for the string to write in the log file.
  * @param ... The arguments for a_format 
  **/
-void glite_common_log(char *catName,int a_priority, const char* a_format,...) {
+void glite_common_log(const char *catName, int a_priority, const char* a_format,...) {
 #ifndef WITHOUT_LOG4C
         const log4c_category_t* a_category = log4c_category_get(catName);
 

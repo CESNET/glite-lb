@@ -106,7 +106,7 @@ init_errors()
 }
 
 int 
-set_error(int code, long minor, char *msg)
+set_error(int code, long minor, const char *msg)
 {
   struct error_inf *err;
   char buf[256];
