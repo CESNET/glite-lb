@@ -253,7 +253,6 @@ char *glite_lbu_EscapeJSON(const char *in) {
 		switch (*tmp_in) {
 		case '"':
 		case '\\':
-		case '/':
 		case '\b':
 		case '\f':
 		case '\n':
@@ -273,7 +272,6 @@ char *glite_lbu_EscapeJSON(const char *in) {
 		switch (in[i]) {
 		case '"':
 		case '\\':
-		case '/':
 			out[j++] = '\\';
 			out[j++] = in[i];
 			break;
