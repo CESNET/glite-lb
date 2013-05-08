@@ -124,74 +124,89 @@ OutputPlugin::createMessage(edg_wll_JobStat &state_out)
 	char *s;
 	unsigned int i;
 	std::ostringstream body;
+	bool first = true;
 
 	body << "{";
 	/* jobid */
 	s = glite_jobid_unparse(state_out.jobId);
 	if(s) {
-		body << "\"jobid\" : \"" << s << "\", ";
+		if (first) { first = false; } else { body << ", "; }
+		body << "\"jobid\" : \"" << s << "\"";
 		free(s);
 	}
 	/* ownerDn */
 	if(state_out.owner) {
-		body << "\"ownerDn\" : \"" << state_out.owner << "\", ";
+		if (first) { first = false; } else { body << ", "; }
+		body << "\"ownerDn\" : \"" << state_out.owner << "\"";
 		// cms_msg->setStringProperty("ownerDn", val);
 	}
 	/* voname */
 	s = edg_wll_JDLField(&state_out,"VirtualOrganisation");
 	if(s) {
-		body << "\"VirtualOrganisation\" : \"" << s << "\", ";
+		if (first) { first = false; } else { body << ", "; }
+		body << "\"VirtualOrganisation\" : \"" << s << "\"";
 		free(s);
 	}
 	/* bkHost */
 	glite_jobid_getServerParts(state_out.jobId, &s, &i);
 	if(s) {
-		body << "\"bkHost\" : \"" << s << "\", ";
+		if (first) { first = false; } else { body << ", "; }
+		body << "\"bkHost\" : \"" << s << "\"";
 		free(s);
 	}
 	/* networkServer */
 	/* TODO: XXX cut out hostname */
 	if(state_out.network_server) {
-		body << "\"networkHost\" : \"" << state_out.network_server << "\", ";
+		if (first) { first = false; } else { body << ", "; }
+		body << "\"networkHost\" : \"" << state_out.network_server << "\"";
 	}
 	timeval2str(&state_out.lastUpdateTime, &s);
 	if(s) {
-		body << "\"lastUpdateTime\" : \"" << s << "\", ";
+		if (first) { first = false; } else { body << ", "; }
+		body << "\"lastUpdateTime\" : \"" << s << "\"";
 		free(s);
 	}
 	/* stateName */
 	s = edg_wll_StatToString(state_out.state);
 	if(s) {
-		body << "\"stateName\" : \"" << s << "\", ";
+		if (first) { first = false; } else { body << ", "; }
+		body << "\"stateName\" : \"" << s << "\"";
 		free(s);
 	}
 	timeval2str(&state_out.stateEnterTime, &s);
 	if(s) {
-		body << "\"stateStartTime\" : \"" << s << "\", ";
+		if (first) { first = false; } else { body << ", "; }
+		body << "\"stateStartTime\" : \"" << s << "\"";
 		free(s);
 	}
 	/* condorId */
 	if(state_out.condorId) {
-		body << "\"condorId\" : \"" << state_out.condorId << "\", ";
+		if (first) { first = false; } else { body << ", "; }
+		body << "\"condorId\" : \"" << state_out.condorId << "\"";
 	}
 	/* destSite */
 	if(state_out.destination) {
+		if (first) { first = false; } else { body << ", "; }
 		if (trio_asprintf(&s, "%|Js", state_out.destination) == -1) s = NULL;
-		body << "\"destSite\" : \"" << s << "\", ";
+		body << "\"destSite\" : \"" << s << "\"";
 		free(s);
 	}
 	/* exitCode */
-	body << "\"exitCode\" : " << state_out.exit_code <<  ", ";
+	if (first) { first = false; } else { body << ", "; }
+	body << "\"exitCode\" : " << state_out.exit_code;
 	/* doneCode */
-	body << "\"doneCode\" : " << state_out.done_code << ", ";
+	if (first) { first = false; } else { body << ", "; }
+	body << "\"doneCode\" : " << state_out.done_code;
 	/* statusReason */
 	if(state_out.reason) {
+		if (first) { first = false; } else { body << ", "; }
 		if (trio_asprintf(&s, "%|Js", state_out.reason) == -1) s = NULL;
-		body << "\"statusReason\" : \"" << s << "\", ";
+		body << "\"statusReason\" : \"" << s << "\"";
 		free(s);
 	}
 	/* summaries */
 	if(state_out.history) {
+		if (first) { first = false; } else { body << ", "; }
 		body << "\"history\" : " << state_out.history;
 	}
 	body << "}";
