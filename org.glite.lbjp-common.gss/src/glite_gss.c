@@ -713,7 +713,8 @@ edg_wll_gss_acquire_cred(const char *cert_file, const char *key_file, const gss_
    gss_OID_set avail_mechs = NULL;
    OM_uint32 lifetime;
    char *proxy_file = NULL;
-   char *name = NULL, *mech_name = NULL;
+   char *name = NULL;
+   const char *mech_name = NULL;
    int ret, mech_available;
 
    *cred = NULL;
@@ -1521,8 +1522,8 @@ edg_wll_gss_get_error(edg_wll_GssStatus *gss_err, const char *prefix, char **msg
          /* abort() ? */
 	 free(line);
 	 free(str);
-	 str = "WARNING: Not enough memory to produce error message";
-	 break;
+	 *msg = NULL;
+	 return ENOMEM;
       }
       str = tmp;
       strcat(str, line);
