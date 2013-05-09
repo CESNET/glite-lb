@@ -309,7 +309,7 @@ if test "$setup_db" = 1; then
 		my_cnf=/etc/my.cnf
 	fi
 	if test -f "$my_cnf"; then
-		grep '^!includedir\s\+/etc/mysql/conf.d/?' "$my_cnf" >/dev/null 2>&1
+		egrep '^!includedir[[:space:]]+/etc/mysql/conf.d/?' "$my_cnf" >/dev/null
 		if ! test $? -eq 0; then
 			echo '!includedir /etc/mysql/conf.d/' >> "$my_cnf"
 		fi
