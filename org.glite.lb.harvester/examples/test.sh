@@ -75,10 +75,17 @@ init() {
 		if [ -d "$dir" ]; then break; fi
 	done
 
+	GLITE_USER='glite'
+	GLITE_HOME=`getent passwd ${GLITE_USER} | cut -d: -f6`
+	GLITE_HOST_CERT="$GLITE_HOME/.certs/hostcert.pem"
+	GLITE_HOST_KEY="$GLITE_HOME/.certs/hostkey.pem"
+	KRB5_KTNAME="FILE:$GLITE_HOME/krb5kt_lb"
+	KRB5CCNAME="FILE:$GLITE_HOME/krb5cc_lb"
+
+	[ -f /etc/profile.d/grid-env.sh ] && . /etc/profile.d/grid-env.sh
 	[ -f /etc/glite.conf ] && . /etc/glite.conf
 	[ -f /etc/default/glite-lb ] && . /etc/default/glite-lb
 	[ -f /etc/sysconfig/glite-lb ] && . /etc/sysconfig/glite-lb
-	[ -f $HOME/.glite.conf ] && . $HOME/.glite.conf
 	
         if [ -n "$GLITE_HOST_CERT" -a -n "$GLITE_HOST_KEY" ] ;then
 		X509_USER_CERT="$GLITE_HOST_CERT"

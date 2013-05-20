@@ -17,6 +17,13 @@
 #
 
 GLITE_LOCATION=${GLITE_LOCATION:-"@glite_prefix@"}
+GLITE_USER='glite'
+GLITE_HOME=`getent passwd ${GLITE_USER} | cut -d: -f6`
+GLITE_HOST_CERT="$GLITE_HOME/.certs/hostcert.pem"
+GLITE_HOST_KEY="$GLITE_HOME/.certs/hostkey.pem"
+KRB5_KTNAME="FILE:$GLITE_HOME/krb5kt_lb"
+KRB5CCNAME="FILE:$GLITE_HOME/krb5cc_lb"
+
 [ -f /etc/profile.d/grid-env.sh ] && . /etc/profile.d/grid-env.sh
 [ -f @defaultdir@/glite-lb ] && . @defaultdir@/glite-lb
 
