@@ -596,6 +596,9 @@ resource "LB" {
 	     subject = "/DC=cz/DC=cesnet-ca/O=CESNET/CN=Daniel Kouril"
         }
 	rule permit {
+	     subject = "/DC=org/DC=terena/DC=tcs/C=CZ/O=CESNET/CN=Zdenek Sustr 4040"
+        }
+	rule permit {
 	     fqan = "/vo/Role=Manager"
         }
     }
