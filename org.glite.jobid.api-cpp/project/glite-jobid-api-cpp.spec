@@ -1,6 +1,3 @@
-# no binaries, only depends on arch-specific library
-%global debug_package %{nil}
-
 Name:           glite-jobid-api-cpp
 Version:        @MAJOR@.@MINOR@.@REVISION@
 Release:        @AGE@%{?dist}
@@ -14,6 +11,7 @@ Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.jobid.
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  pkgconfig
+BuildArch:      noarch
 
 
 %description
@@ -23,7 +21,7 @@ This is a dummy package to build gLite jobid C++ API.
 %package        devel
 Summary:        @SUMMARY@
 Group:          Development/Libraries
-Requires:       glite-jobid-api-c-devel%{?_isa}
+Requires:       glite-jobid-api-c-devel
 Provides:       %{name} = %{version}-%{release}
 
 
@@ -36,12 +34,12 @@ Provides:       %{name} = %{version}-%{release}
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module jobid.api-cpp
-CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
+/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --project=emi --module jobid.api-cpp
+make
 
 
 %check
-CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make check
+make check
 
 
 %install
@@ -57,8 +55,6 @@ rm -rf $RPM_BUILD_ROOT
 %files devel
 %defattr(-,root,root)
 %doc LICENSE project/ChangeLog
-%dir %{_includedir}/glite
-%dir %{_includedir}/glite/jobid
 %{_includedir}/glite/jobid/JobId.h
 
 

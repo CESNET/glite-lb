@@ -1143,6 +1143,9 @@ for my $ext (keys %deps_aux) {
 );
 
 %platform_properties = (
+	'jobid.api-cpp' => {
+		default => { 'package.buildarch' => 'noarch' },
+	},
 	'jobid.api-java' => {
 		default => { 'package.buildarch' => 'noarch' },
 	},
@@ -2001,12 +2004,16 @@ $output};
 	close C;
 
 	for $file ("$cvs_module/project/debian.rules", "$cvs_module/project/$packageName.spec") {
-		my ($lib, $pkg_prefix);
+		my ($conf_arg_lib, $pkg_prefix);
 		my $main_module;
 		@copts = ();
 
-		if ($file =~ /debian\.rules$/) { $lib = 'lib'; $pkg_prefix = "$project{local_prefix}"; }
-		else { $lib = '%{_lib}'; $pkg_prefix = '%{_prefix}'; }
+
+		if ($file =~ /debian\.rules$/) { $conf_arg_lib = ' --libdir=lib'; $pkg_prefix = "$project{local_prefix}"; }
+		else { $conf_arg_lib = ' --libdir=%{_lib}'; $pkg_prefix = '%{_prefix}'; }
+		if (exists $platform_properties{"$subsys.$module"}{default}{'package.buildarch'} and $platform_properties{"$subsys.$module"}{default}{'package.buildarch'} eq 'noarch') {
+			$conf_arg_lib = '';
+		}
 
 		my $main_module = "$subsys.$module";
 		if (exists $subpackages{$main_module}) { $main_module = $subpackages{$main_module}; }
@@ -2025,7 +2032,7 @@ $output};
 			while (<SRC>) {
 				if (/^(\s*).+\/configure\s/) {
 					printf DST "%s", "$1";
-					printf DST "/usr/bin/perl $confdir/configure $project{flavours} --root=/ --prefix=$pkg_prefix --libdir=$lib --project=$project --module $main_module@copts\n";
+					printf DST "/usr/bin/perl $confdir/configure $project{flavours} --root=/ --prefix=$pkg_prefix$conf_arg_lib --project=$project --module $main_module@copts\n";
 				} else {
 					printf DST "%s", "$_";
 				}
