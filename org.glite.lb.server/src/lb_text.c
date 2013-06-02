@@ -22,12 +22,12 @@ limitations under the License.
 #include "cond_dump.h"
 #include "server_state.h"
 #include "authz_policy.h"
+/* for edg_wll_QueryRecToColumn(), only L&B <= 3.2 */
+#include "index.h"
+/* for edg_wll_get_server_policy(), only L&B <= 3.2 */
+#include "lb_authz.h"
 
 #include "glite/lb/context-int.h"
-/* for edg_wll_QueryRecToColumn(), only L&B <= 3.2 */
-#include "glite/lb/index.h"
-/* for edg_wll_get_server_policy(), only L&B <= 3.2 */
-#include "glite/lb/lb_authz.h"
 #include "glite/lb/xml_conversions.h"
 #include "glite/lbu/trio.h"
 #include "glite/lbu/db.h"
