@@ -32,6 +32,7 @@ typedef struct {
 	int order; } JobIdSorter;
 
 int edg_wll_QueryToHTML(edg_wll_Context,edg_wll_Event *,char **);
+int edg_wll_WSDLOutput(edg_wll_Context ctx, char **message, char *filename);
 int edg_wll_GeneralJobStatusToHTML(edg_wll_Context, edg_wll_JobStat, char **);
 int edg_wll_CreamJobStatusToHTML(edg_wll_Context, edg_wll_JobStat, char **);
 int edg_wll_UserInfoToHTML(edg_wll_Context, edg_wlc_JobId *, edg_wll_JobStat *, char **, int text);
