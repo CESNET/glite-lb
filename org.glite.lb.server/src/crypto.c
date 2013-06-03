@@ -16,7 +16,7 @@ sha256_salt(edg_wll_Context ctx, const char *string,
 {
     SHA256_CTX context;
     unsigned char md[SHA256_DIGEST_LENGTH];
-    char output[SHA256_DIGEST_LENGTH+1];
+    char output[2*SHA256_DIGEST_LENGTH+1];
     char *input;
     int ret, i;
 
