@@ -499,10 +499,13 @@ export LBSERVER_PID_FILE=/var/run/glite/glite-lb-bkserverd.pid
 EOF
 		chmod +x /var/lib/bdii/gip/provider/glite-info-provider-service-lbserver-wrapper
 		BDII_PASSWD=`dd if=/dev/random bs=1 count=10 2>/dev/null | base64`
+		SLAPD=
+		# newer slapd with rwm backend required for SL5
+		[ -x /usr/sbin/slapd2.4 ] && SLAPD="/usr/sbin/slapd2.4"
 		cat << EOF > @defaultdir@/bdii
 RUN=yes
 SLAPD_CONF=
-SLAPD=
+SLAPD=$SLAPD
 BDII_RAM_DISK=
 EOF
 		sed -i  "s#.*rootpw.*#rootpw	${BDII_PASSWD}#" /etc/bdii/bdii-slapd.conf
