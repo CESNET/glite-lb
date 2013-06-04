@@ -46,7 +46,7 @@ CC=gcc
 GLITE_LBJP_COMMON_CFLAGS?=`PKG_CONFIG_PATH=$$PKG_CONFIG_PATH:${PREFIX}${prefix}/${libdir}/pkgconfig pkg-config glite-security-gsoap-plugin --cflags`
 
 DEBUG:=-g -O0 -Wall
-CFLAGS:=${CFLAGS} -I${gsoap_prefix}/include -I${gsoap_prefix}/ \
+CFLAGS:=-I${gsoap_prefix}/include -I${gsoap_prefix}/ \
 	-I${stagedir}${prefix}/include -I${top_srcdir}/src -I. \
 	${GLOBUS_GSSAPI_GSI_CFLAGS} \
 	${GSOAP_CFLAGS} \

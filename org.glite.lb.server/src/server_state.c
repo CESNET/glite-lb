@@ -40,7 +40,7 @@ int edg_wll_GetServerState(edg_wll_Context ctx,const char *name,char **val)
 	switch (edg_wll_ExecSQL(ctx,stmt,&q)) {
 		case 0: edg_wll_SetError(ctx,ENOENT,name); break;
 		case -1: break;
-		default: edg_wll_FetchRow(ctx,q,sizeof(val)/sizeof(val[0]),NULL,val); break;
+		default: edg_wll_FetchRow(ctx,q,1,NULL,val); break;
 	}
 
 	glite_lbu_FreeStmt(&q);
