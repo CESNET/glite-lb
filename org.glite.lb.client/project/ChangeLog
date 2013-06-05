@@ -252,3 +252,7 @@
   - Relies on environmental variable EDG_WLL_PARAM_LBPROXY_SERVERNAME
 - Crash during handling options in register_sandbox fixed
 
+5.1.8-1
+- Warnings fixes backported from master
+- More cleaning to make newer Debians happy (backported from HEAD)
+
