@@ -67,3 +67,7 @@
 1.2.0-7
 - Module rebuilt
 
+1.2.1-1
+- Compressing the jar file (fixes rpmlint warning)
+- More cleaning to make newer Debians happy (backported from HEAD)
+
