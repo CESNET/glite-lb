@@ -224,3 +224,7 @@
 - Clean of legacy build files
 - Small memleak in locallogger fixed
 
+2.3.9-1
+- Warnings fixes backported from master
+- More cleaning to make newer Debians happy (backported from HEAD)
+
