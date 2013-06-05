@@ -104,3 +104,8 @@
 - Clean of legacy build files.
 - Honour system CFLAGS and LDFLAGS in build
 
+1.2.5-1
+- Searching also for jakarta jars in jar generator - fixes build on Fedora
+- Fixing build on Fedora
+- More cleaning to make newer Debians happy (backported from HEAD)
+
