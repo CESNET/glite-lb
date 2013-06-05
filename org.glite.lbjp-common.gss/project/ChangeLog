@@ -150,3 +150,6 @@
 3.1.7-1
 - Clean of legacy build files
 
+3.1.8-1
+- More cleaning to make newer Debians happy (backported from HEAD)
+
