@@ -75,3 +75,8 @@
 - Clean of legacy build files
 - Compatibility with slight API change of ActiveMQ (backported from HEAD)
 
+1.1.7-1
+- More fixes in generating of JSON arrays
+- Generating JSON format strictly according to RFC 4627
+- More cleaning to make newer Debians happy (backported from HEAD)
+
