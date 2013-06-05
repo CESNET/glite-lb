@@ -30,10 +30,9 @@ $module = shift;
 chomp($module);
 
 $usage = qq{
-usage: $0 [-c <current configuration>] module.name
+usage: $0 [-c <current tag>] module.name
 
-        -c      Use this configuration (\d+\.\d+\.\d+-\S+) rather than parsing version.properties
-        -p      Specify project ("org.glite" / "emi"). Default: autodetect. 
+        -c      Use this tag (\d+\.\d+\.\d+-\S+) rather than parsing version.properties
         -h      Display this help
 
 };
@@ -87,43 +86,11 @@ usage: $0 [-c <current configuration>] module.name
 		$current_tag=~s/^emi-/glite-/;
 	}
 
-        if (defined $opt_p) {
-                $project=$opt_p;
-                if (($project ne "emi")&&($project ne "org.glite")) {die "Only projects \"emi\" or \"org.glite\" are recognized";}
-        }
-        else {
-                system("etics-list-configuration > $TMPDIR/etics-tag-proj_configs.$$.tmp");
+	$project = "emi";
+	$proj_switch = " --project=emi";
 
-                if ( !system("grep -x \"org.glite.HEAD\" $TMPDIR/etics-tag-proj_configs.$$.tmp > /dev/null") ) { $project = "org.glite"; }
-                else {
-                        if ( !system("grep -x \"emi.HEAD\" $TMPDIR/etics-tag-proj_configs.$$.tmp > /dev/null") ) { $project = "emi"; }
-                        else { die "Unable to autodetect project. Run from workspace root or specify by -p" }
-                }
-
-                system("rm $TMPDIR/etics-tag-proj_configs.$$.tmp");
-        }
-
-        if ($project eq "emi") { $proj_suffix = "emi" }
-        else { $proj_suffix = ""; }
-
-
-	# According to the documentation, symbolic names in the 'cvs log' output are sorted by age so this should be OK
-	#$current_tag=`cvs log -h $module/Makefile | grep \"_R_\" | head -n 1`;
-	#$current_tag=~s/^\s//;
-	#$current_tag=~s/:.*?$//;
-	#chomp($current_tag);
-
-	#$current_tag=~/(.*_R_)(\d*?)_(\d*?)_(\d*?)_(.*)/;
-	#$current_prefix=$1;
-	#$current_major=$2;
-	#$current_minor=$3;
-	#$current_revision=$4;
-	#$current_age=$5;
 
 	$module=~/\.([^\.]+?)$/;	
-
-        if ($project eq "emi") { $proj_switch = " --project=emi" }
-        else { $proj_switch = ""; }
 
         @modules=split(/\s+/, `PATH=\$PATH:./:./org.glite.lb configure --listmodules $1$proj_switch`);
 
@@ -151,24 +118,23 @@ usage: $0 [-c <current configuration>] module.name
 		$old_major=-1; $old_minor=-1; $old_revision=-1; $old_age=-1;
 		$new_major=-1; $new_minor=-1; $new_revision=-1; $new_age=-1;
 
-		foreach $l (`cvs diff -r $current_prefix$current_major\_$current_minor\_$current_revision\_$current_age $m/project/version.properties | grep -E "module\.age|module\.version"`) {
+		foreach $l (`git diff $current_prefix$current_major\_$current_minor\_$current_revision\_$current_age $m/project/version.properties | grep -E "module\.age|module\.version"`) {
 			chomp($l);
-#			printf("$l\n");
 
-			if($l=~/<\s*module\.version\s*=\s*(\d*)\.(\d*)\.(\d*)/) {
+			if($l=~/-module\.version\s*=\s*(\d*)\.(\d*)\.(\d*)/) {
 				$old_major=$1;
 				$old_minor=$2;
 				$old_revision=$3;
 			} 
-			elsif($l=~/<\s*module\.age\s*=\s*(\S+)/) {
+			elsif($l=~/-module\.age\s*=\s*(\S+)/) {
 				$old_age=$1;
 			}
-			elsif($l=~/>\s*module\.version\s*=\s*(\d*)\.(\d*)\.(\d*)/) {
+			elsif($l=~/\+module\.version\s*=\s*(\d*)\.(\d*)\.(\d*)/) {
 				$new_major=$1;
 				$new_minor=$2;
 				$new_revision=$3;
 			} 
-			elsif($l=~/>\s*module\.age\s*=\s*(\S+)/) {
+			elsif($l=~/\+module\.age\s*=\s*(\S+)/) {
 				$new_age=$1;
 			}
 		}
@@ -235,7 +201,7 @@ usage: $0 [-c <current configuration>] module.name
 
 	printf("\nNew tag: $tag\n\n");
 
-	die "This tag already exists; reported by assertion" unless system("cvs log -h $module/project/version.properties | grep \"$tag\"");
+	die "This tag already exists; reported by assertion" unless system("git tag | grep \"$tag\"");
 
 	# **********************************
 	# Create the execution script
@@ -262,105 +228,22 @@ usage: $0 [-c <current configuration>] module.name
         }
         close V;
 	printf(EXEC "EOF\n\n");
-	printf(EXEC "cvs commit -m \"Modified to reflect version $major.$minor.$revision-$age\" $module/project/version.properties\n\n");
+	printf(EXEC "git commit -m \"Modified to reflect version $major.$minor.$revision-$age\" $module/project/version.properties\n\n");
 
 
 	$cwd=`pwd`;
 	chomp($cwd);
 
-	printf(EXEC "#Register the new tag\ncd $module\ncvs tag \"$tag\"\n");
-	foreach $m (@modules) {
-		printf (EXEC "cd \"$cwd/$m\"\ncvs tag \"$tag\"\n");
-	}
-	printf(EXEC "cd \"$cwd\"\n");
+	printf(EXEC "#Register the new tag\n");
+	
+	printf (EXEC "git tag \"$tag\"\n");
+	printf (EXEC "git config push.default current\n");
+	printf (EXEC "git push\n");
+	printf (EXEC "git push --tags\n");
 	
 
 
-	# **********************************
-	# Etics configuration prepare / modify / upload
-	# **********************************
 
-#	$currentconfig="$module_$module" . "_R_$current_major" . "_$current_minor" . "_$current_revision" . "_$current_age";
-#	$currentconfig=~s/^org.//;
-#	$currentconfig=~s/\./-/g;
-	$newconfig="$module_$module" . "_R_$major" . "_$minor" . "_$revision" . "_$age";
-	$newconfig=~s/^org.//;
-	$newconfig=~s/\./-/g;
-	if ( $project eq "emi" ) { $newconfig=~s/^glite/emi/; }
-
-	$moduleName=$module;
-	if ( $project eq "emi" ) { $moduleName=~s/^org.glite/emi/; }
-
-	printf("\nNew configuration:\t$newconfig\n\nPreparing...\n");
-
-	open NEWCONF, ">", "$TMPDIR/$newconfig.ini.$$" or die $!;
-
-	printf (NEWCONF "[Configuration-$newconfig]\nprofile = None\nmoduleName = $moduleName\ndisplayName = $newconfig\ndescription = None\nprojectName = $project\nage = $age\ntag = $tag\nversion = $major.$minor.$revision\npath = None\n\n");
-
-	if ( $project eq "emi" ) { printf (NEWCONF "[Platform-default:Property]\n\n"); }
-
-#	printf (NEWCONF "[Platform-default:VcsCommand]\ndisplayName = None\ndescription = HEAD CVS commands\ntag = cvs -d \${vcsroot} tag -R \${tag} \${moduleName}\nbranch = None\ncommit = None\ncheckout = cvs -d \${vcsroot} co -r \${tag} \${moduleName}\n\n");
-
-#	printf (NEWCONF "[Platform-default:Environment]\nHOME = \${workspaceDir}");
-
-	printf (NEWCONF "\n\n[Hierarchy]\n");
-
-	foreach $m (@modules) {
-	        open MOD, "$m/project/version.properties" or die "$m/project/version.properties: $?\n";
-
-		$m_major=0; $m_minor=0; $m_revision=0; $m_age=0;
-
-	        while ($_ = <MOD>) {
-        	        chomp;
-
-			if(/module\.version\s*=\s*(\d*)\.(\d*)\.(\d*)/) {
-				$m_major=$1;
-				$m_minor=$2;
-				$m_revision=$3;
-			}
-                	if(/module\.age\s*=\s*(\S+)/) {
-				$m_age=$1;
-			}
-		}
-
-		$modconfig="$m_$m" . "_R_$m_major" . "_$m_minor" . "_$m_revision" . "_$m_age";
-		$modconfig=~s/^org.//;
-		$modconfig=~s/\./-/g;
-		if ( $project eq "emi" ) { 
-			$modconfig=~s/^glite/emi/; 
-			$m=~s/^org.glite/emi/;
-		}
-
-#		system("echo $m = $modconfig >> $TMPDIR/$newconfig.ini.$$");
-		printf(NEWCONF "$m = $modconfig\n");
-
-		close (MOD);
-
-		$shortname=$m;
-		$shortname=~s/^org\.glite\.//;
-		$shortname=~s/^emi\.//;
-		open( SC, "PATH=\$PATH:./:./org.glite.lb configure --listmodules $shortname|" );
-	        while ( <SC> ) {
-        	        $subconfs=$_;
-                	break;
-	        }
-	        close SC;
-        	chomp($subconfs);
-
-	        my @subconfs=split(/ /, $subconfs);
-        	foreach $submod (@subconfs) {
-			$subpref = $project eq "emi" ? "emi" : "org.glite";
-			$subconf = "$subpref.$submod";
-			$subconf =~s/\./-/g;
-			$subconf =~s/^org-//;
-			printf(NEWCONF "$subpref.$submod = ${subconf}_R_${m_major}_${m_minor}_${m_revision}_${m_age}\n");
-		}
-        }
-
-	close(NEWCONF);
-
-	printf(EXEC "\n#Add new configuration\netics-configuration add -i $TMPDIR/$newconfig.ini.$$\n");
-	printf(EXEC "etics-commit\n");
 
 
 	# **********************************
@@ -371,5 +254,5 @@ usage: $0 [-c <current configuration>] module.name
 
 	system("chmod +x \"$TMPDIR/tag-with-subsystems-$module.$major.$minor.$revision-$age.sh\"");
 
-	printf("\n\n---------\nDone!\n\nExecution script written in:\t$TMPDIR/tag-with-subsystems-$module.$major.$minor.$revision-$age.sh\nNew configuration written in:\t$TMPDIR/$newconfig.ini.$$\n\n");
+	printf("\n\n---------\nDone!\n\nExecution script written in:\t$TMPDIR/tag-with-subsystems-$module.$major.$minor.$revision-$age.sh\n\n");
 

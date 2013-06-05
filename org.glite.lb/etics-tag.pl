@@ -26,55 +26,11 @@ if ($TMPDIR eq "") {$TMPDIR="/tmp";}
 
 sub ConstructChangeLog {
         my ($CCLtag,$CCLmod,$CCLchl) = @_;
-        my $orig_tag = "";
-        my $new_tag = "";
-        my $filename = "";
 
-	open(CHANGELOG, ">>$CCLchl");
-
-
-        open(CCLFILES, "cvs diff -r $CCLtag $CCLmod | grep -E '^RCS file' -A 2 | ");
-        while (<CCLFILES>) {
-                $inline=$_;
-                chomp($inline);
-
-                if($inline =~/^RCS file: \/cvs\/.*?\/(.*),.*$/) {
-                        $filename=$1;
-                        $orig_tag="";
-                        $new_tag="";
-                }
-                if ($inline =~/^retrieving revision ([0-9\.]*)/) {
-                        if ($orig_tag == "") {
-                                $orig_tag=$1;
-                        }
-                        else {
-                                $new_tag=$1;
-
-                                open(OUTLINES, "cvs log -S -N -r" . "$orig_tag" . "::$new_tag $filename | egrep -v \"^locks:|^access list:|^keyword substitution:|^total revisions:|^branch:|^description:|^head:|^RCS file:|^---|^===|^revision|^Working[ ]file: \" |");
-				$CCLnames = "";
-				while (<OUTLINES>) {
-					$logline=$_;
-					chomp($logline);
-					if ($logline=~/^date:.*author:\s+(.*?);\s+state.*/) {
-						unless ($CCLnames=~/$1/) {
-							$CCLnames = $CCLnames . ", $1";
-						}
-					}
-					else {
-						print CHANGELOG "$_";
-					}
-				}
-                                print CHANGELOG "		==$filename $orig_tag to $new_tag$CCLnames==";
-				close(OUTLINES);
-                        }
-                }
-        }
-        close(CCLFILES);
-	close(CHANGELOG);
-
+	system("git log --name-status $CCLtag..HEAD -- $CCLmod | grep -E -v \"^commit|^Author:|Date:|^\$\" | sed 's/^[ \\t][ \\t]*/- /' >> $CCLchl");
 }
 
-getopts('i:c:m:p:gh');
+getopts('i:c:m:h');
 
 $module = shift;
 
@@ -82,13 +38,11 @@ $usage = qq{
 usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configuration> ] module.name
 
 	-i	What to increment ('maj'or version, 'min'or version, 'rev'ision, 'age')
-		Should you fail to specify the -i option the script will open up a cvs diff
+		Should you fail to specify the -i option the script will open up a git diff
 		output and ask you to specify what to increment interactively.
 		'none' means no change -- this basically just generates a configuration.
-	-g	Generate old configuration for comparison
-	-c	Use this configuration (\d+\.\d+\.\d+-\S+) rather than parsing version.properties
-	-m	Use this as a CVS commit message instead of the script's default.
-	-p	Specify project ("org.glite" / "emi"). Default: autodetect. 
+	-c	Use this version (\d+\.\d+\.\d+-\S+) rather than parsing version.properties
+	-m	Use this as a git commit message instead of the script's default.
 	-h	Display this help
 
 };
@@ -102,6 +56,8 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 
 	#Clean possible trailing '/' (even multiple occurrences :-) from module name
 	$module=~s/\/+$//;
+	
+	$project="emi";
 
 	switch ($opt_i) {
 		case "maj" {$increment="j"}
@@ -111,6 +67,25 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 		case "none" {$increment="n"}
 		else {$increment=$opt_i};
 	}
+
+	#poor man's subsystem recignition
+	if ($module =~ m/^org\.glite\.jobid/) {
+		$subsysname="org.glite.lb";
+		$subsystem_prefix="glite-lb";
+	}
+	elsif ($module =~ m/^org\.glite\.lb/) {
+		$subsysname="org.glite.lb";
+		$subsystem_prefix="glite-lb";
+	}
+	elsif ($module =~ m/^org\.glite\.px/) {
+		$subsysname="org.glite.px";
+		$subsystem_prefix="glite-px";
+	}
+	elsif ($module =~ m/^org\.glite\.canl/) {
+		$subsysname="org.glite.canl-c";
+		$subsystem_prefix="emi-canl";
+	}
+	$subsystem_prefix=$subsystem_prefix . "_R_";
 
 
 	if (defined $opt_c) {
@@ -129,68 +104,53 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 
 	}
 	else {
-
 		# **********************************
-		# Determine the most recent tag and its components from version.properties 
+		# Determine the most recent tag and its components from subsystem's version.properties 
 		# **********************************
 
-		open VP, "$module/project/version.properties" or die "$module/project/version.properties: $?\n";
+		open VP, "$subsysname/project/version.properties" or die "$subsysname/project/version.properties: $?\n";
 
 		while ($_ = <VP>) {
 			chomp;
 
 			if(/module\.version\s*=\s*(\d*)\.(\d*)\.(\d*)/) {
-				$current_major=$1;
-				$current_minor=$2;
-				$current_revision=$3;
+				$subsystem_major=$1;
+				$subsystem_minor=$2;
+				$subsystem_revision=$3;
 			}
 			if(/module\.age\s*=\s*(\S+)/) {
-				$current_age=$1;
+				$subsystem_age=$1;
 			}
 		}
 		close (VP);
 
-		$current_prefix=$module;
-		$current_prefix=~s/^org\.//;
-		$current_prefix=~s/\./-/g;
-		$current_prefix=~s/emi-canl-canl/emi-canl/; #exception for caNl
-		$current_prefix="$current_prefix" . "_R_";
-		$current_tag="$current_prefix" . "$current_major" . "_$current_minor" . "_$current_revision" . "_$current_age";
+		$current_tag="$subsystem_prefix" . "$subsystem_major" . "_$subsystem_minor" . "_$subsystem_revision" . "_$subsystem_age";
 	}
 
-	if (defined $opt_p) {
-		$project=$opt_p;
-		if (($project ne "emi")&&($project ne "org.glite")) {die "Only projects \"emi\" or \"org.glite\" are recognized";}
-	}
-	else {
-		system("etics-list-configuration > $TMPDIR/etics-tag-proj_configs.$$.tmp");
+	# **********************************
+	# Determine the most recent module version and its components from version.properties 
+	# **********************************
 
-		if ( !system("grep -x \"org.glite.HEAD\" $TMPDIR/etics-tag-proj_configs.$$.tmp > /dev/null") ) { $project = "org.glite"; }
-		else {
-			if ( !system("grep -x \"emi.HEAD\" $TMPDIR/etics-tag-proj_configs.$$.tmp > /dev/null") ) { $project = "emi"; }
-			else { die "Unable to autodetect project. Run from workspace root or specify by -p" }
+	open VP, "$module/project/version.properties" or die "$module/project/version.properties: $?\n";
+
+	while ($_ = <VP>) {
+		chomp;
+
+		if(/module\.version\s*=\s*(\d*)\.(\d*)\.(\d*)/) {
+			$current_major=$1;
+			$current_minor=$2;
+			$current_revision=$3;
+		}
+		if(/module\.age\s*=\s*(\S+)/) {
+			$current_age=$1;
 		}
 
-		system("rm $TMPDIR/etics-tag-proj_configs.$$.tmp");
+
 	}
+	close (VP);
 
-	if ($project eq "emi") { $proj_opt = " --project=emi"; }
-	else { $proj_opt = "--project=glite"; }
-	
-	# According to the documentation, symbolic names in the 'cvs log' output are sorted by age so this should be OK
-	#$current_tag=`cvs log -h $module/Makefile | grep \"_R_\" | head -n 1`;
-	#$current_tag=~s/^\s//;
-	#$current_tag=~s/:.*?$//;
-	#chomp($current_tag);
 
-	#$current_tag=~/(.*_R_)(\d*?)_(\d*?)_(\d*?)_(.*)/;
-	#$current_prefix=$1;
-	#$current_major=$2;
-	#$current_minor=$3;
-	#$current_revision=$4;
-	#$current_age=$5;
-
-	printf("Current tag: $current_tag\n\tprefix: $current_prefix\n\t major: $current_major\n\t minor: $current_minor\n\t   rev: $current_revision\n\t   age: $current_age\n");
+	printf("Subsystem tag: $current_tag\n\tModule major: $current_major\n\tModule minor: $current_minor\n\t  Module rev: $current_revision\n\t  Module age: $current_age\n");
 
 	# **********************************
 	# Compare the last tag with the current source
@@ -199,11 +159,12 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 	unless (defined $increment) {
 		printf("Diffing...\n");
 
-		system("cvs diff -r $current_tag $module | less");
+		printf("*** git diff --relative=\"$module\" $current_tag ***\n");
+		system("git diff --relative=\"$module\" $current_tag");
 	}
 
 	# **********************************
-	# Generate the new tag name
+	# Generate new version
 	# **********************************
 
 	printf("\nWhich component do you wish to increment?\n\n\t'j'\tmaJor\n\t'i'\tmInor\n\t'r'\tRevision\n\t'a'\tAge\n\t\'n'\tNo change\n\tfree type\tUse what I have typed (single word) as a new age name (original: $current_age)\n\nType in your choice: ");
@@ -246,11 +207,10 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 			$revision=$current_revision;
 			$age=$increment;}
 	}
-	$tag="$current_prefix" . "$major" . "_$minor" . "_$revision" . "_$age";
+	$new_version="$major" . ".$minor" . ".$revision" . "-$age";
 
-	printf("\nNew tag: $tag\n\n");
+	printf("\nNew version: $new_version\n\n");
 
-	die "This tag already exists; reported by assertion" unless (($increment eq 'n') || system("cvs log -h $module/Makefile | grep \"$tag\""));
 
 	# **********************************
 	# Create the execution script
@@ -258,7 +218,7 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 
 	open EXEC, ">", "$TMPDIR/etics-tag-$module.$major.$minor.$revision-$age.sh" or die $!;
 
-	printf (EXEC "#This script registers tags for the $module module, version $major.$minor.$revision-$age\n#Generated automatically by $0\n\n"); 
+	printf (EXEC "#This script sets up version properties for the $module module, version $major.$minor.$revision-$age\n#Generated automatically by $0\n\n"); 
 
 
 	# **********************************
@@ -324,83 +284,8 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
         else {$commit_message="Updating version, ChangeLog and copying the most recent configure from $GLITE_LB_LOCATION for v. $major.$minor.$revision-$age";}
 
 	
-	printf(EXEC "#Commit changes\ncvs commit -m \"$commit_message\" $module/project/ChangeLog $module/project/version.properties $module/configure\n\n");
+	printf(EXEC "#Commit changes\ngit commit -m \"$commit_message\" $module/project/ChangeLog $module/project/version.properties $module/configure\n\n");
 
-
-	unless ($increment eq "n") {
-		# **********************************
-		# Run CVS Tag
-		# **********************************
-
-		$cwd=`pwd`;
-		chomp($cwd);
-
-		printf(EXEC "#Register the new tag\ncd $module\ncvs tag \"$tag\"\ncd \"$cwd\"\n");
-	}
-
-	# **********************************
-	# Etics configuration prepare / modify / upload
-	# **********************************
-
-	$currentconfig="$module_$module" . "_R_$current_major" . "_$current_minor" . "_$current_revision" . "_$current_age";
-	$currentconfig=~s/^org.//;
-	$currentconfig=~s/\./-/g;
-	$currentconfig=~s/emi-canl-canl/emi-canl/; #exception for caNl
-	$newconfig="$module_$module" . "_R_$major" . "_$minor" . "_$revision" . "_$age";
-	$newconfig=~s/^org.//;
-	$newconfig=~s/\./-/g;
-	$newconfig=~s/emi-canl-canl/emi-canl/; #exception for caNl
-	if ( $project eq "emi" ) { $newconfig=~s/^glite/emi/; }
-
-
-	$module=~/([^\.]+?)\.([^\.]+?)$/;
-	$subsysname=$1;
-	$modulename=$2;
-	$modulename=~s/canl-c/c/; #exception for caNl
-
-	printf("Project=$project\nModule=$module\nname=$modulename\nsubsys=$subsysname\n");
-	system("$GLITE_LB_LOCATION/configure --mode=etics --module $subsysname.$modulename --output $TMPDIR/$newconfig.ini.$$ --version $major.$minor.$revision-$age $proj_opt");
-
-#	printf("\nCurrent configuration:\t$currentconfig\nNew configuration:\t$newconfig\n\nPreparing...\n");
-#
-	if (defined $opt_g) {
-		system("etics-configuration prepare -o $TMPDIR/$currentconfig.ini.$$ -c $currentconfig $module");
-	}
-
-	if ($increment eq "n") { # There was no version change and the configuration should already exist
-		printf(EXEC "\n#Modify new configuration\netics-configuration modify -i $TMPDIR/$newconfig.ini.$$\n"); }
-	else { # New configuration needs to be created
-	printf(EXEC "\n#Add new configuration\netics-configuration add -i $TMPDIR/$newconfig.ini.$$\n"); }
-	$listconfig=$newconfig . ".ini.$$";
-
-	# **********************************
-	# Subconfigurations
-	# **********************************
-
-	open( SC, "$GLITE_LB_LOCATION/configure --listmodules $subsysname.$modulename|" ); 
-	while ( <SC> ) {
-		$subconfs=$_;
-		break;
-	}
-	close SC;
-	chomp($subconfs);
-
-	my @subconfs=split(/ /, $subconfs);
-	foreach $subconf (@subconfs) {
-		$newconfig=$project . "-" . $subconf  . "_R_$major" . "_$minor" . "_$revision" . "_$age";
-		$newconfig=~s/\./-/;
-
-		system("$GLITE_LB_LOCATION/configure --mode=etics --module $subconf --output $TMPDIR/$newconfig.ini.$$ --version $major.$minor.$revision-$age $proj_opt");
-
-		if ($increment eq "n") { # There was no version change and the configuration should already exist
-			printf(EXEC "\n#Modify configuration\netics-configuration modify -i $TMPDIR/$newconfig.ini.$$\n"); }
-		else { # New configuration needs to be created
-		printf(EXEC "etics-configuration add -i $TMPDIR/$newconfig.ini.$$\n"); }
-		$listconfig=$listconfig . " $TMPDIR/$newconfig.ini.$$";
-	}
-
-	printf(EXEC "etics-commit\n");
-	
 
 	# **********************************
 	# Final bows
@@ -411,6 +296,4 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 	system("chmod +x \"$TMPDIR/etics-tag-$module.$major.$minor.$revision-$age.sh\"");
 
 	printf("\n\n---------\nDone!\n\nExecution script written in:\t$TMPDIR/etics-tag-$module.$major.$minor.$revision-$age.sh\nChangeLog candidate written in:\t$tmpChangeLog\n");
-	printf("Old configuration stored in:\t$TMPDIR/$currentconfig.ini.$$\n") if (defined $opt_g);
-	printf("New configuration written in:\t$TMPDIR/$listconfig\n\n");
 
