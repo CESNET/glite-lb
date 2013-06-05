@@ -128,3 +128,6 @@
 2.2.4-1
 - Clean of legacy build files
 
+2.2.5-1
+- More cleaning to make newer Debians happy (backported from HEAD)
+
