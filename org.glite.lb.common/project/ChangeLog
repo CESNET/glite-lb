@@ -204,6 +204,10 @@
   - Fixes bug #100869
   - Relies on environmental variable EDG_WLL_PARAM_LBPROXY_SERVERNAME
 
+8.1.7-1
+- Generating JSON format strictly according to RFC 4627
+- More cleaning to make newer Debians happy (backported from HEAD)
+
 8.2.0-1
 - Merge from branch_3_2
 - Torque jobs support

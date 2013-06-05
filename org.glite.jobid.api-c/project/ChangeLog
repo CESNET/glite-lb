@@ -91,6 +91,9 @@
 2.1.2-5
 - Module rebuilt
 
+2.1.3-1
+- More cleaning to make newer Debians happy (backported from HEAD)
+
 2.2.0-1
 - Merge from branch_3_2
 
@@ -123,3 +126,4 @@
 - Removed bundled libcrypto files and using external library instead
 - Fixed small memleak and race-condition in base64_decode()
 - Deleting rpath using chrpath not needed in rpm
+

@@ -91,6 +91,9 @@
 - Remove log4c revision from config file (required for newer log4c)
 - Fixed test with log4c version > 1.2.1 (backported from HEAD)
 
+1.2.3-1
+- More cleaning to make newer Debians happy (backported from HEAD)
+
 1.3.0-1
 - Merge from branch_3_2
 

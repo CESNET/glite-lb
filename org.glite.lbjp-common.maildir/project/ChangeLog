@@ -96,6 +96,9 @@
 2.2.2-1
 Clean of legacy build files
 
+2.2.3-1
+- More cleaning to make newer Debians happy (backported from HEAD)
+
 2.3.0-1
 - Merge from branch_3_2
 

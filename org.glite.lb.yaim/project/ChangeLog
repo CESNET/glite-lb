@@ -123,6 +123,10 @@
 - Possibility to set socket paths directly by yaim. Part 3 of SB #97911
 - pidfile location fixed for BDII provider
 
+4.4.6-1
+- configure set as executable
+- More cleaning to make newer Debians happy (backported from HEAD)
+
 4.5.0-1
 - Merge from branch_3_2
 

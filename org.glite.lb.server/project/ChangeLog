@@ -433,6 +433,15 @@
   - Replaced with a series of (... AND ... AND ...) OR (...)... conditions
 - Do not look for a zombie in case the result set is empty due to EPERM (Partial fix for SB #100381)
 
+2.3.10-1
+- Corrected server state table handling
+- Fixed stack smashing during anonymization (issue #16)
+- Warnings addressed
+- Warnings fixes backported from master.
+- Warnings fixes: 'implicit function declaration' in flex/bison.
+- Improved handling of connections lost or dropped by the client
+- More cleaning to make newer Debians happy (backported from HEAD)
+
 2.4.0-1
 - Resolved packaging warnings
 - Job status queries over socket enabled (fixes the proxy purge, second part of the SB #88630)

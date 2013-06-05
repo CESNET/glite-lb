@@ -132,3 +132,8 @@
 - Possibility to set owner/group and permissions dynamically, default still g+rw
 - Group permissions on IL files set (for interlogd/tomcat interaction)
 
+1.2.5-1
+- Searching also for jakarta jars in jar generator - fixes build on Fedora
+- Fixing build on Fedora
+- More cleaning to make newer Debians happy (backported from HEAD)
+

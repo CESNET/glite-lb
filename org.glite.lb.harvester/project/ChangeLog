@@ -135,6 +135,9 @@
 1.2.5-1
 - Clean of legacy build files
 
+1.2.6-1
+- More cleaning to make newer Debians happy (backported from HEAD)
+
 1.3.0-1
 - Fixed template database encoding
 

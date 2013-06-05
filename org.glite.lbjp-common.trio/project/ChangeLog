@@ -107,6 +107,10 @@
 2.2.4-1
 Clean of legacy build files
 
+2.2.5-1
+- Escaping the solidus character in JSON avoided
+- More cleaning to make newer Debians happy (backported from HEAD)
+
 2.3.0-1
 - Merge from branch_3_2
 
