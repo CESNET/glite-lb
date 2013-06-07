@@ -78,3 +78,6 @@
 - Proper directory owned by nagios
   - Own the working directory recursivelly, just in case
 
+1.2.12-1
+- Merge branch 'branch_3_2' into branch_4_0
+
