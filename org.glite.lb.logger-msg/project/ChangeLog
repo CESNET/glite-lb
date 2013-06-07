@@ -132,3 +132,9 @@ Fixed dependency of msg-plugin for Debian
 - Merge from branch_3_2, round 7
 - Debugging packages of subpackages in Debian
 
+1.2.10-1
+- Build-time warningx fixed
+- Generate JSON format strictly according to RFC 4627
+- More fixes in generating of JSON arrays
+- Fedora Packaging Guidelines updated - cron files
+
