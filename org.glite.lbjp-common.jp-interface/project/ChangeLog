@@ -133,3 +133,6 @@ Clean of legacy build files
 - Merge from branch_3_2, round 7
 - Debugging packages of subpackages in Debian.
 
+2.3.8-1
+- Merge branch 'branch_3_2' into branch_4_0
+
