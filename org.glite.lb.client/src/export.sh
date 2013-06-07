@@ -26,6 +26,7 @@
 #autodetect the prefix
 PREFIX=${GLITE_LOCATION:-`dirname $0`/..}
 PURGE_TYPE=${1:-server}
+GLITE_LB_TYPE=${GLITE_LB_TYPE:-server}
 
 if [ "$GLITE_LB_TYPE" != "both" -a "$PURGE_TYPE" != "$GLITE_LB_TYPE" ]; then
 	echo "No $PURGE_TYPE purge on L&B $GLITE_LB_TYPE"
