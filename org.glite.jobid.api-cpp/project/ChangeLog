@@ -106,3 +106,10 @@
 1.3.6-1
 - Fixes to follow recent Debian updates
 
+1.3.7-1
+- jobid.api-cpp package review for Fedora:
+  - not using '--libdir' in noarch packages
+  - jobid.api-cpp as noarch package
+  - directories already in jobid.api-c
+- Removing static and libtool files not needed (there are only header in jobid.api-cpp)
+
