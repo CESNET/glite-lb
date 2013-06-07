@@ -653,3 +653,11 @@
 3.0.13-1
 - Missing dependency on adduser added (for preinstal scripts)
 
+3.0.14-1
+- Workaround implemented in the setup script for BDII
+- yaim-less deployment fixed: harvester test and notif keeper
+- Fixed check of the my.cnf content, GGUS #93930
+- Build-time warning fixes
+- Precautionary check of log4crc file in setup script
+- Fedora Packaging Guidelines updated - cron files
+
