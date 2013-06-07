@@ -276,3 +276,6 @@
 - Memory leak fixes
 - CREAM status codes added and naming conflicts with other enums fixed
 
+9.0.7-1
+- Generating JSON format strictly according to RFC 4627
+
