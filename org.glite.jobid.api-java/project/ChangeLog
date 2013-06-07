@@ -90,3 +90,6 @@
 1.3.5-1
 - Build, install and package java doc for gLite jobid and java L&B client. Rename jobid package on Debian.
 
+1.3.6-1
+- Merge branch 'branch_3_2' into branch_4_0
+
