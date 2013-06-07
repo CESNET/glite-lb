@@ -181,3 +181,6 @@
 4.5.11-1
 - Support additional daemon options with the new startup scripts
 
+4.5.12-1
+- Merge branch 'branch_3_2' into branch_4_0
+

@@ -167,6 +167,10 @@ my %externs = (
 		prefix=>'/opt/activemq-cpp-library',
 		pkg => 'activemq-cpp'
 	},
+	crypto => {
+		prefix => '/usr',
+		pkg => 'libcrypto',
+	},
 );
 
 my %jar = (
@@ -658,7 +662,7 @@ BEGIN{
 	'lbjp-common.jp-interface' => [ qw/cppunit:B log4c:B libtool:B pkgconfig:B/ ],
 	'lbjp-common.gss' =>  [ qw/globus_essentials:R globus:B cares cppunit:B libtool:B pkgconfig:B/ ],
 	'lbjp-common.gsoap-plugin' =>  [ qw/cppunit:B globus_essentials:R globus:B cares:B gsoap gsoapxx libtool:B pkgconfig:B/ ],
-	'jobid.api-c' =>  [ qw/cppunit:B libtool:B openssl:B pkgconfig:B/ ],
+	'jobid.api-c' =>  [ qw/cppunit:B libtool:B crypto:B pkgconfig:B/ ],
 	'jobid.api-cpp' =>  [ qw// ],
 	'jobid.api-java' =>  [ qw/ant:B jdk:B/ ],
 	'jp.client' => [ qw/gsoap libtar globus_essentials:R globus:B pkgconfig:B/ ],
@@ -972,6 +976,7 @@ for my $ext (keys %deps_aux) {
 		},
 		etics_externs_devel => {
 			default => {
+				crypto => 'openssl',
 				gridsite=>'org.gridsite.devel',
 				voms=>'org.glite.security.voms-api',
 			},
@@ -1078,6 +1083,7 @@ for my $ext (keys %deps_aux) {
 				cares => 'c-ares-devel',
 				classads => 'classads-devel',
 				cppunit => 'cppunit-devel',
+				crypto => 'openssl-devel',
 				expat => 'expat-devel',
 				gsoap => 'gsoap-devel',
 				voms => 'emi.voms.voms-api-devel',
@@ -1126,7 +1132,7 @@ for my $ext (keys %deps_aux) {
 			sl5_x86_64_gcc412EPEL => 1,
 			sl5_ia32_gcc412EPEL => 1,
 			sl6_x86_64_gcc446EPEL => 1,
-			sl6_ia32_gcc446EPEL => 1,
+			sl6_ia32_gcc447EPEL => 1,
 			deb6_x86_64_gcc445 => 1,
 		},
 		modules => {
@@ -1137,6 +1143,9 @@ for my $ext (keys %deps_aux) {
 );
 
 %platform_properties = (
+	'jobid.api-cpp' => {
+		default => { 'package.buildarch' => 'noarch' },
+	},
 	'jobid.api-java' => {
 		default => { 'package.buildarch' => 'noarch' },
 	},
@@ -1441,7 +1450,7 @@ distcheck: ${package}-${version}.tar.gz
 	a=`(cd dist/${package}-${version}; find . -type f | sort)`; \
 	b=`(cd ${top_srcdir}; find . -path ./dist -prune -or -type f -print | sort)`; \
 	echo "$$a" >dist/files-dist; \
-	echo "$$b" | egrep -v "(^./Makefile.inc$$|^./${package}-${version}.tar.gz$$|^./debian|^./[^/]*.spec$$|\.cvsignore|^\./project/changelog$$|/CVS)" >dist/files-original
+	echo "$$b" | egrep -v "(^./Makefile.inc$$|^./${package}-${version}.tar.gz$$|^./debian|^./[^/]*.spec$$|\.cvsignore|^\./project/changelog$$|/CVS|^\./\.git|^\./config\.status$$)" >dist/files-original
 	diff -U0 dist/files-dist dist/files-original
 
 rpm: ${package}-${version}.tar.gz
@@ -1995,12 +2004,16 @@ $output};
 	close C;
 
 	for $file ("$cvs_module/project/debian.rules", "$cvs_module/project/$packageName.spec") {
-		my ($lib, $pkg_prefix);
+		my ($conf_arg_lib, $pkg_prefix);
 		my $main_module;
 		@copts = ();
 
-		if ($file =~ /debian\.rules$/) { $lib = 'lib'; $pkg_prefix = "$project{local_prefix}"; }
-		else { $lib = '%{_lib}'; $pkg_prefix = '%{_prefix}'; }
+
+		if ($file =~ /debian\.rules$/) { $conf_arg_lib = ' --libdir=lib'; $pkg_prefix = "$project{local_prefix}"; }
+		else { $conf_arg_lib = ' --libdir=%{_lib}'; $pkg_prefix = '%{_prefix}'; }
+		if (exists $platform_properties{"$subsys.$module"}{default}{'package.buildarch'} and $platform_properties{"$subsys.$module"}{default}{'package.buildarch'} eq 'noarch') {
+			$conf_arg_lib = '';
+		}
 
 		my $main_module = "$subsys.$module";
 		if (exists $subpackages{$main_module}) { $main_module = $subpackages{$main_module}; }
@@ -2019,7 +2032,7 @@ $output};
 			while (<SRC>) {
 				if (/^(\s*).+\/configure\s/) {
 					printf DST "%s", "$1";
-					printf DST "/usr/bin/perl $confdir/configure $project{flavours} --root=/ --prefix=$pkg_prefix --libdir=$lib --project=$project --module $main_module@copts\n";
+					printf DST "/usr/bin/perl $confdir/configure $project{flavours} --root=/ --prefix=$pkg_prefix$conf_arg_lib --project=$project --module $main_module@copts\n";
 				} else {
 					printf DST "%s", "$_";
 				}
