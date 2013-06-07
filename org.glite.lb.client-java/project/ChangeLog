@@ -97,6 +97,11 @@
 1.2.3-1
 - Improved building and packaging for Fedora and Debian
 
+1.2.5-1
+- Searching also for jakarta jars in jar generator - fixes build on Fedora
+- Fixing build on Fedora
+- More cleaning to make newer Debians happy (backported from HEAD)
+
 1.3.0-1
 - Merge from branch_3_2
 
@@ -132,8 +137,6 @@
 - Possibility to set owner/group and permissions dynamically, default still g+rw
 - Group permissions on IL files set (for interlogd/tomcat interaction)
 
-1.2.5-1
-- Searching also for jakarta jars in jar generator - fixes build on Fedora
-- Fixing build on Fedora
-- More cleaning to make newer Debians happy (backported from HEAD)
+2.0.4-1
+- Merge branch 'branch_3_2' into branch_4_0
 
