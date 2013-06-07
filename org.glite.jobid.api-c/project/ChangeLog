@@ -127,3 +127,9 @@
 - Fixed small memleak and race-condition in base64_decode()
 - Deleting rpath using chrpath not needed in rpm
 
+2.2.10-1
+- Build-time warnings fixed
+- Missing gen-b64r.pl in source tarball.
+- chrpath not needed in jobid.api-c
+- Removing bundled libcrypto files, use external -lcrypto from openssl instead
+
