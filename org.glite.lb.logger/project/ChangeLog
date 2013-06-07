@@ -323,3 +323,8 @@ gLite L&B setup script:
 2.4.19-1
 - Missing dependency on adduser added (for preinstal scripts)
 
+2.4.20-1
+- Build-time warnings fixed
+- Startup on Fedora fixed
+- Refreshing Kerberos ticket explicitly during start (interlogger and proxy interlogger should be enough for that), Meta RT# 38262
+
