@@ -90,9 +90,22 @@ usage: $0 [-c <current tag>] module.name
 	$proj_switch = " --project=emi";
 
 
-	$module=~/\.([^\.]+?)$/;	
+	$module=~/\.([^\.]+?)$/;
+	$mod2go=$1;
 
-        @modules=split(/\s+/, `PATH=\$PATH:./:./org.glite.lb configure --listmodules $1$proj_switch`);
+	if ($mod2go eq "lb") {
+		#This is a workaround for LB where three subsystems were merged into one after EMI
+		$lbmodules=`PATH=\$PATH:./:./org.glite.lb configure --listmodules lb$proj_switch`;
+		chomp($lbmodules);
+		$jobidmodules=`PATH=\$PATH:./:./org.glite.lb configure --listmodules jobid$proj_switch`;
+		chomp($jobidmodules);
+		$lbjpmodules=`PATH=\$PATH:./:./org.glite.lb configure --listmodules lbjp-common$proj_switch`;
+		chomp($lbjpmodules);
+	        @modules=split(/\s+/, $jobidmodules . $lbjpmodules . $lbmodules);
+	}
+	else {
+	        @modules=split(/\s+/, `PATH=\$PATH:./:./org.glite.lb configure --listmodules $mod2go$proj_switch`);
+	}
 
 	my $incmajor=0;
 	my $incminor=0;
