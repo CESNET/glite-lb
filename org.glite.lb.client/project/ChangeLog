@@ -326,3 +326,6 @@
 - Merge from branch_3_2, round 7
 - Debugging packages of subpackages in Debian
 
+6.0.7-1
+- Default socket path fixed in L&B client library (using central constants from log_proto.h), Meta RT #38352
+
