@@ -11,3 +11,6 @@
 1.0.2-2
 - Package rebuilt to adjust to next-generation dpkg-dev
 
+1.0.3-1
+- glite-lb-yaim dependency removed from Debian (not supported and glite-yaim-bdii not available on Debian). Fixes issue #13.
+
