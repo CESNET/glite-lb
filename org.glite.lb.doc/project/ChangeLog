@@ -249,3 +249,7 @@
 - Installation documentation updated (obsoleted or not recommended setup variables)
 - Improved explanation of DAG status computation
 
+1.4.13-1
+- Another subject added to the authz file example. It may not have been obvious.
+- Updated packaging for Fedora 18 -- new dependencies after splitting latex
+
