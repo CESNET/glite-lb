@@ -430,7 +430,7 @@ int edg_wll_ParseQueryConditions(edg_wll_Context ctx, const char *query, edg_wll
 	edg_wll_QueryRec  **conds = NULL;
 	char *q = glite_lbu_UnescapeURL(query);
 	char *vartok, *vartok2, *cond, *attribute, *op, *operator, *value, *orvals, *errmsg = NULL;
-	int len, i=0, j, attr;
+	int len, i=0, j, attr, shift;
 	edg_wll_ErrorCode err = 0;
 
 	glite_common_log(LOG_CATEGORY_LB_SERVER_REQUEST, LOG_PRIORITY_DEBUG, "Query over HTML \"%s\"", q);
@@ -540,7 +540,8 @@ int edg_wll_ParseQueryConditions(edg_wll_Context ctx, const char *query, edg_wll
 				case EDG_WLL_QUERY_ATTR_TIME:
 				case EDG_WLL_QUERY_ATTR_STATEENTERTIME:
 				case EDG_WLL_QUERY_ATTR_LASTUPDATETIME:
-					conds[i][j].value.t.tv_sec = strtol(value, NULL, 10);
+					if ((!strncmp("last",value,4)) || (!strncmp("past",value,4))) shift = 4;
+					conds[i][j].value.t.tv_sec = strtol(value+shift, NULL, 10);
 					switch (errno) {
 						case EINVAL: 
 							asprintf(&errmsg, "Cannot parse numeric value \"%s\" for attribute %s in query", value, attribute);
@@ -550,6 +551,11 @@ int edg_wll_ParseQueryConditions(edg_wll_Context ctx, const char *query, edg_wll
 							asprintf(&errmsg, "Numeric value \"%s\" for attribute %s in query exceeds range", value, attribute);
 							err = edg_wll_SetError(ctx, EINVAL, errmsg);
 	                                                goto err;
+					}
+					if (shift) {
+						struct timeval tvnow;
+						gettimeofday(&tvnow,NULL);
+						conds[i][j].value.t.tv_sec = tvnow.tv_sec - conds[i][j].value.t.tv_sec;
 					}
 					conds[i][j].value.t.tv_usec = 0;
 					break;
