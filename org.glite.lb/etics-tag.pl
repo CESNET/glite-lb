@@ -27,7 +27,7 @@ if ($TMPDIR eq "") {$TMPDIR="/tmp";}
 sub ConstructChangeLog {
         my ($CCLtag,$CCLmod,$CCLchl) = @_;
 
-	system("git log --name-status --first-parent $CCLtag..HEAD -- $CCLmod | grep -E -v \"^commit|^Author:|Date:|^\$\" | sed 's/^[ \\t][ \\t]*/- /' >> $CCLchl");
+	system("git log --name-status --first-parent $CCLtag..HEAD -- $CCLmod | grep -E -v \"^commit|^Author:|^\$\" | sed 's/^[ \\t][ \\t]*/- /' >> $CCLchl");
 }
 
 getopts('i:c:m:h');
