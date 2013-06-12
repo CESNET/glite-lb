@@ -130,13 +130,20 @@ Conditions are conveyed to the \LB server through a query string starting with \
 https://pelargir.ics.muni.cz:9000/?query=status=running
 \end{verbatim}
 
-It is important to note that in its default configuration, \LB server requires at least one indexed attribute to be included in the query.\footnote{The list of indexed attributes can be received from the given \LB server's configuration page (see Section~\ref{s:findbroker}).} In most installations, attributes such as \emph{owner} or \emph{last update time} will be indexed. Toquery for all running jobs in such conditions, add an indexed attribute to your query. For instance:
+It is important to note that in its default configuration, \LB server requires at least one indexed attribute to be included in the query.\footnote{The list of indexed attributes can be received from the given \LB server's configuration page (see Section~\ref{s:findbroker}).} In most installations, attributes such as \emph{owner} or \emph{last update time} will be indexed. To query for all running jobs in such conditions, add an indexed attribute to your query. For instance:
 
 \begin{verbatim}
 https://pelargir.ics.muni.cz:9000/?query=status=running&lastupdatetime>1577836800
 \end{verbatim}
 
 Note that temporal attributes such as \emph{last update time} or \emph{state enter time} accept UNIX time values.
+
+For more convenience, temporal attributes can also be specified relative to ``now'', i.\,e., the value will be subtracted from the current timestamp. This is achieved by prefixing the timestamp value with a \texttt{last} or \texttt{past} literal.\footnote{The literals are recognized by \LBver{newer than~4.0.10.}
+Both have the same effect. Two distinguished literals are introduced simply because if only one was recognized, it could be difficult for users to remember which one.} For instance, the following query will return all jobs active witin past 30\,days (=\,2592000\,s):
+
+\begin{verbatim}
+https://pelargir.ics.muni.cz:9000/?query=lastupdatetime>past2592000
+\end{verbatim}
 
 Since \emph{OR}ed conditions may only apply to a single attribute, the name of the attribute is given only once in the condition. For instance, to query for jobs in state \emph{running} or \emph{scheduled}:
 
