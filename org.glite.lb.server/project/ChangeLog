@@ -661,3 +661,8 @@
 - Precautionary check of log4crc file in setup script
 - Fedora Packaging Guidelines updated - cron files
 
+3.0.15-1
+- Browser queries support 'last' or 'past' prefixes to allow simple querying for jobs active within past n seconds
+- Statistics file preserver during upgrade
+- Fixed purging with yaim-less setup
+
