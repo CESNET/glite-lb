@@ -253,3 +253,6 @@
 - Another subject added to the authz file example. It may not have been obvious.
 - Updated packaging for Fedora 18 -- new dependencies after splitting latex
 
+1.4.14-1
+- Extended querying capability for temporal attributes explained
+
