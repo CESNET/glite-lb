@@ -1,6 +1,7 @@
 #!/bin/sh
 
 [ -f /etc/default/glite-lb ] && . /etc/default/glite-lb
+[ -f /etc/default/glite-lb-interlogd ] && . /etc/default/glite-lb-interlogd
 
 if [ "x$GLITE_GSS_MECH" != "xkrb5" ]
 then
@@ -25,17 +26,28 @@ KTUTIL=${KTUTIL:-"/usr/sbin/ktutil"}
 HOSTNAMECMD=${HOSTNAMECMD:-"/bin/hostname"}
 KINIT=${KINIT:-"/usr/bin/kinit"}
 KLIST=${KLIST:-"/usr/bin/klist"}
+KINIT_HEIMDAL_ARGS="--no-afslog"
+KINIT_MIT_ARGS=""
 
 [ -x ${KTUTIL} ] && [ -x ${HOSTNAMECMD} ] && [ -x ${KINIT} ] && [ -x ${KLIST} ] || exit 1
 
-PRINCIPAL=`${KTUTIL} list 2>/dev/null | grep $($HOSTNAMECMD -f) | grep host | awk '//{print $3}'|uniq`
+${KLIST} --version >/dev/null 2>&1
+if [ $? -eq 0 ]; then
+	# Heimdal
+	PRINCIPAL=`${KTUTIL} list | grep $($HOSTNAMECMD -f) | grep 'host/' | awk '//{print $3}' | head -n 1`
+	KINIT_ARGS=${KINIT_ARGS:-$KINIT_HEIMDAL_ARGS}
+else
+	# MIT
+	PRINCIPAL=`${KLIST} -k | grep $($HOSTNAMECMD -f) | grep 'host/' | awk '//{print $2}' | head -n 1`
+	KINIT_ARGS=${KINIT_ARGS:-$KINIT_MIT_ARGS}
+fi
 
 [ -z "${PRINCIPAL}" ] && exit 1
 
 try=5
 while [ $try -gt 0 ]
 do 
-  KRB5CCNAME="FILE:${ticket}0" ${KINIT} -k $PRINCIPAL
+  KRB5CCNAME="FILE:${ticket}0" ${KINIT} ${KINIT_ARGS} -k $PRINCIPAL
 
   if  ${KLIST} -c  "FILE:${ticket}0" -s 
   then
