@@ -167,6 +167,7 @@ setup_all() {
 	setup_upgrade_proxy=1
 	setup_upgrade_log4c=1
 	setup_crl=1
+	test x"$GLITE_GSS_MECH" = x"krb5" && setup_krb=1
 	setup_startup=1
 }
 
@@ -729,40 +730,23 @@ if test "$setup_krb" = "1"; then
 		echo "glite-lb-setup: ERROR: keytab not found"
 		kerberos=0
 	fi
-
 	if ! test -n "`which klist 2>/dev/null`"; then
 		echo "glite-lb-setup: ERROR: kerberos clients not found"
 		kerberos=0
 	fi
-
+	if ldd $GLITE_LOCATION/bin/glite-lb-bkserverd | grep libglobus_gssapi_gsi >/dev/null 2>&1; then
+		echo "glite-lb-setup: ERROR: Kerberos support requires L&B built with Kerberos libraries"
+		kerberos=0
+	fi
 	if test "$kerberos" = "0"; then
 		error="$error krb"
 	fi
 
-	if ldd $GLITE_LOCATION/bin/glite-lb-bkserverd | grep libglobus_gssapi_gsi >/dev/null 2>&1; then
-		echo "glite-lb-setup: ERROR: Kerberos support requires L&B built with Kerberos libraries"
-		error="$error krb"
-		kerberos=0
-	fi
-
 	if test "$kerberos" != "0"; then
-		klist --version >/dev/null 2>&1
-		if test $? -eq 0; then
-			#Heimdal
-			PRINC=`ktutil -k /etc/krb5.keytab list | grep "host/" | head -1 | awk '{print $3}'`
-		else
-			#MIT
-			PRINC=`klist -k | grep "host/" | head -1 | awk '{print $2}'`
-		fi
+		/usr/share/glite-lb-logger/lb_krb_ticket.sh
 
-		cp /etc/krb5.keytab $GLITE_HOME/krb5kt_lb || error="$error krb"
-		chown glite:glite $GLITE_HOME/krb5kt_lb
-
-		cat > /etc/cron.d/glite-lb-ticket <<EOF
-0 */2 * * *	root	(ticket=$GLITE_HOME/krb5cc_lb; KRB5CCNAME="FILE:\${ticket}0" kinit -k $PRINC; chown glite:glite \${ticket}0; mv \${ticket}0 \$ticket)
-EOF
-		KRB5CCNAME=$GLITE_HOME/krb5cc_lb kinit -k $PRINC
-		chown glite:glite $GLITE_HOME/krb5cc_lb
+		# not needed anymore
+		rm -vf /etc/cron.d/glite-lb-ticket
 
 		qecho "Kerberos configured"
 	fi
