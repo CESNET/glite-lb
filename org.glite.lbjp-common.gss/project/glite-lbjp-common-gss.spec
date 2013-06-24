@@ -12,16 +12,16 @@ Vendor:         EMI
 Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.gss/%{version}/src/%{name}-%{version}.tar.gz
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
-BuildRequires:  c-ares-devel
-BuildRequires:  cppunit-devel
+BuildRequires:  c-ares-devel%{?_isa}
+BuildRequires:  cppunit-devel%{?_isa}
 %if %{?gssapi_provider_kerberos:0}
-BuildRequires:  globus-common-devel
-BuildRequires:  krb5-devel
+BuildRequires:  globus-common-devel%{?_isa}
+BuildRequires:  krb5-devel%{?_isa}
 %else
-BuildRequires:  globus-gssapi-gsi-devel
+BuildRequires:  globus-gssapi-gsi-devel%{?_isa}
 %endif
 BuildRequires:  libtool
-BuildRequires:  openssl-devel
+BuildRequires:  openssl-devel%{?_isa}
 BuildRequires:  pkgconfig
 Obsoletes:      glite-security-gss%{?_isa} < 2.1.5-1
 
@@ -34,10 +34,10 @@ Summary:        Development files for gLite GSS library
 Group:          Development/Libraries
 Requires:       %{name}%{?_isa} = %{version}-%{release}
 %if %{?gssapi_provider_kerberos:0}
-Requires:       globus-common-devel
-Requires:       krb5-devel
+Requires:       globus-common-devel%{?_isa}
+Requires:       krb5-devel%{?_isa}
 %else
-Requires:       globus-gssapi-gsi-devel
+Requires:       globus-gssapi-gsi-devel%{?_isa}
 %endif
 Requires:       pkgconfig
 Provides:       glite-security-gss%{?_isa} = %{version}-%{release}
