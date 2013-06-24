@@ -48,10 +48,10 @@ do_start()
 		/usr/share/glite-lb-logger/lb_krb_ticket.sh
 	fi
 
-	[ -n "$LOG4C_RCPATH" ] && env="$env LOG4C_RCPATH='$LOG4C_RCPATH'"
-	[ -n "$KRB5_KTNAME" ] && env="$env KRB5_KTNAME='$KRB5_KTNAME'"
-	[ -n "$KRB5CCNAME" ] && env="$env KRB5CCNAME='$KRB5CCNAME'"
-	[ -n "$GLITE_GSS_MECH" ] && env="$env GLITE_GSS_MECH='$GLITE_GSS_MECH'"
+	[ -n "$LOG4C_RCPATH" ] && env="$env LOG4C_RCPATH=$LOG4C_RCPATH"
+	[ -n "$KRB5_KTNAME" ] && env="$env KRB5_KTNAME=$KRB5_KTNAME"
+	[ -n "$KRB5CCNAME" ] && env="$env KRB5CCNAME=$KRB5CCNAME"
+	[ -n "$GLITE_GSS_MECH" ] && env="$env GLITE_GSS_MECH=$GLITE_GSS_MECH"
 
 	if [ -n "$GLITE_HOST_CERT" -a -n "$GLITE_HOST_KEY" ]; then
 		env="$env X509_USER_CERT=$GLITE_HOST_CERT X509_USER_KEY=$GLITE_HOST_KEY"
