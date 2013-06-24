@@ -738,17 +738,20 @@ if test "$setup_krb" = "1"; then
 		echo "glite-lb-setup: ERROR: Kerberos support requires L&B built with Kerberos libraries"
 		kerberos=0
 	fi
-	if test "$kerberos" = "0"; then
-		error="$error krb"
-	fi
 
 	if test "$kerberos" != "0"; then
-		/usr/share/glite-lb-logger/lb_krb_ticket.sh
+		cp /etc/krb5.keytab $GLITE_HOME/krb5kt_lb || kerberos=0
+		chown $GLITE_USER:$GLITE_GROUP $GLITE_HOME/krb5kt_lb
+
+		/usr/share/glite-lb-logger/lb_krb_ticket.sh || kerberos=0
 
 		# not needed anymore
 		rm -vf /etc/cron.d/glite-lb-ticket
-
+	fi
+	if test "$kerberos" != "0"; then
 		qecho "Kerberos configured"
+	else
+		error="$error krb"
 	fi
 fi
 
