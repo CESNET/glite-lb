@@ -50,11 +50,11 @@ SOURCES=\
 DEBUG:=-g -O0 -W -Wall -Wno-unused-parameter
 # not for globus, gsoap: -Werror
 
-CFLAGS:= ${CFLAGS} ${DEBUG} \
+CFLAGS:= ${DEBUG} \
 	-DVERSION=\"${version}\" \
 	-I. -I${top_srcdir}/interface \
 	-I${stagedir}${prefix}/include \
-	${COVERAGE_FLAGS} -D_GNU_SOURCE -DDATAGRID_EXTENSION
+	${COVERAGE_FLAGS} -D_GNU_SOURCE -DDATAGRID_EXTENSION ${CFLAGS}
 
 LDFLAGS:=${LDFLAGS} ${COVERAGE_FLAGS}
 
