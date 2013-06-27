@@ -13,6 +13,9 @@ BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildRequires:  chrpath
 BuildRequires:  glite-lbjp-common-log-devel
 BuildRequires:  libtool
+BuildRequires:  perl
+BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(POSIX)
 
 %description
 @DESCRIPTION@
@@ -33,7 +36,7 @@ common server-bones.
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lbjp-common.server-bones
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lbjp-common.server-bones
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 

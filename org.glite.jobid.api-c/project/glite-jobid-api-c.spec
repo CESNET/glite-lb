@@ -13,6 +13,9 @@ BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildRequires:  libtool
 BuildRequires:  cppunit-devel%{?_isa}
 BuildRequires:  openssl-devel%{?_isa}
+BuildRequires:  perl
+BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
 
 %description
@@ -34,7 +37,7 @@ C library.
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module jobid.api-c
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module jobid.api-c
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 

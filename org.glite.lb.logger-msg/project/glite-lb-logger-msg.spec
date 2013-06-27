@@ -20,6 +20,9 @@ BuildRequires:  glite-lb-logger-devel%{?_isa}
 BuildRequires:  glite-lbjp-common-log-devel%{?_isa}
 BuildRequires:  glite-lbjp-common-trio-devel%{?_isa}
 BuildRequires:  libtool
+BuildRequires:  perl
+BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
 Requires:       crontabs
 Requires:       perl-LDAP
@@ -34,7 +37,7 @@ Requires:       glite-lb-logger
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.logger-msg
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.logger-msg
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 

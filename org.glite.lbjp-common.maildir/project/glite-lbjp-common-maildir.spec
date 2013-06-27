@@ -12,6 +12,9 @@ BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  chrpath
 BuildRequires:  libtool
+BuildRequires:  perl
+BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(POSIX)
 
 %description
 @DESCRIPTION@
@@ -32,7 +35,7 @@ common maildir library.
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lbjp-common.maildir
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lbjp-common.maildir
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 

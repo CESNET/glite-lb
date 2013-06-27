@@ -22,6 +22,9 @@ BuildRequires:  globus-gssapi-gsi-devel%{?_isa}
 %endif
 BuildRequires:  libtool
 BuildRequires:  openssl-devel%{?_isa}
+BuildRequires:  perl
+BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
 Obsoletes:      glite-security-gss%{?_isa} < 2.1.5-1
 
@@ -53,7 +56,7 @@ library.
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lbjp-common.gss
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lbjp-common.gss
 if [ "%gssapi_provider_kerberos" == "1" ]; then
     echo "gssapi_provider=kerberos" >> Makefile.inc
     echo "GLOBUS_COMMON_CFLAGS=`pkg-config --cflags globus-common`" >> Makefile.inc

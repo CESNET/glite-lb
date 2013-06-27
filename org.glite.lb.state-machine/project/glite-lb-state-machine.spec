@@ -22,6 +22,9 @@ BuildRequires:  glite-lbjp-common-jp-interface-devel
 BuildRequires:  glite-lbjp-common-trio-devel
 BuildRequires:  libtool
 BuildRequires:  libxslt
+BuildRequires:  perl
+BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
 
 %description
@@ -52,7 +55,7 @@ This package contains L&B state machine plugins for Job Provenance.
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.state-machine
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.state-machine
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 

@@ -23,6 +23,9 @@ BuildRequires:  glite-lbjp-common-gss-devel
 BuildRequires:  glite-lbjp-common-trio-devel
 BuildRequires:  libtool
 BuildRequires:  glite-lb-types
+BuildRequires:  perl
+BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
 
 %description
@@ -47,7 +50,7 @@ common library.
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.common
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.common
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 

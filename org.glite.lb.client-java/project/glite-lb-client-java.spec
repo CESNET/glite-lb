@@ -31,6 +31,9 @@ BuildRequires:  java-devel
 BuildRequires:  jpackage-utils
 BuildRequires:  libtool
 BuildRequires:  log4j
+BuildRequires:  perl
+BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(POSIX)
 Requires:       glite-jobid-api-java
 Requires:       jakarta-commons-lang
 Requires:       jpackage-utils
@@ -98,7 +101,7 @@ L&B client.
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.client-java --with-axis=/usr/local/axis1.4
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.client-java --with-axis=/usr/local/axis1.4
 if [ "%with_trustmanager" == "0" ]; then
     echo >> Makefile.inc
     echo "trustmanager_prefix=no" >> Makefile.inc

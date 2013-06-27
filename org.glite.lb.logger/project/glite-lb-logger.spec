@@ -18,6 +18,9 @@ BuildRequires:  glite-lbjp-common-gss-devel%{?_isa}
 BuildRequires:  glite-lbjp-common-trio-devel%{?_isa}
 BuildRequires:  glite-lbjp-common-log-devel%{?_isa}
 BuildRequires:  libtool
+BuildRequires:  perl
+BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
 %if 0%{?fedora}
 Requires(post): chkconfig
@@ -50,7 +53,7 @@ This package contains header files for building plugins for gLite L&B logger.
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.logger
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.logger
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 

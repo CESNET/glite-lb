@@ -41,6 +41,9 @@ BuildRequires:  libxml2-devel
 BuildRequires:  expat-devel
 BuildRequires:  bison
 BuildRequires:  chrpath
+BuildRequires:  perl
+BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
 Requires:       crontabs
 Requires:       mysql-server
@@ -69,7 +72,7 @@ Requires(preun): initscripts
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.server
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.server
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 

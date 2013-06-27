@@ -20,6 +20,9 @@ BuildRequires:  glite-lbjp-common-db-devel
 BuildRequires:  glite-lbjp-common-log-devel
 BuildRequires:  glite-lbjp-common-trio-devel
 BuildRequires:  libtool
+BuildRequires:  perl
+BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
 %if 0%{?fedora}
 Requires(post): systemd
@@ -41,7 +44,7 @@ Requires(preun): initscripts
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.harvester
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.harvester
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 

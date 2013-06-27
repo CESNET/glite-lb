@@ -12,7 +12,10 @@ BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  libtool
 BuildRequires:  log4c-devel
-
+BuildRequires:  perl
+BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(POSIX)
+BuildRequires:  pkgconfig
 
 %description
 @DESCRIPTION@
@@ -32,7 +35,7 @@ common log module.
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lbjp-common.log
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lbjp-common.log
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 

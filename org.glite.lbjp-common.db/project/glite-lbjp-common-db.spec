@@ -17,6 +17,9 @@ BuildRequires:  mysql-devel
 BuildRequires:  glite-lbjp-common-trio-devel
 BuildRequires:  glite-lbjp-common-log-devel
 BuildRequires:  libtool
+BuildRequires:  perl
+BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
 BuildRequires:  postgresql-devel
 
@@ -39,7 +42,7 @@ common DB module.
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lbjp-common.db
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lbjp-common.db
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 

@@ -23,6 +23,9 @@ BuildRequires:  gsoap
 BuildRequires:  gsoap-devel
 BuildRequires:  glite-lbjp-common-gss-devel
 BuildRequires:  libtool
+BuildRequires:  perl
+BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
 Obsoletes:      glite-security-gsoap-plugin%{?_isa} < 2.0.1-1
 
@@ -48,7 +51,7 @@ gsoap-plugin.
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lbjp-common.gsoap-plugin
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lbjp-common.gsoap-plugin
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 

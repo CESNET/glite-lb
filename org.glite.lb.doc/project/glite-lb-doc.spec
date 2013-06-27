@@ -12,6 +12,9 @@ BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildArch:      noarch
 BuildRequires:  glite-lb-types
+BuildRequires:  perl
+BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(POSIX)
 %if 0%{?fedora} >= 9 || 0%{?rhel} >= 6
 BuildRequires:  tex(latex)
 %else
@@ -32,7 +35,7 @@ BuildRequires:  tex(multirow.sty)
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.doc
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.doc
 make
 
 

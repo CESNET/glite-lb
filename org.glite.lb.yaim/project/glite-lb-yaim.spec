@@ -11,6 +11,9 @@ Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/@MODULE@/%
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildArch:      noarch
+BuildRequires:  perl
+BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(POSIX)
 Requires:       glite-yaim-bdii
 Requires:       glite-yaim-core
 Obsoletes:      glite-yaim-lb <= 4.2.1-1
@@ -25,7 +28,7 @@ Provides:       glite-yaim-lb = %{version}-%{release}
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.yaim
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.yaim
 make
 
 

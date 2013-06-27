@@ -15,6 +15,9 @@ BuildRequires:  ant
 BuildRequires:  jakarta-commons-codec
 BuildRequires:  java-devel
 BuildRequires:  jpackage-utils
+BuildRequires:  perl
+BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(POSIX)
 Requires:       jakarta-commons-codec
 Requires:       jpackage-utils
 
@@ -41,7 +44,7 @@ jobid.
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module jobid.api-java
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module jobid.api-java
 make
 
 

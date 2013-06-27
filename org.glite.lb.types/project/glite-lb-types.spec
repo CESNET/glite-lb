@@ -10,8 +10,11 @@ Vendor:         EMI
 Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.types/%{version}/src/%{name}-%{version}.tar.gz
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
-Requires:       perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo $version))
 BuildArch:      noarch
+BuildRequires:  perl
+BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(POSIX)
+Requires:       perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo $version))
 
 %description
 @DESCRIPTION@
@@ -22,12 +25,8 @@ BuildArch:      noarch
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.types
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.types
 make
-
-
-%check
-make check
 
 
 %install
@@ -44,6 +43,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 %doc LICENSE project/ChangeLog
 %dir %{_datadir}/glite-lb/at3/
+%dir %{perl_vendorlib}/
 %dir %{perl_vendorlib}/gLite/
 %dir %{perl_vendorlib}/gLite/LB/
 %dir %{_includedir}/glite/

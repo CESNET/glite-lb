@@ -15,6 +15,9 @@ BuildRequires:  gsoap-devel
 BuildRequires:  glite-lb-ws-interface
 BuildRequires:  glite-lbjp-common-gsoap-plugin-devel
 BuildRequires:  libtool
+BuildRequires:  perl
+BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
 Requires:       glite-lb-ws-interface
 
@@ -27,7 +30,7 @@ Requires:       glite-lb-ws-interface
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.ws-test
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.ws-test
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 

@@ -11,6 +11,9 @@ Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.nag
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildArch:      noarch
+BuildRequires:  perl
+BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(POSIX)
 Requires:       nagios-common
 Requires:       glite-lb-client-progs
 Requires:       glite-lb-utils
@@ -27,7 +30,7 @@ Provides:       glite-lb-nagios-plugins = %{name}-%{version}-%{release}
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.nagios
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.nagios
 make
 
 

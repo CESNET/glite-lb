@@ -10,9 +10,11 @@ Vendor:         EMI
 Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.jobid.api-cpp/%{version}/src/%{name}-%{version}.tar.gz
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
+BuildRequires:  perl
+BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
 BuildArch:      noarch
-
 
 %description
 This is a dummy package to build gLite jobid C++ API.
@@ -34,7 +36,7 @@ Provides:       %{name} = %{version}-%{release}
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --project=emi --module jobid.api-cpp
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --project=emi --module jobid.api-cpp
 make
 
 

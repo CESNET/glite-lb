@@ -16,6 +16,9 @@ BuildRequires:  glite-jobid-api-c-devel
 BuildRequires:  glite-lbjp-common-db-devel
 BuildRequires:  glite-lbjp-common-trio-devel
 BuildRequires:  libtool
+BuildRequires:  perl
+BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
 
 %description
@@ -37,7 +40,7 @@ interface library.
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lbjp-common.jp-interface
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lbjp-common.jp-interface
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 

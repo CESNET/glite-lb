@@ -20,6 +20,9 @@ BuildRequires:  glite-lbjp-common-jp-interface-devel
 BuildRequires:  glite-lbjp-common-maildir-devel
 BuildRequires:  glite-lbjp-common-trio-devel
 BuildRequires:  libtool
+BuildRequires:  perl
+BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
 Requires:       glite-lb-state-machine-plugins
 
@@ -32,7 +35,7 @@ Requires:       glite-lb-state-machine-plugins
 
 
 %build
-/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.utils
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.utils
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 

@@ -1834,12 +1834,12 @@ sub mode_etics {
 		}
 		elsif ($subsys eq 'px' and $module eq 'myproxy-config') {
 			$cmd{default}{clean} = 'make clean';
-			$cmd{default}{configure} = "/usr/bin/perl $confdir/configure --root=\${prefix} --prefix= --stage=\${stageDir} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
+			$cmd{default}{configure} = "perl $confdir/configure --root=\${prefix} --prefix= --stage=\${stageDir} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
 			$cmd{default}{packaging} = "make rpm package=".$confprefix."$subsys-myproxy-config";
 		}
 		else {
 			$cmd{default}{clean} = 'make clean';
-			$cmd{default}{configure} = "/usr/bin/perl $confdir/configure $project{flavours} --root=\${prefix} --prefix=$project{local_prefix} --stage=\${stageDir} --sysroot=\${package.prefix} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
+			$cmd{default}{configure} = "perl $confdir/configure $project{flavours} --root=\${prefix} --prefix=$project{local_prefix} --stage=\${stageDir} --sysroot=\${package.prefix} --libdir=\${libdir} --project=\${projectName} --module $subsys.$module @copts";
 			# no stage builds since EMI-3
 			if ($project ne 'emi' or $project_version <= 2) {
 				$cmd{default}{compile} = 'make';
@@ -2032,7 +2032,7 @@ $output};
 			while (<SRC>) {
 				if (/^(\s*).+\/configure\s/) {
 					printf DST "%s", "$1";
-					printf DST "/usr/bin/perl $confdir/configure $project{flavours} --root=/ --prefix=$pkg_prefix$conf_arg_lib --project=$project --module $main_module@copts\n";
+					printf DST "perl $confdir/configure $project{flavours} --root=/ --prefix=$pkg_prefix$conf_arg_lib --project=$project --module $main_module@copts\n";
 				} else {
 					printf DST "%s", "$_";
 				}
