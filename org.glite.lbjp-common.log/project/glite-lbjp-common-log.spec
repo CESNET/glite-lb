@@ -11,7 +11,7 @@ Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-c
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  libtool
-BuildRequires:  log4c-devel
+BuildRequires:  log4c-devel%{?_isa}
 BuildRequires:  perl
 BuildRequires:  perl(Getopt::Long)
 BuildRequires:  perl(POSIX)

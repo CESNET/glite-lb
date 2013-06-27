@@ -11,15 +11,15 @@ Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.cli
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  classads
-BuildRequires:  classads-devel
-BuildRequires:  cppunit-devel
+BuildRequires:  classads-devel%{?_isa}
+BuildRequires:  cppunit-devel%{?_isa}
 BuildRequires:  chrpath
 BuildRequires:  glite-lb-types
-BuildRequires:  glite-jobid-api-c-devel
+BuildRequires:  glite-jobid-api-c-devel%{?_isa}
 BuildRequires:  glite-jobid-api-cpp-devel
-BuildRequires:  glite-lb-common-devel
-BuildRequires:  glite-lbjp-common-gss-devel
-BuildRequires:  glite-lbjp-common-trio-devel
+BuildRequires:  glite-lb-common-devel%{?_isa}
+BuildRequires:  glite-lbjp-common-gss-devel%{?_isa}
+BuildRequires:  glite-lbjp-common-trio-devel%{?_isa}
 BuildRequires:  libtool
 BuildRequires:  perl
 BuildRequires:  perl(Getopt::Long)
@@ -34,8 +34,8 @@ BuildRequires:  pkgconfig
 Summary:        Development files for gLite L&B client library
 Group:          Development/Libraries
 Requires:       %{name}%{?_isa} = %{version}-%{release}
-Requires:       glite-lb-common-devel
-Requires:       glite-jobid-api-c-devel
+Requires:       glite-lb-common-devel%{?_isa}
+Requires:       glite-jobid-api-c-devel%{?_isa}
 Requires:       glite-jobid-api-cpp-devel
 
 %description    devel

@@ -10,8 +10,8 @@ Vendor:         EMI
 Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.gsoap-plugin/%{version}/src/%{name}-%{version}.tar.gz
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
-BuildRequires:  c-ares-devel
-BuildRequires:  cppunit-devel
+BuildRequires:  c-ares-devel%{?_isa}
+BuildRequires:  cppunit-devel%{?_isa}
 BuildRequires:  chrpath
 # gssapi is needed explicitly for gsoap-plugin, but the proper package is
 # known only in glite-lbjp-common-gss-devel:
@@ -20,8 +20,8 @@ BuildRequires:  chrpath
 #  - gssapi from Heimdal Kerberos
 #BuildRequires: globus-gssapi-gsi-devel
 BuildRequires:  gsoap
-BuildRequires:  gsoap-devel
-BuildRequires:  glite-lbjp-common-gss-devel
+BuildRequires:  gsoap-devel%{?_isa}
+BuildRequires:  glite-lbjp-common-gss-devel%{?_isa}
 BuildRequires:  libtool
 BuildRequires:  perl
 BuildRequires:  perl(Getopt::Long)
@@ -37,7 +37,7 @@ Obsoletes:      glite-security-gsoap-plugin%{?_isa} < 2.0.1-1
 Summary:        Development files for gLite gsoap-plugin
 Group:          Development/Libraries
 Requires:       %{name}%{?_isa} = %{version}-%{release}
-Requires:       glite-lbjp-common-gss-devel
+Requires:       glite-lbjp-common-gss-devel%{?_isa}
 Provides:       glite-security-gsoap-plugin%{?_isa} = %{version}-%{release}
 Obsoletes:      glite-security-gsoap-plugin%{?_isa} < 2.0.1-1
 

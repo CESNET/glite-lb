@@ -11,15 +11,15 @@ Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.sta
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  chrpath
-BuildRequires:  classads-devel
-BuildRequires:  expat-devel
-BuildRequires:  glite-jobid-api-c-devel
-BuildRequires:  glite-lb-common-devel
+BuildRequires:  classads-devel%{?_isa}
+BuildRequires:  expat-devel%{?_isa}
+BuildRequires:  glite-jobid-api-c-devel%{?_isa}
+BuildRequires:  glite-lb-common-devel%{?_isa}
 BuildRequires:  glite-lb-types
-BuildRequires:  glite-lbjp-common-db-devel
-BuildRequires:  glite-lbjp-common-gss-devel
-BuildRequires:  glite-lbjp-common-jp-interface-devel
-BuildRequires:  glite-lbjp-common-trio-devel
+BuildRequires:  glite-lbjp-common-db-devel%{?_isa}
+BuildRequires:  glite-lbjp-common-gss-devel%{?_isa}
+BuildRequires:  glite-lbjp-common-jp-interface-devel%{?_isa}
+BuildRequires:  glite-lbjp-common-trio-devel%{?_isa}
 BuildRequires:  libtool
 BuildRequires:  libxslt
 BuildRequires:  perl
@@ -35,7 +35,7 @@ BuildRequires:  pkgconfig
 Summary:        Development files for gLite L&B state machine
 Group:          Development/Libraries
 Requires:       %{name}%{?_isa} = %{version}-%{release}
-Requires:       glite-lb-common-devel
+Requires:       glite-lb-common-devel%{?_isa}
 
 %description    devel
 This package contains development libraries and header files for gLite L&B

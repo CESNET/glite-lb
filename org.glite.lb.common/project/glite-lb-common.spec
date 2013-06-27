@@ -10,17 +10,17 @@ Vendor:         EMI
 Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.common/%{version}/src/%{name}-%{version}.tar.gz
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
-BuildRequires:  c-ares-devel
+BuildRequires:  c-ares-devel%{?_isa}
 BuildRequires:  chrpath
 BuildRequires:  classads
-BuildRequires:  classads-devel
-BuildRequires:  cppunit-devel
+BuildRequires:  classads-devel%{?_isa}
+BuildRequires:  cppunit-devel%{?_isa}
 BuildRequires:  expat
-BuildRequires:  expat-devel
+BuildRequires:  expat-devel%{?_isa}
 BuildRequires:  glite-jobid-api-cpp-devel
-BuildRequires:  glite-jobid-api-c-devel
-BuildRequires:  glite-lbjp-common-gss-devel
-BuildRequires:  glite-lbjp-common-trio-devel
+BuildRequires:  glite-jobid-api-c-devel%{?_isa}
+BuildRequires:  glite-lbjp-common-gss-devel%{?_isa}
+BuildRequires:  glite-lbjp-common-trio-devel%{?_isa}
 BuildRequires:  libtool
 BuildRequires:  glite-lb-types
 BuildRequires:  perl
@@ -36,9 +36,9 @@ BuildRequires:  pkgconfig
 Summary:        Development files for gLite L&B common library
 Group:          Development/Libraries
 Requires:       %{name}%{?_isa} = %{version}-%{release}
-Requires:       glite-jobid-api-c-devel
+Requires:       glite-jobid-api-c-devel%{?_isa}
 Requires:       glite-lb-types
-Requires:       glite-lbjp-common-gss-devel
+Requires:       glite-lbjp-common-gss-devel%{?_isa}
 
 %description    devel
 This package contains development libraries and header files for gLite L&B

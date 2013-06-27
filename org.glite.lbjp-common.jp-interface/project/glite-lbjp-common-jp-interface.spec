@@ -11,10 +11,10 @@ Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-c
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  chrpath
-BuildRequires:  cppunit-devel
-BuildRequires:  glite-jobid-api-c-devel
-BuildRequires:  glite-lbjp-common-db-devel
-BuildRequires:  glite-lbjp-common-trio-devel
+BuildRequires:  cppunit-devel%{?_isa}
+BuildRequires:  glite-jobid-api-c-devel%{?_isa}
+BuildRequires:  glite-lbjp-common-db-devel%{?_isa}
+BuildRequires:  glite-lbjp-common-trio-devel%{?_isa}
 BuildRequires:  libtool
 BuildRequires:  perl
 BuildRequires:  perl(Getopt::Long)
