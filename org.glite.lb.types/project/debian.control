@@ -12,6 +12,6 @@ DM-Upload-Allowed: yes
 Package: glite-lb-types
 Section: devel
 Architecture: all
-Depends: ${misc:Depends}
+Depends: ${misc:Depends}, ${perl:Depends}
 Description: @SUMMARY@
 @DEBIAN_DESCRIPTION@

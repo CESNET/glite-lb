@@ -28,7 +28,7 @@ Description: Development files for gLite L&B/JP common log module
 Package: glite-lb-client-progs
 Section: misc
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${perl:Depends}
 Description: gLite L&B client programs and examples
  This package contains client programs and examples for gLite L&B.
 

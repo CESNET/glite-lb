@@ -47,6 +47,7 @@ binary-indep: install
 	dh_installlogrotate
 	dh_installcron
 	dh_install --fail-missing
+	dh_perl
 	dh_link
 	dh_compress
 	dh_fixperms

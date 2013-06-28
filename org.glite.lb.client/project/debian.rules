@@ -64,6 +64,7 @@ binary-arch: install
 	dh_installlogrotate
 	dh_installcron
 	dh_install --fail-missing
+	dh_perl
 	dh_link
 	dh_strip -p$(p_lib) --dbg-package=$(p_lib)-dbg
 	dh_strip -p$(p_progs) --dbg-package=$(p_progs)-dbg
