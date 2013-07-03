@@ -34,11 +34,10 @@ LOG4C_LIBS:=-L${log4c_prefix}/${libdir} -L${log4c_prefix}/lib -llog4c
 
 DEBUG:=-g -O0 -W -Wall
 
-CFLAGS:= ${CFLAGS} \
-	${DEBUG} \
+CFLAGS:= ${DEBUG} \
 	-I${stagedir}${prefix}/include -I${top_srcdir}/src \
 	-I${top_srcdir}/interface \
-	${LOG4C_CFLAGS}
+	${LOG4C_CFLAGS} ${CFLAGS}
 
 LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir}
 
