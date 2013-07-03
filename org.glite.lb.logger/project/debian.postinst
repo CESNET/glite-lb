@@ -5,6 +5,10 @@ set -e
 for i in logd interlogd notif-interlogd proxy-interlogd; do
   [ -f /var/glite/glite-lb-$i.pid -a ! -f /var/run/glite/glite-lb-$i.pid ] && cp -pv /var/glite/glite-lb-$i.pid /var/run/glite/
 done
+
+# upgrade from L&B <= 4.0.4
+# problems with empty 'Default-Start'
+rm -fv /etc/rc*.d/*glite-lb-locallogger
 :
 
 #DEBHELPER#
