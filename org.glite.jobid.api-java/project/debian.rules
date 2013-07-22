@@ -30,7 +30,7 @@ clean: configure-stamp
 	dh_testdir
 	dh_testroot
 	rm -f configure-stamp build-stamp
-	$(MAKE) clean
+	-$(MAKE) clean
 	rm -f Makefile.inc config.status *.spec
 	dh_clean
 
