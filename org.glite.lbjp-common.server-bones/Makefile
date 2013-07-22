@@ -86,9 +86,9 @@ check: example
 example: srv_example cnt_example
 
 srv_example: srv_example.o ${LTLIB}
-	${LINK} -o $@ ${LTLIB} srv_example.o
+	${LINK} -o $@ ${LTLIB} srv_example.o -lglite_lbu_log
 
-cnt_example: cnt_example.o ${LTLIB}
+cnt_example: cnt_example.o
 	${LINK} -o $@ cnt_example.o
 
 doc:

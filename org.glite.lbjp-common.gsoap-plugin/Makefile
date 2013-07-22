@@ -158,11 +158,13 @@ lib_LTLIBRARIES:=${STATICLIB} ${LTLIB}
 lib_LTLIBRARIES_S:=${LTLIB_S}
 LTLIB_TEST_S:=libglite_security_gsoap_plugin_${dotless_ver}_cxx.la
 default_ltlib_s:=${LTLIB_S}
+default_libs:=${EX_LIBS}
 else
 lib_LTLIBRARIES:=${NOTHRSTATICLIB} ${NOTHRLTLIB} ${THRSTATICLIB} ${THRLTLIB}
 lib_LTLIBRARIES_S:=${NOTHRLTLIB_S} ${THRLTLIB_S}
 LTLIB_TEST_S:=libglite_security_gsoap_plugin_${dotless_ver}_${nothrflavour}_cxx.la
 default_ltlib_s:=${NOTHRLTLIB_S}
+default_libs:=${EX_NOTHRLIBS}
 endif
 
 ifeq (${gsoap_version},${gsoap_default_version})
@@ -288,16 +290,16 @@ WSCALC_SRV2_OBJS = wscalc_srv_ex2.o ${GSOAP_FPREFIX}C.o ${GSOAP_FPREFIX}Server.o
 wscalc_clt_ex.o wscalc_srv_ex.o wscalc_srv_ex2.o: ${GSOAP_FPREFIX}H.h
 
 wscalc_clt_ex: ${WSCALC_CLT_OBJS} ${default_ltlib_s}
-	${LINK_lang} -o $@ ${WSCALC_CLT_OBJS} ${default_ltlib_s} ${GSOAP_DEFAULT_LIBS}
+	${LINK_lang} -o $@ ${WSCALC_CLT_OBJS} ${default_ltlib_s} ${GSOAP_DEFAULT_LIBS} ${default_libs}
 
 wscalc_srv_ex: ${WSCALC_SRV_OBJS} ${default_ltlib_s}
-	${LINK_lang} -o $@ ${WSCALC_SRV_OBJS} ${default_ltlib_s} ${GSOAP_DEFAULT_LIBS}
+	${LINK_lang} -o $@ ${WSCALC_SRV_OBJS} ${default_ltlib_s} ${GSOAP_DEFAULT_LIBS} ${default_libs}
 
 wscalc_srv_ex2: ${WSCALC_SRV2_OBJS} ${default_ltlib_s}
-	${LINK_lang} -o $@ ${WSCALC_SRV2_OBJS} ${default_ltlib_s} ${GSOAP_DEFAULT_LIBS}
+	${LINK_lang} -o $@ ${WSCALC_SRV2_OBJS} ${default_ltlib_s} ${GSOAP_DEFAULT_LIBS} ${default_libs}
 
 test_cxx: test_gsplugin_cxx.o ${GSOAP_FPREFIX}C.cxx.o
-	${LINKXX} -o $@ $+ ${LTLIB_TEST_S}
+	${LINKXX} -o $@ $+ ${LTLIB_TEST_S} ${default_libs} ${GSOAPXX_LIBS}
 
 soapcpp:=${shell if [ -x ${gsoap_prefix}/bin/soapcpp2 ]; then \
 	echo ${gsoap_prefix}/bin/soapcpp2; \
