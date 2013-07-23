@@ -114,7 +114,7 @@ ifneq (${classads_prefix},/usr)
 endif
 CLASSADS_CFLAGS?=-I${classads_prefix}/include -I${classads_prefix}/include/classad
 CLASSADS_LIBS?=${classads_libs} -lclassad
-classad_namespace:=${shell if ! ${classads_prefix}/bin/classad_version | grep -i 'classad namespace.*yes' >/dev/null; then echo no; else echo yes; fi}
+classad_namespace:=${shell if ${classads_prefix}/bin/classad_version | grep -i 'classad namespace.*no' >/dev/null; then echo no; else echo yes; fi}
 ifeq (${classad_namespace},yes)
 CLASSADS_CFLAGS+=-DCLASSAD_NAMESPACE=classad::
 else
