@@ -143,7 +143,7 @@ int edg_wll_ServerStatisticsIncrement(edg_wll_Context ctx, edg_wll_server_statis
 	if (type >= SERVER_STATISTICS_COUNT){
 		glite_common_log(LOG_CATEGORY_LB_SERVER, LOG_PRIORITY_WARN,
 			"edg_wll_ServerStatisticsIncrement(): unknown statistic item.");
-		return edg_wll_SetError(ctx,NULL,"edg_wll_ServerStatisticsIncrement()");
+		return edg_wll_SetError(ctx,EINVAL,"edg_wll_ServerStatisticsIncrement()");
 	}
 
 	if (flock(serverStatisticsFD, LOCK_EX))
