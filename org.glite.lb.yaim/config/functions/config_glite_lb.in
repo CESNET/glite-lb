@@ -214,9 +214,14 @@ function config_glite_lb() {
   if [ ! -f "$my_cnf" ]; then
     my_cnf=/etc/my.cnf
   fi
-  grep '^!includedir\s\+/etc/mysql/conf.d/?' "$my_cnf" >/dev/null 2>&1
-  if [ $? != 0 ]; then
-    echo '!includedir /etc/mysql/conf.d/' >> "$my_cnf"
+  if [ -f "$my_cnf" ]; then
+    egrep '^!includedir[[:space:]]+/etc/mysql/conf.d/?' "$my_cnf" >/dev/null
+    if [ $? != 0 ]; then
+      echo '!includedir /etc/mysql/conf.d/' >> "$my_cnf"
+    fi
+  else
+    yaimlog WARNING "$my_cnf not found, check/add following line into MySQL configuration:"
+    yaimlog WARNING "!includedir /etc/mysql/conf.d/"
   fi
 
   if [ -x /sbin/service ]; then
