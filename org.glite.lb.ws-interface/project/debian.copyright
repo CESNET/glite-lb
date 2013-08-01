@@ -7,6 +7,10 @@ Files: *
 Copyright: 2004-2010 Members of the EGEE Collaboration
 License: Apache-2.0
 
+Files: src/glue2.xsd
+Copyright: 2008 Istituto Nazionale di Fisica Nucleare http://www.infn.it
+License: Apache-2.0
+
 License: Apache-2.0
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.

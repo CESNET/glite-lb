@@ -4,7 +4,11 @@ Release:        @AGE@%{?dist}
 Summary:        @SUMMARY@
 
 Group:          System Environment/Libraries
-License:        ASL 2.0
+# Created under ASL 2.0 license.
+# Core files taken from http://daniel.haxx.se/projects/trio/ are under MIT-like
+# license (a variant identical to ISC): interface/trio.h, src/strio.c,
+# src/strio.h, src/trio.c, and src/triop.h.
+License:        ASL 2.0 and MIT
 Url:            @URL@
 Vendor:         EMI
 Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.trio/%{version}/src/%{name}-%{version}.tar.gz
