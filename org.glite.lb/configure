@@ -1504,6 +1504,7 @@ deb: ${package}-${version}.tar.gz
 			open SRC, "<$abs_srcdir/project/$file";
 			while (<SRC>) {
 				if (/\@MODULE\@/) { s/\@MODULE\@/$full/g; }
+				if (/\@PACKAGE_NAME\@/) { s/\@PACKAGE_NAME\@/$packageName/g; }
 				if (/\@URL\@/) { s/\@URL\@/$package{url}/g; }
 				if (/\@SUMMARY\@/) { s/\@SUMMARY\@/$package_summary/g; }
 				if (/\@DESCRIPTION\@/) { s/\@DESCRIPTION\@/$package_description/g; }
