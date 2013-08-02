@@ -19,6 +19,7 @@ SCRIPTNAME=/etc/init.d/$NAME
 RUN_SERVER=yes
 
 GLITE_USER='glite'
+GLITE_GROUP='glite'
 GLITE_HOME=`getent passwd ${GLITE_USER} | cut -d: -f6`
 GLITE_HOST_CERT="$GLITE_HOME/.certs/hostcert.pem"
 GLITE_HOST_KEY="$GLITE_HOME/.certs/hostkey.pem"
@@ -43,6 +44,11 @@ if [ "x$RUN_SERVER" != "xyes" ]; then
 	echo "When configuring L&B manually, please also set RUN_SERVER to 'yes' in"
 	echo "/etc/default/glite-lb or /etc/default/glite-lb-bkserverd."
 	exit 0
+fi
+
+if [ ! -d /var/run/glite ]; then
+	mkdir -p /var/run/glite
+	chown $GLITE_USER:$GLITE_GROUP /var/run/glite
 fi
 
 do_start()

@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+
+if [ "x$1" = "xpurge" ]; then
+	rmdir /var/run/glite 2>/dev/null || :
+fi
+
+#DEBHELPER#

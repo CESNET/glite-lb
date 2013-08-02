@@ -6,4 +6,8 @@ if [ "x$1" = "xpurge" -a ! \( -x /usr/bin/glite-lb-bkserverd -o -x /usr/bin/glit
 	getent group glite >/dev/null && groupdel glite
 fi
 
+if [ "x$1" = "xpurge" ]; then
+	rmdir /var/run/glite 2>/dev/null || :
+fi
+
 #DEBHELPER#

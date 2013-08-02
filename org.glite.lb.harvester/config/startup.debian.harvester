@@ -23,6 +23,7 @@ SCRIPTNAME=/etc/init.d/$NAME
 RUN_HARVESTER=yes
 
 GLITE_USER='glite'
+GLITE_GROUP='glite'
 GLITE_HOME=`getent passwd ${GLITE_USER} | cut -d: -f6`
 GLITE_HOST_CERT="$GLITE_HOME/.certs/hostcert.pem"
 GLITE_HOST_KEY="$GLITE_HOME/.certs/hostkey.pem"
@@ -44,6 +45,11 @@ LOG4C_RCPATH="/etc/glite-lb"
 if [ "x$RUN_HARVESTER" != "xyes" ]; then
 	echo "$DESC disabled."
 	exit 0
+fi
+
+if [ ! -d /var/run/glite ]; then
+	mkdir -p /var/run/glite
+	chown $GLITE_USER:$GLITE_GROUP /var/run/glite
 fi
 
 do_start()
