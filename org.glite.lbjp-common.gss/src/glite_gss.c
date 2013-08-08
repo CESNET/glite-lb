@@ -1488,8 +1488,9 @@ edg_wll_gss_get_error(edg_wll_GssStatus *gss_err, const char *prefix, char **msg
 	 break;
       }
 
-      asprintf(&line, ": %s (%s)", (char *)maj_status_string.value,
-	       (char *)min_status_string.value);
+      asprintf(&line, ": %.*s (%.*s)", (int)maj_status_string.length,
+		(char *)maj_status_string.value, (int)min_status_string.length,
+		(char *)min_status_string.value);
       gss_release_buffer(&min_stat, &maj_status_string);
       gss_release_buffer(&min_stat, &min_status_string);
 
@@ -1656,7 +1657,7 @@ edg_wll_gss_get_client_conn(edg_wll_GssConnection *connection,
       goto end;
    }
 
-   p->name = strdup(token.value);
+   p->name = strndup(token.value, token.length);
    p->flags = ctx_flags;
 
    *principal = p;
