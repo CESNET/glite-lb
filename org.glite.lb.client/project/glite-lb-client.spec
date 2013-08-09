@@ -106,6 +106,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/glite/lb/*.h
 %{_libdir}/libglite_lb_client.so
 %{_libdir}/libglite_lb_clientpp.so
+%{_libdir}/pkgconfig/*.pc
 %{_docdir}/%{name}-%{version}/examples/*
 %{_datadir}/emi/build/m4/glite_lb.m4
 

@@ -1,0 +1,11 @@
+prefix=@PREFIX@
+exec_prefix=${prefix}
+libdir=/usr/@LIBDIR@
+includedir=${prefix}/include
+
+Name: gLite Logging and Bookkeeping common library
+Description: gLite L&B common files shared by client and daemons
+Version: @VERSION@
+Requires: glite-security-gss
+Libs: -L${libdir} -lglite_lb_common
+Cflags: -I${includedir}

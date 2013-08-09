@@ -20,7 +20,7 @@ version=${module.version}
 
 jobiddir=${top_srcdir}/../org.glite.jobid.api-c
 
-VPATH=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir}/doc
+VPATH=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir}/doc:${top_srcdir}/project
 AT3=${stagedir}${prefix}/bin/glite-lb-at3
 
 SUFFIXES = .T
@@ -32,7 +32,7 @@ SOURCES=\
 	examples/perf_*.log \
 	interface/*.h interface/*.h.T \
 	m4/*.m4 \
-	project/.post* \
+	project/.post* project/*.pc.in \
 	src/*.c src/*.c.T src/*.sh \
 	test/*.c test/*.cpp test/*.cpp.T \
 	Makefile
@@ -129,6 +129,8 @@ lib_LIBRARIES=${NOTHRSTATICLIB} ${THRSTATICLIB}
 default_commonlib=${NOTHRLTLIB}
 endif
 
+PKG_CONFIG_FILES=common.pc
+
 ifdef LB_PERF
 STAGE_PERFTEST=mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/perftest; \
 		${INSTALL} -m 644 ${top_srcdir}/examples/*.log ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/perftest; \
@@ -142,7 +144,7 @@ generate: ${GEN_HDRS}
 common_version.h: ${top_srcdi${top_srcdir}/project/version.properties
 	echo "#define GLITE_LB_COMMON_VERSION \"${version}\"" >$@
 
-all compile: generate ${lib_LTLIBRARIES} ${lib_LIBRARIES}
+all compile: generate ${lib_LTLIBRARIES} ${lib_LIBRARIES} ${PKG_CONFIG_FILES}
 
 # In order to use libtool versioning correcty, we must have:
 #
@@ -243,7 +245,7 @@ olddoc: generate events.tex status.tex
 	doxygen CPP.dox
 
 install: 
-	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/pkgconfig
 #	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	${INSTALL} -m 755 ${lib_LTLIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 #	cp -r C CPP ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
@@ -255,10 +257,11 @@ install:
 		mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/glite/wmsutils/jobid ; \
 		${INSTALL} -m 644 glite/wmsutils/jobid/*.h ${DESTDIR}${PREFIX}${prefix}/include/glite/wmsutils/jobid/ ; \
 	fi ;
+	${INSTALL} -m 644 common.pc ${DESTDIR}${PREFIX}${prefix}/${libdir}/pkgconfig/glite-lb-common.pc
 	${STAGE_PERFTEST} ;
 
 clean:
-	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/
+	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/ *.pc
 	rm -fv test_parse il_test parse.cpp events.tex status.tex test_query_rec padding
 	rm -rvf ${REPORTS}
 	rm -rvf dist ${package}-*.tar.gz
@@ -297,5 +300,8 @@ il_int_test.o il_string_test.o il_test.o il_msg_test.o parse.o: %.o: %.cpp test_
 	rm -f $@
 	${AT3} $< >$@ || ( rm -f $@; false )
 	chmod -w $@ >/dev/null
+
+%.pc: %.pc.in
+	sed -e "s,@PREFIX@,${PREFIX}${prefix}," -e "s/@VERSION@/${version}/" -e "s/@LIBDIR@/${libdir}/" $< > $@
 
 .PHONY: default all generate compile stage check mkreports check.parse check.il testcoverage doc olddoc install clean distclean dist distcheck

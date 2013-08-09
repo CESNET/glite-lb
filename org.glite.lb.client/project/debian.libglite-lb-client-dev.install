@@ -1,4 +1,5 @@
 usr/include/glite/lb/*.h
 usr/lib/lib*.a
 usr/lib/lib*.so
+usr/lib/pkgconfig/*.pc
 usr/share/emi/build/m4/*

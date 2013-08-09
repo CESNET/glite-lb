@@ -89,6 +89,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_includedir}/glite/lb/
 %{_includedir}/glite/lb/*
 %{_libdir}/libglite_lb_common.so
+%{_libdir}/pkgconfig/*.pc
 
 
 %changelog

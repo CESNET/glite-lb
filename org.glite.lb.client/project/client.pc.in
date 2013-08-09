@@ -1,0 +1,11 @@
+prefix=@PREFIX@
+exec_prefix=${prefix}
+libdir=/usr/@LIBDIR@
+includedir=${prefix}/include
+
+Name: gLite Logging and Bookkeeping client C library
+Description: The client side of gLite L&B C API
+Version: @VERSION@
+Requires: glite-lb-common
+Libs: -L${libdir} -lglite_lb_client
+Cflags: -I${includedir}

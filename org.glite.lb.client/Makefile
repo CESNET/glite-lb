@@ -28,7 +28,7 @@ VERSION_AHEAD=-3
 # - installed *.la files should be removed
 rpath?=${PREFIX}${prefix}/${libdir}
 
-VPATH=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/doc
+VPATH=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir}/examples:${top_srcdir}/doc:${top_srcdir}/project
 AT3=${stagedir}${prefix}/bin/glite-lb-at3
 GENSAM=${top_srcdir}/examples/gen_sample_job
 check_version_pl=$(shell bin_dir=${stagedir}${prefix}/bin; if test -f $${bin_dir}/glite-lb-check_version.pl; then echo $${bin_dir}; else echo ${prefix}/bin; fi)/glite-lb-check_version.pl
@@ -41,7 +41,7 @@ SOURCES = \
 	examples/*.c examples/*.l examples/*.sh examples/Makefile examples/README.examples \
 	interface/*.h interface/*.h.T \
 	m4/*.m4 \
-	project/.post* \
+	project/.post* project/*.pc.in \
 	src/*.c src/*.h src/*.T src/*.pl src/*.cpp \
 	test/*.c test/*.cpp test/*.T test/PLOT test/TEST \
 	Makefile
@@ -203,6 +203,7 @@ MAN = $(MAN_GZ:.gz=)
 
 PLUS_EXTRA_LIB:=-lglite_jobid
 
+PKG_CONFIG_FILES=client.pc clientpp.pc
 
 # version_info=-version-info `echo ${version} | cut -d. -f1,2 | tr . :`
 
@@ -219,9 +220,9 @@ m4dir=${PREFIX}${prefix}/share/build/m4
 endif
 
 ifdef LB_STANDALONE
-compile all: generate ${c_LIBRARIES} ${TOOLS} logevent notify register_sandbox examples ${MAN_GZ}
+compile all: generate ${c_LIBRARIES} ${TOOLS} logevent notify register_sandbox examples ${MAN_GZ} ${PKG_CONFIG_FILES}
 else
-compile all: check_version generate ${lib_LTLIBRARIES} ${TOOLS} logevent notify register_sandbox examples ${MAN_GZ}
+compile all: check_version generate ${lib_LTLIBRARIES} ${TOOLS} logevent notify register_sandbox examples ${MAN_GZ} ${PKG_CONFIG_FILES}
 endif
 
 generate: ${GEN_HDRS}
@@ -322,6 +323,9 @@ perftest_logjobs.o: perftest_logjobs.c
 	$(GENSAM) $< >$@ || rm -f $@
 	chmod -w,+x $@ > /dev/null
 
+%.pc: %.pc.in
+	sed -e "s,@PREFIX@,${PREFIX}${prefix}," -e "s/@VERSION@/${version}/" -e "s/@LIBDIR@/${libdir}/" $< > $@
+
 examples: ${EXAMPLES} ${EXAMPLES_PLUS} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
 
 check: compile 
@@ -358,7 +362,7 @@ install:
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}
-	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/pkgconfig
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples/
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man1
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples
@@ -371,6 +375,8 @@ else
 		install -m 755 ${plus_LIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}; \
 	fi
 endif
+	${INSTALL} -m 644 client.pc ${DESTDIR}${PREFIX}${prefix}/${libdir}/pkgconfig/glite-lb-client.pc
+	${INSTALL} -m 644 clientpp.pc ${DESTDIR}${PREFIX}${prefix}/${libdir}/pkgconfig/glite-lb-clientpp.pc
 	${INSTALL} -m 644 ${top_srcdir}/doc/README-notify ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
 	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}) 
 	${INSTALL} -m 644 ${GEN_HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix} 
@@ -398,7 +404,7 @@ endif
 	${INSTALL} -m 644 ${top_srcdir}/m4/glite_lb.m4 ${DESTDIR}${m4dir}/
 
 clean:
-	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h *.dox producer_test notify C/ CPP/
+	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h *.dox *.pc producer_test notify C/ CPP/
 	rm -rvf ${lib_LTLIBRARIES} ${TOOLS} logevent  register_sandbox ${MAN_GZ}
 	rm -rvf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
 	rm -f EventAttrNames.pl StatusAttrNames.pl uiwrap.T
