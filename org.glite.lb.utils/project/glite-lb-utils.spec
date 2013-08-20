@@ -11,14 +11,14 @@ Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.uti
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  chrpath
-BuildRequires:  cppunit-devel%{?_isa}
+BuildRequires:  cppunit-devel
 BuildRequires:  glite-lb-types
-BuildRequires:  glite-jobid-api-c-devel%{?_isa}
-BuildRequires:  glite-lb-client-devel%{?_isa}
-BuildRequires:  glite-lb-state-machine-devel%{?_isa}
-BuildRequires:  glite-lbjp-common-jp-interface-devel%{?_isa}
-BuildRequires:  glite-lbjp-common-maildir-devel%{?_isa}
-BuildRequires:  glite-lbjp-common-trio-devel%{?_isa}
+BuildRequires:  glite-jobid-api-c-devel
+BuildRequires:  glite-lb-client-devel
+BuildRequires:  glite-lb-state-machine-devel
+BuildRequires:  glite-lbjp-common-jp-interface-devel
+BuildRequires:  glite-lbjp-common-maildir-devel
+BuildRequires:  glite-lbjp-common-trio-devel
 BuildRequires:  libtool
 BuildRequires:  perl
 BuildRequires:  perl(Getopt::Long)

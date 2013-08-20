@@ -11,14 +11,14 @@ Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.log
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 %if 0%{?fedora}
-BuildRequires:  activemq-cpp-devel%{_isa}
+BuildRequires:  activemq-cpp-devel
 %else
 BuildRequires:  activemq-cpp-library
 %endif
-BuildRequires:  cppunit-devel%{?_isa}
-BuildRequires:  glite-lb-logger-devel%{?_isa}
-BuildRequires:  glite-lbjp-common-log-devel%{?_isa}
-BuildRequires:  glite-lbjp-common-trio-devel%{?_isa}
+BuildRequires:  cppunit-devel
+BuildRequires:  glite-lb-logger-devel
+BuildRequires:  glite-lbjp-common-log-devel
+BuildRequires:  glite-lbjp-common-trio-devel
 BuildRequires:  libtool
 BuildRequires:  perl
 BuildRequires:  perl(Getopt::Long)

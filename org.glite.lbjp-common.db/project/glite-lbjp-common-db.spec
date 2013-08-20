@@ -10,18 +10,18 @@ Vendor:         EMI
 Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.db/%{version}/src/%{name}-%{version}.tar.gz
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
-BuildRequires:  cppunit-devel%{?_isa}
+BuildRequires:  cppunit-devel
 BuildRequires:  chrpath
-BuildRequires:  log4c-devel%{?_isa}
-BuildRequires:  mysql-devel%{?_isa}
-BuildRequires:  glite-lbjp-common-trio-devel%{?_isa}
-BuildRequires:  glite-lbjp-common-log-devel%{?_isa}
+BuildRequires:  log4c-devel
+BuildRequires:  mysql-devel
+BuildRequires:  glite-lbjp-common-trio-devel
+BuildRequires:  glite-lbjp-common-log-devel
 BuildRequires:  libtool
 BuildRequires:  perl
 BuildRequires:  perl(Getopt::Long)
 BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
-BuildRequires:  postgresql-devel%{?_isa}
+BuildRequires:  postgresql-devel
 
 %description
 @DESCRIPTION@

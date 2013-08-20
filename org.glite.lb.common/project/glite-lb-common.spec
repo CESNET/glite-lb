@@ -10,17 +10,17 @@ Vendor:         EMI
 Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.common/%{version}/src/%{name}-%{version}.tar.gz
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
-BuildRequires:  c-ares-devel%{?_isa}
+BuildRequires:  c-ares-devel
 BuildRequires:  chrpath
 BuildRequires:  classads
-BuildRequires:  classads-devel%{?_isa}
-BuildRequires:  cppunit-devel%{?_isa}
+BuildRequires:  classads-devel
+BuildRequires:  cppunit-devel
 BuildRequires:  expat
-BuildRequires:  expat-devel%{?_isa}
+BuildRequires:  expat-devel
 BuildRequires:  glite-jobid-api-cpp-devel
-BuildRequires:  glite-jobid-api-c-devel%{?_isa}
-BuildRequires:  glite-lbjp-common-gss-devel%{?_isa}
-BuildRequires:  glite-lbjp-common-trio-devel%{?_isa}
+BuildRequires:  glite-jobid-api-c-devel
+BuildRequires:  glite-lbjp-common-gss-devel
+BuildRequires:  glite-lbjp-common-trio-devel
 BuildRequires:  libtool
 BuildRequires:  glite-lb-types
 BuildRequires:  perl

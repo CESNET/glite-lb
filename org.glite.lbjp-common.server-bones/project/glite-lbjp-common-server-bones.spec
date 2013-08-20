@@ -11,7 +11,7 @@ Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-c
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  chrpath
-BuildRequires:  glite-lbjp-common-log-devel%{?_isa}
+BuildRequires:  glite-lbjp-common-log-devel
 BuildRequires:  libtool
 BuildRequires:  perl
 BuildRequires:  perl(Getopt::Long)

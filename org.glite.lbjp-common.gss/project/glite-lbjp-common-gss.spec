@@ -12,16 +12,16 @@ Vendor:         EMI
 Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.gss/%{version}/src/%{name}-%{version}.tar.gz
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
-BuildRequires:  c-ares-devel%{?_isa}
-BuildRequires:  cppunit-devel%{?_isa}
+BuildRequires:  c-ares-devel
+BuildRequires:  cppunit-devel
 %if %{?gssapi_provider_kerberos:0}
-BuildRequires:  globus-common-devel%{?_isa}
-BuildRequires:  krb5-devel%{?_isa}
+BuildRequires:  globus-common-devel
+BuildRequires:  krb5-devel
 %else
-BuildRequires:  globus-gssapi-gsi-devel%{?_isa}
+BuildRequires:  globus-gssapi-gsi-devel
 %endif
 BuildRequires:  libtool
-BuildRequires:  openssl-devel%{?_isa}
+BuildRequires:  openssl-devel
 BuildRequires:  perl
 BuildRequires:  perl(Getopt::Long)
 BuildRequires:  perl(POSIX)

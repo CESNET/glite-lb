@@ -11,15 +11,15 @@ Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.cli
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  classads
-BuildRequires:  classads-devel%{?_isa}
-BuildRequires:  cppunit-devel%{?_isa}
+BuildRequires:  classads-devel
+BuildRequires:  cppunit-devel
 BuildRequires:  chrpath
 BuildRequires:  glite-lb-types
-BuildRequires:  glite-jobid-api-c-devel%{?_isa}
+BuildRequires:  glite-jobid-api-c-devel
 BuildRequires:  glite-jobid-api-cpp-devel
-BuildRequires:  glite-lb-common-devel%{?_isa}
-BuildRequires:  glite-lbjp-common-gss-devel%{?_isa}
-BuildRequires:  glite-lbjp-common-trio-devel%{?_isa}
+BuildRequires:  glite-lb-common-devel
+BuildRequires:  glite-lbjp-common-gss-devel
+BuildRequires:  glite-lbjp-common-trio-devel
 BuildRequires:  libtool
 BuildRequires:  perl
 BuildRequires:  perl(Getopt::Long)

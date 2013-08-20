@@ -11,9 +11,9 @@ Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.typ
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  chrpath
-BuildRequires:  gsoap-devel%{?_isa}
+BuildRequires:  gsoap-devel
 BuildRequires:  glite-lb-ws-interface
-BuildRequires:  glite-lbjp-common-gsoap-plugin-devel%{?_isa}
+BuildRequires:  glite-lbjp-common-gsoap-plugin-devel
 BuildRequires:  libtool
 BuildRequires:  perl
 BuildRequires:  perl(Getopt::Long)

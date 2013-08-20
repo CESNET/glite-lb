@@ -11,8 +11,8 @@ Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.jobid.
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  libtool
-BuildRequires:  cppunit-devel%{?_isa}
-BuildRequires:  openssl-devel%{?_isa}
+BuildRequires:  cppunit-devel
+BuildRequires:  openssl-devel
 BuildRequires:  perl
 BuildRequires:  perl(Getopt::Long)
 BuildRequires:  perl(POSIX)
