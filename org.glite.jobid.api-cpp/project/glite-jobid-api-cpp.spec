@@ -40,10 +40,6 @@ perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --pr
 make
 
 
-%check
-make check
-
-
 %install
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT

@@ -76,10 +76,6 @@ perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --li
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 
-%check
-CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make check
-
-
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT

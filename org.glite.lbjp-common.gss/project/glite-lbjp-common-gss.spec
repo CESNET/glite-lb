@@ -66,10 +66,6 @@ fi
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 
-%check
-CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make check
-
-
 %install
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT

@@ -31,10 +31,6 @@ perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --li
 make
 
 
-%check
-make check
-
-
 %install
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
