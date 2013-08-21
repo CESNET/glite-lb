@@ -25,6 +25,7 @@ default: all
 -include ${top_srcdir}/project/version.properties
 
 version=${module.version}
+docdir?=${prefix}/share/doc/${package}-${version}
 
 SOURCES=\
 	config/glite-lb* config/my.cnf config/*.conf config/startup config/startup.* config/setup config/systemd.* \
@@ -429,7 +430,7 @@ stage: compile
 install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	-mkdir -p ${DESTDIR}${PREFIX}${docdir}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/glite
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man1
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
@@ -463,7 +464,7 @@ install:
 	${INSTALL} -m 644 glite-lb-notif-keeper.cron ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/${package}-notif-keeper
 	${INSTALL} -m 644 ${top_srcdir}/config/glite-lb-server.logrotate ${DESTDIR}${PREFIX}${sysconfdir}/logrotate.d/glite-lb-server
 	${INSTALL} -m 644 ${top_srcdir}/config/my.cnf ${DESTDIR}${PREFIX}${sysconfdir}/mysql/conf.d/glite-lb-server.cnf
-	${INSTALL} -m 644 glite-lb ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/glite-lb
+	${INSTALL} -m 644 glite-lb ${DESTDIR}${PREFIX}${docdir}/glite-lb
 	${INSTALL} -m 644 glite-lb ${DESTDIR}${PREFIX}${sysdefaultdir}
 
 	install -m 644 ${STATIC_LIB_BK} ${DESTDIR}${PREFIX}${prefix}/${libdir}

@@ -16,6 +16,7 @@ default: all
 -include ${top_srcdir}/project/version.properties
 
 version=${module.version}
+docdir?=${prefix}/share/doc/${package}-${version}
 
 VPATH=${top_srcdir}/src:${top_srcdir}/doc
 
@@ -116,10 +117,10 @@ stage: compile
 
 install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin 
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	-mkdir -p ${DESTDIR}${PREFIX}${docdir}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man1
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
-	${INSTALL} -m 644 ${top_srcdir}/doc/README* ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	${INSTALL} -m 644 ${top_srcdir}/doc/README* ${DESTDIR}${PREFIX}${docdir}
 	${INSTALL} -m 644 ${MAN_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man1
 	${INSTALL} -m 644 ${MAN8_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 	${INSTALL} -m 755 ${top_srcdir}/src/glite-lb-bkpurge-offline.sh ${DESTDIR}${PREFIX}${prefix}/bin/glite-lb-bkpurge-offline

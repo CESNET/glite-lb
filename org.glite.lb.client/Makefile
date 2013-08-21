@@ -14,6 +14,7 @@ default: all
 -include ${top_srcdir}/project/version.properties
 
 version=${module.version}
+docdir?=${prefix}/share/doc/${package}-${version}
 
 # We must follow major version changes of org.glite.lb.common due to
 # binary compatibility. However, we may live a life of our own, changing our
@@ -363,7 +364,7 @@ install:
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/pkgconfig
-	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples/
+	mkdir -p ${DESTDIR}${PREFIX}${docdir}/examples/
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man1
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples
 	mkdir -p ${DESTDIR}${m4dir}
@@ -377,12 +378,12 @@ else
 endif
 	${INSTALL} -m 644 client.pc ${DESTDIR}${PREFIX}${prefix}/${libdir}/pkgconfig/glite-lb-client.pc
 	${INSTALL} -m 644 clientpp.pc ${DESTDIR}${PREFIX}${prefix}/${libdir}/pkgconfig/glite-lb-clientpp.pc
-	${INSTALL} -m 644 ${top_srcdir}/doc/README-notify ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	${INSTALL} -m 644 ${top_srcdir}/doc/README-notify ${DESTDIR}${PREFIX}${docdir}
 	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}) 
 	${INSTALL} -m 644 ${GEN_HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix} 
 ifndef LB_STANDALONE
-#	cp -r C CPP ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
-#       cp -r ${top_srcdir}/doc/api/{Makefile,api.tex,fig} ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/api
+#	cp -r C CPP ${DESTDIR}${PREFIX}${docdir}
+#       cp -r ${top_srcdir}/doc/api/{Makefile,api.tex,fig} ${DESTDIR}${PREFIX}${docdir}/api
 endif
 	for p in logevent notify register_sandbox; do \
 		${INSTALL} -m 755 "$$p" "${DESTDIR}${PREFIX}${prefix}/bin/glite-lb-$$p"; \
@@ -394,10 +395,10 @@ endif
 		${INSTALL} -m 755 "$$p" "${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/glite-lb-$$p"; \
 	done
 	for p in ${EXAMPLES_SRC} ${EXAMPLES_PLUS_SRC} ${EXAMPLES_CL_SRC} ${EXAMPLES_CL_THR_SRC} ; do \
-		${INSTALL} -m 644 "${top_srcdir}/examples/$$p" "${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples/"; \
+		${INSTALL} -m 644 "${top_srcdir}/examples/$$p" "${DESTDIR}${PREFIX}${docdir}/examples/"; \
 	done
-	${INSTALL} -m 644 ${top_srcdir}/examples/Makefile "${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples/"
-	${INSTALL} -m 644 ${top_srcdir}/examples/README.examples "${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples/"
+	${INSTALL} -m 644 ${top_srcdir}/examples/Makefile "${DESTDIR}${PREFIX}${docdir}/examples/"
+	${INSTALL} -m 644 ${top_srcdir}/examples/README.examples "${DESTDIR}${PREFIX}${docdir}/examples/"
 	${INSTALL} -m 755 ${top_srcdir}/examples/notify.pl ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/glite-lb-notify.pl
 	${INSTALL} -m 755 ${top_srcdir}/examples/sandbox_transfers.sh ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/glite-lb-sandbox_transfers.sh
 	${INSTALL} -m 644 ${MAN_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man1

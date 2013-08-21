@@ -17,6 +17,7 @@ default: all
 -include ${top_srcdir}/project/version.properties
 
 version=${module.version}
+docdir?=${prefix}/share/doc/${package}-${version}
 
 jobiddir=${top_srcdir}/../org.glite.jobid.api-c
 
@@ -246,9 +247,9 @@ olddoc: generate events.tex status.tex
 
 install: 
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/pkgconfig
-#	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+#	mkdir -p ${DESTDIR}${PREFIX}${docdir}
 	${INSTALL} -m 755 ${lib_LTLIBRARIES} ${DESTDIR}${PREFIX}${prefix}/${libdir}
-#	cp -r C CPP ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+#	cp -r C CPP ${DESTDIR}${PREFIX}${docdir}
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix} ;
 	(cd ${top_srcdir}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}) ;
 	${INSTALL} -m 644 ${GEN_HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix} ;

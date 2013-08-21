@@ -8,6 +8,7 @@ default: all
 -include ${top_srcdir}/project/version.properties
 
 version=${module.version}
+docdir?=${prefix}/share/doc/${package}-${version}
 
 ANT_ARGS=-f ${top_srcdir}/build.xml -Dfile.reference.commons-codec.jar=${jakarta-commons-codec_jar} -Dsrc.dir=${top_srcdir}/src -Dbuild.dir=$(shell pwd)/build -Ddist.dir=$(shell pwd)/dist
 
@@ -24,9 +25,9 @@ stage:
 	$(MAKE) install PREFIX=${stagedir}
 
 install:
-	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/java ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/api
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/java ${DESTDIR}${PREFIX}${docdir}/api
 	cp dist/glite-jobid-api-java.jar ${DESTDIR}${PREFIX}${prefix}/share/java
-	cp -rp dist/javadoc/* ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/api
+	cp -rp dist/javadoc/* ${DESTDIR}${PREFIX}${docdir}/api
 
 check:
 

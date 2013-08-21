@@ -21,6 +21,7 @@ default: all
 -include ${top_srcdir}/project/version.properties
 
 version=${module.version}
+docdir?=${prefix}/share/doc/${package}-${version}
 
 CC=gcc
 
@@ -135,9 +136,9 @@ stage: compile
 
 install: all
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
-#	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+#	-mkdir -p ${DESTDIR}${PREFIX}${docdir}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix}
-#	-cp -r C ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+#	-cp -r C ${DESTDIR}${PREFIX}${docdir}
 	${INSTALL} -m 755 "libglite_lbu_db.la" "${DESTDIR}${PREFIX}${prefix}/${libdir}/libglite_lbu_db.la"; \
 	${INSTALL} -m 644 ${top_srcdir}/interface/${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix}
 

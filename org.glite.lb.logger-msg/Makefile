@@ -17,6 +17,7 @@ default: all
 -include ${top_srcdir}/project/version.properties
 
 version=${module.version}
+docdir?=${prefix}/share/doc/${package}-${version}
 
 CC=gcc
 CXX=g++
@@ -124,11 +125,11 @@ check:
 
 install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	-mkdir -p ${DESTDIR}${PREFIX}${docdir}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/cron.d
-	${INSTALL} -m 644 ${top_srcdir}/config/msg.conf.example ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	${INSTALL} -m 644 ${top_srcdir}/config/msg.conf.example ${DESTDIR}${PREFIX}${docdir}
 	${INSTALL} -m 755 ${PLUGIN_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	${INSTALL} -m 755 ${EXAMPLES} ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples
 	${INSTALL} -m 755 ${top_srcdir}/src/msg-brokers ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-msg-brokers

@@ -8,6 +8,7 @@ default: all
 -include ${top_srcdir}/project/version.properties
 
 version=${module.version}
+docdir?=${prefix}/share/doc/${package}-${version}
 
 # broken 
 # SimpleLLTest.class ProducerTestLL.class ProducerTestIL.class
@@ -148,12 +149,12 @@ stage:
 doc: build/javadoc
 
 install:
-	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/java ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/api
+	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/java ${DESTDIR}${PREFIX}${docdir}/api
 	for j in $(JARS); do \
 		cp build/$$j ${DESTDIR}${PREFIX}${prefix}/share/java; \
 	done
 	cd build/c && $(MAKE) install PREFIX=${PREFIX}
-	cp -rp build/javadoc/* ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/api
+	cp -rp build/javadoc/* ${DESTDIR}${PREFIX}${docdir}/api
 
 clean:
 	rm -rf build

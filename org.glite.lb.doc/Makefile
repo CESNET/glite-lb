@@ -14,6 +14,7 @@ default: all
 -include ${top_srcdir}/project/version.properties
 
 version=${module.version}
+docdir?=${prefix}/share/doc/${package}-${version}
 
 VPATH = ${top_srcdir}/src
 SOURCES=\
@@ -68,17 +69,17 @@ check:
 	@echo "No test"
 
 install:
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples
-	${INSTALL} -m 644 ${top_srcdir}/src/README ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
-	${INSTALL} -m 644 LBUG.pdf ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
-	${INSTALL} -m 644 LBAG.pdf ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
-	${INSTALL} -m 644 LBDG.pdf ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
-	${INSTALL} -m 644 LBTG.pdf ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
-	${INSTALL} -m 644 LBTP.pdf ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	-mkdir -p ${DESTDIR}${PREFIX}${docdir}/examples
+	${INSTALL} -m 644 ${top_srcdir}/src/README ${DESTDIR}${PREFIX}${docdir}
+	${INSTALL} -m 644 LBUG.pdf ${DESTDIR}${PREFIX}${docdir}
+	${INSTALL} -m 644 LBAG.pdf ${DESTDIR}${PREFIX}${docdir}
+	${INSTALL} -m 644 LBDG.pdf ${DESTDIR}${PREFIX}${docdir}
+	${INSTALL} -m 644 LBTG.pdf ${DESTDIR}${PREFIX}${docdir}
+	${INSTALL} -m 644 LBTP.pdf ${DESTDIR}${PREFIX}${docdir}
 # install DG example sources
 	for p in ${top_srcdir}/examples/*; do \
 		if [ "$$p" = "${top_srcdir}/examples/CVS" ]; then continue; fi; \
-		${INSTALL} -m 644 "$$p" "${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/examples"; \
+		${INSTALL} -m 644 "$$p" "${DESTDIR}${PREFIX}${docdir}/examples"; \
 	done
 
 clean:

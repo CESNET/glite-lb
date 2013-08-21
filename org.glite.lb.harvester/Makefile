@@ -13,6 +13,7 @@ default: all
 -include ${top_srcdir}/project/version.properties
 
 version=${module.version}
+docdir?=${prefix}/share/doc/${package}-${version}
 
 CC=gcc
 VPATH=${top_srcdir}/src:${top_srcdir}/doc
@@ -92,7 +93,7 @@ stage: compile
 
 install: compile
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples \
-		${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version} \
+		${DESTDIR}${PREFIX}${docdir} \
 		${DESTDIR}${PREFIX}${prefix}/share/glite \
 		${DESTDIR}${PREFIX}${prefix}/share/man/man1 \
 		${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
@@ -100,7 +101,7 @@ install: compile
 	${INSTALL} -m 755 harvester-dbg ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/glite-lb-harvester-dbg
 	${INSTALL} -m 755 ${top_srcdir}/examples/test.sh ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/glite-lb-harvester-test.sh
 	${INSTALL} -m 444 ${top_srcdir}/examples/test.sql ${DESTDIR}${PREFIX}${prefix}/share/glite/glite-lb-harvester-test-dbsetup.sql
-	${INSTALL} -m 444 ${top_srcdir}/doc/README ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	${INSTALL} -m 444 ${top_srcdir}/doc/README ${DESTDIR}${PREFIX}${docdir}
 	${INSTALL} -m 444 glite-lb-harvester.1 ${DESTDIR}${PREFIX}${prefix}/share/man/man1
 ifeq ($(os_type),redhat)
 	mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/rc.d/init.d

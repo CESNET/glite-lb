@@ -16,6 +16,7 @@ default: all
 -include ${top_srcdir}/project/version.properties
 
 version=${module.version}
+docdir?=${prefix}/share/doc/${package}-${version}
 
 SUFFIXES = .T
 
@@ -49,9 +50,9 @@ glue2-copy.xsd:
 
 install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${STAGETO}
-	-test -f LB.html && mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	-test -f LB.html && mkdir -p ${DESTDIR}${PREFIX}${docdir}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbprefix}
-	-test -f LB.html && install -m 644 LB.html ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	-test -f LB.html && install -m 644 LB.html ${DESTDIR}${PREFIX}${docdir}
 # install the generated stuff instead
 #	cd ${top_srcdir}/interface && install -m 644 ${WSDL} ${DESTDIR}${PREFIX}${prefix}/${STAGETO}
 	install -m 644 ${WSDL} ${DESTDIR}${PREFIX}${prefix}/${STAGETO}

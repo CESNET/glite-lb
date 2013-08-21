@@ -18,6 +18,7 @@ default: all
 -include ${top_srcdir}/project/version.properties
 
 version=${module.version}
+docdir?=${prefix}/share/doc/${package}-${version}
 
 CC=gcc
 VPATH=${top_srcdir}/interface:${top_srcdir}/src:${top_srcdir}/tests
@@ -74,12 +75,12 @@ stage: compile
 install: compile
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix} 
 	${INSTALL} -m 644 ${top_srcdir}/src/log.h ${DESTDIR}${PREFIX}${prefix}/include/${globalprefix}/${lbutilsprefix} 
-	mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
-	${INSTALL} -m 644 ${top_srcdir}/README ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}
+	mkdir -p ${DESTDIR}${PREFIX}${docdir}
+	${INSTALL} -m 644 ${top_srcdir}/README ${DESTDIR}${PREFIX}${docdir}
 	mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 	${INSTALL} -m 644 ${top_srcdir}/config/log4crc ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb/log4crc
-	${INSTALL} -m 644 ${top_srcdir}/config/log4crc ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/log4crc.example-production
-	${INSTALL} -m 644 ${top_srcdir}/config/log4crc.debugging ${DESTDIR}${PREFIX}${prefix}/share/doc/${package}-${version}/log4crc.example-debugging
+	${INSTALL} -m 644 ${top_srcdir}/config/log4crc ${DESTDIR}${PREFIX}${docdir}/log4crc.example-production
+	${INSTALL} -m 644 ${top_srcdir}/config/log4crc.debugging ${DESTDIR}${PREFIX}${docdir}/log4crc.example-debugging
 	mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	${INSTALL} -m 755 ${LTLIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}/${LTLIB}
 
