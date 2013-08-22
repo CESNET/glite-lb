@@ -90,8 +90,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libglite_lb_client.so.14.*
 %{_libdir}/libglite_lb_clientpp.so.14
 %{_libdir}/libglite_lb_clientpp.so.14.*
-%{_pkgdocdir}/%{name}-%{version}/ChangeLog
-%{_pkgdocdir}/%{name}-%{version}/LICENSE
+%{_pkgdocdir}/ChangeLog
+%{_pkgdocdir}/LICENSE
 
 %files devel
 %defattr(-,root,root)
