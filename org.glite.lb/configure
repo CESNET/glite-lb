@@ -54,8 +54,6 @@ my $project_version;
 my (%projects, %project);
 my $debug = 0;
 my $url = $default_url;
-my $url_rpm;
-my $url_deb;
 my $url_source;
 my $pkg_config_env = (defined $ENV{PKG_CONFIG_PATH}) ? "$ENV{PKG_CONFIG_PATH}:" : '';
 
@@ -260,8 +258,6 @@ my @opts = (
 	'project=s' => \$project,
 	'debug' => \$debug,
 	'url=s' => \$url,
-	'url-rpm=s' => \$url_rpm,
-	'url-deb=s' => \$url_deb,
 	'url-source=s' => \$url_source,
 );
 
@@ -287,12 +283,8 @@ if (not $localstatedir) { $localstatedir = $prefix eq '/usr' ? '/var' : "$prefix
 $sysconfdir=~s/\/$//;
 $localstatedir=~s/\/$//;
 if (not $os_type) { $os_type = os_type(); }
-if (not $url_rpm) { $url_rpm = $url; }
-if (not $url_deb) { $url_deb = $url; }
 if (not $url_source) { $url_source = $url; }
 $url=~s/\/$//;
-$url_rpm=~s/\/$//;
-$url_deb=~s/\/$//;
 $url_source=~s/\/$//;
 
 $externs{'mysql-server'}{prefix}=$externs{mysql}{prefix} if $externs{'mysql-server'}{prefix} eq '';
@@ -1448,62 +1440,6 @@ sub getlibdir {
         return $libdir;
 }
 
-sub reshuffle_platforms($$) {
-	my ($data, $platforms) = @_;
-	my ($platform, %blacklist, $value);
-
-	return if not $platforms;
-
-	for $platform (keys %$data) {
-#print "plat: $platform: $data->{$platform}\n";
-		next if $platform eq 'default';
-		for $_ (keys %{$data->{$platform}}) {
-#print "  blacklist: $_ = $data->{$platform}{$_}\n";
-			$blacklist{$_} = 1;
-		}
-	}
-
-	for $_ (keys %blacklist) {
-		$value = $data->{default}{$_} ? $data->{default}{$_} : $_;
-		for $platform (keys %$platforms) {
-			next if $platform eq 'default';
-			if (not defined $data->{$platform}{$_}) {
-				$data->{$platform}{$_} = $value;
-#print "added $value to $platform\n"
-			}
-		}
-		$data->{default}{$_} = '-';
-#print "deleted $_ from default\n";
-	}
-
-	# merge dependencies across the supported platforms
-	%blacklist = [];
-	for $platform (keys %$platforms) {
-		next if $platform eq 'default';
-		for $_ (keys %{$data->{$platform}}) {
-			$blacklist{$_} = 1;
-		}
-	}
-	for $_ (keys %blacklist) {
-		$value = undef;
-		$same = 1;
-		for $platform (keys %$platforms) {
-			if (not $value) { $value = $data->{$platform}{$_}; }
-			if (not $data->{$platform}{$_} or $value ne $data->{$platform}{$_}) {
-				$same = 0;
-				last;
-			}
-		}
-		if ($same and $value) {
-#print "merged dependency $_\n";
-			$data->{default}{$_} = $value;
-			for $platform (keys %$platforms) {
-				delete $data->{$platform}{$_};
-			}
-		}
-	}
-}
-
 sub os_type {
 	my $ver;
 
@@ -1544,8 +1480,6 @@ General options (defaults in []):
   --project=PROJECT		build for a project (glite/emi1/emi) [emi]
   --debug			print more details
   --url				URL of all published files [$default_url]
-  --url-rpm			URL of published RPM packages []
-  --url-deb			URL of published Debian packages []
   --url-source			URL of published source tarballs []
   
 Mode of operation:
