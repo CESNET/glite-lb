@@ -1,3 +1,5 @@
+%{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
+
 Name:           glite-lbjp-common-log
 Version:        @MAJOR@.@MINOR@.@REVISION@
 Release:        @AGE@%{?dist}
@@ -35,7 +37,7 @@ common log module.
 
 
 %build
-perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lbjp-common.log
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --docdir=%{_pkgdocdir} --project=emi --module lbjp-common.log
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 
@@ -47,7 +49,7 @@ CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make check
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
-install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT%{_defaultdocdir}/%{name}-%{version}
+install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT%{_pkgdocdir}
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*.a' -exec rm -rf {} \;
 
@@ -63,14 +65,14 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%dir %{_docdir}/%{name}-%{version}
+%dir %{_pkgdocdir}/
 %dir %{_sysconfdir}/glite-lb
 %config(noreplace) %{_sysconfdir}/glite-lb/log4crc
-%doc %{_docdir}/%{name}-%{version}/ChangeLog
-%doc %{_docdir}/%{name}-%{version}/LICENSE
-%doc %{_docdir}/%{name}-%{version}/README
-%doc %{_docdir}/%{name}-%{version}/log4crc.example-debugging
-%doc %{_docdir}/%{name}-%{version}/log4crc.example-production
+%doc %{_pkgdocdir}/ChangeLog
+%doc %{_pkgdocdir}/LICENSE
+%doc %{_pkgdocdir}/README
+%doc %{_pkgdocdir}/log4crc.example-debugging
+%doc %{_pkgdocdir}/log4crc.example-production
 %{_libdir}/libglite_lbu_log.so.1
 %{_libdir}/libglite_lbu_log.so.1.*
 

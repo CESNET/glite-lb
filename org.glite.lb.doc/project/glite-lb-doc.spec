@@ -1,3 +1,5 @@
+%{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
+
 Name:           glite-lb-doc
 Version:        @MAJOR@.@MINOR@.@REVISION@
 Release:        @AGE@%{?dist}
@@ -35,7 +37,7 @@ BuildRequires:  tex(multirow.sty)
 
 
 %build
-perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.doc
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --docdir=%{_pkgdocdir} --project=emi --module lb.doc
 make
 
 
@@ -43,7 +45,7 @@ make
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
-install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
+install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT%{_pkgdocdir}
 
 
 %clean
@@ -52,17 +54,17 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%dir %{_docdir}/%{name}-%{version}/
-%dir %{_docdir}/%{name}-%{version}/examples/
-%{_docdir}/%{name}-%{version}/examples/*
-%{_docdir}/%{name}-%{version}/ChangeLog
-%{_docdir}/%{name}-%{version}/LICENSE
-%{_docdir}/%{name}-%{version}/README
-%{_docdir}/%{name}-%{version}/LBAG.pdf
-%{_docdir}/%{name}-%{version}/LBUG.pdf
-%{_docdir}/%{name}-%{version}/LBDG.pdf
-%{_docdir}/%{name}-%{version}/LBTG.pdf
-%{_docdir}/%{name}-%{version}/LBTP.pdf
+%dir %{_pkgdocdir}/
+%dir %{_pkgdocdir}/examples/
+%{_pkgdocdir}/examples/*
+%{_pkgdocdir}/ChangeLog
+%{_pkgdocdir}/LICENSE
+%{_pkgdocdir}/README
+%{_pkgdocdir}/LBAG.pdf
+%{_pkgdocdir}/LBUG.pdf
+%{_pkgdocdir}/LBDG.pdf
+%{_pkgdocdir}/LBTG.pdf
+%{_pkgdocdir}/LBTP.pdf
 
 
 %changelog

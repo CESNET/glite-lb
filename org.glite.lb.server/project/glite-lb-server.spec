@@ -1,3 +1,5 @@
+%{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
+
 Name:           glite-lb-server
 Version:        @MAJOR@.@MINOR@.@REVISION@
 Release:        @AGE@%{?dist}
@@ -72,7 +74,7 @@ Requires(preun): initscripts
 
 
 %build
-perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.server
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --docdir=%{_pkgdocdir} --project=emi --module lb.server
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 
@@ -86,7 +88,7 @@ cat > ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d/glite-lb-server.conf <<EOF
 d %{_localstatedir}/run/glite 0755 glite glite -
 EOF
 %endif
-install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
+install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT%{_pkgdocdir}
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*.a' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
@@ -172,16 +174,16 @@ fi
 %dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-notif
 %dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-proxy
 %dir %{_datadir}/glite/
-%dir %{_docdir}/%{name}-%{version}
+%dir %{_pkgdocdir}/
 %dir %{_sysconfdir}/glite-lb/
 %config(noreplace) %{_sysconfdir}/cron.d/%{name}-*
 %config(noreplace) %{_sysconfdir}/glite-lb/*
 %config(noreplace) %{_sysconfdir}/logrotate.d/glite-lb-server
 %config(noreplace) %{_sysconfdir}/mysql/conf.d/glite-lb-server.cnf
 %config(noreplace missingok) %{_sysconfdir}/sysconfig/glite-lb
-%{_docdir}/%{name}-%{version}/ChangeLog
-%{_docdir}/%{name}-%{version}/LICENSE
-%{_docdir}/%{name}-%{version}/glite-lb
+%{_pkgdocdir}/ChangeLog
+%{_pkgdocdir}/LICENSE
+%{_pkgdocdir}/glite-lb
 %if 0%{?fedora}
 %{_prefix}/lib/tmpfiles.d/glite-lb-server.conf
 %{_unitdir}/glite-lb-bkserverd.service

@@ -1,3 +1,5 @@
+%{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
+
 Name:           glite-lb-client
 Version:        @MAJOR@.@MINOR@.@REVISION@
 Release:        @AGE@%{?dist}
@@ -57,7 +59,7 @@ This package contains client programs and examples for gLite L&B.
 
 
 %build
-perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.client
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --docdir=%{_pkgdocdir} --project=emi --module lb.client
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 
@@ -65,7 +67,7 @@ CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
-install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
+install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT%{_pkgdocdir}
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*.a' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
@@ -83,13 +85,13 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%dir %{_docdir}/%{name}-%{version}/
+%dir %{_pkgdocdir}/
 %{_libdir}/libglite_lb_client.so.14
 %{_libdir}/libglite_lb_client.so.14.*
 %{_libdir}/libglite_lb_clientpp.so.14
 %{_libdir}/libglite_lb_clientpp.so.14.*
-%{_docdir}/%{name}-%{version}/ChangeLog
-%{_docdir}/%{name}-%{version}/LICENSE
+%{_pkgdocdir}/%{name}-%{version}/ChangeLog
+%{_pkgdocdir}/%{name}-%{version}/LICENSE
 
 %files devel
 %defattr(-,root,root)
@@ -103,7 +105,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libglite_lb_client.so
 %{_libdir}/libglite_lb_clientpp.so
 %{_libdir}/pkgconfig/*.pc
-%{_docdir}/%{name}-%{version}/examples/*
+%{_pkgdocdir}/examples/*
 %{_datadir}/emi/build/m4/glite_lb.m4
 
 %files progs
@@ -114,7 +116,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/glite-lb-notify
 %{_bindir}/glite-lb-register_sandbox
 %{_libdir}/glite-lb/examples/*
-%{_docdir}/%{name}-%{version}/README-notify
+%{_pkgdocdir}/README-notify
 %{_mandir}/man1/glite-lb-notify.1.gz
 %{_mandir}/man1/glite-lb-logevent.1.gz
 

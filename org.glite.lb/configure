@@ -55,6 +55,7 @@ my (%projects, %project);
 my $debug = 0;
 my $url = $default_url;
 my $url_source;
+my $docdir;
 my $pkg_config_env = (defined $ENV{PKG_CONFIG_PATH}) ? "$ENV{PKG_CONFIG_PATH}:" : '';
 
 my @nodes = qw/client server logger logger-msg nagios utils client-java doc ws-test db jpprimary jpindex jpclient harvester lb px proxyrenewal canl/;
@@ -259,6 +260,7 @@ my @opts = (
 	'debug' => \$debug,
 	'url=s' => \$url,
 	'url-source=s' => \$url_source,
+	'docdir=s' => \$docdir,
 );
 
 for (@nodes) {
@@ -1183,6 +1185,20 @@ canl.c
 		symlink "$top_srcdir/Makefile",$build."Makefile" or die "symlink $top_srcdir/Makefile ".$build."Makefile: $!\n";
 	}
 
+	# package name
+	my $dh;
+	opendir $dh, "$abs_srcdir/project" || die "Can't open $abs_srcdir/project: $!";
+	for my $dir (readdir $dh) {
+		if ($dir=~/^(.*)\.spec$/) {
+			if ($1 ne $packageName) {
+				printf STDERR "Changed RPM name: $packageName --> $1\n" if ($debug);;
+				$packageName=$1;
+			}
+			last;
+		}
+	}
+	closedir $dh;
+
 	open MKINC,">".$build."Makefile.inc"
 		or die $build."Makefile.inc: $!\n";
 
@@ -1201,6 +1217,15 @@ nothrflavour = $nothrflavour
 libdir = $libdir
 top_srcdir = $top_srcdir
 };
+	if ($docdir) {
+		my $d = $docdir;
+		$d =~ s/\$\{prefix\}/$prefix/g;
+		$d =~ s/\$\{moduleName\}/$full/g;
+		$d =~ s/\$\{packageName\}/$packageName/g;
+		$d =~ s/\$\{version\}/$major.$minor.$rev/g;
+		$d =~ s/\$\{age\}/$age/g;
+		print MKINC "docdir = $d\n";
+	}
 
 	for (@{$need_externs{$short}}) {
 		next unless defined $externs{$_} and defined $externs{$_}{prefix};
@@ -1268,20 +1293,7 @@ deb: ${package}-${version}.tar.gz
 
 	close MKINC;
 
-	my $dh;
 	my $debian = 0;
-
-	opendir $dh, "$abs_srcdir/project" || die "Can't open $abs_srcdir/project: $!";
-	for my $dir (readdir $dh) {
-		if ($dir=~/^(.*)\.spec$/) {
-			if ($1 ne $packageName) {
-				printf STDERR "Changed RPM name: $packageName --> $1\n" if ($debug);;
-				$packageName=$1;
-			}
-			last;
-		}
-	}
-	closedir $dh;
 
 	for my $file ("$packageName.spec", "debian.rules", "debian.control", "debian.changelog", "debian.copyright") {
 		if (-f "$abs_srcdir/project/$file") {
@@ -1469,6 +1481,7 @@ General options (defaults in []):
   --sysroot=DIR			system root (custom relocation root -> sysroot) []
   --sysconfdir=DIR              system configuration directory [PREFIX/etc]
   --localstatedir=DIR           system local status directory [PREFIX/var]
+  --docdir			documentation directory []
   --os-type=DIST                system type (debian/redhat/fedora)
   --staged=module,module,...	what is already in PREFIX (specify without org.glite.)
   --thrflavour=flavour
