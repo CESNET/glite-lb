@@ -12,7 +12,7 @@ export DH_VERBOSE=1
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
-	/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=lib --project=emi --module lb.server
+	/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=lib --docdir=/usr/share/doc/$(p_base) --project=emi --module lb.server
 	touch $@
 
 build: build-arch build-indep
@@ -43,7 +43,7 @@ install: build-stamp
 	rm -vf debian/tmp/usr/lib/*.a
 	find debian/tmp -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
 	mkdir -p debian/$(p_base)/usr/share/doc
-	mv debian/tmp/usr/share/doc/glite-lb-server-@MAJOR@.@MINOR@.@REVISION@ debian/$(p_base)/usr/share/doc/$(p_base)
+	mv debian/tmp/usr/share/doc/$(p_base) debian/$(p_base)/usr/share/doc/$(p_base)
 	mkdir -p debian/$(p_dbg)/usr/share/doc
 	ln -s $(p_base) debian/$(p_dbg)/usr/share/doc/$(p_dbg)
 	rm -rf debian/tmp/etc/init.d

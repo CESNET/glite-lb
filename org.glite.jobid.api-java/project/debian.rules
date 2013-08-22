@@ -13,7 +13,7 @@ export DH_VERBOSE=1
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
-	/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=lib --project=emi --module jobid.api-java
+	/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=lib --docdir=/usr/share/doc/$(p_base) --project=emi --module jobid.api-java
 	touch $@
 
 build: build-indep
@@ -42,7 +42,7 @@ install: build-stamp
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
 	mkdir -p debian/$(p_doc)/usr/share/doc
 	mkdir -p debian/$(p_lib)/usr/share/doc
-	mv debian/tmp/usr/share/doc/$(p_base)-@MAJOR@.@MINOR@.@REVISION@ debian/$(p_doc)/usr/share/doc/$(p_lib)
+	mv debian/tmp/usr/share/doc/$(p_base) debian/$(p_doc)/usr/share/doc/$(p_lib)
 
 binary-indep: install
 	dh_testdir

@@ -12,7 +12,7 @@ export DH_VERBOSE=1
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
-	/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=lib --project=emi --module lb.harvester
+	/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=lib --docdir=/usr/share/doc/$(p_base) --project=emi --module lb.harvester
 	touch $@
 
 build: build-arch build-indep
@@ -42,7 +42,7 @@ install: build-stamp
 	mkdir -p debian/$(p_base)/usr/share/doc
 	mkdir -p debian/$(p_dbg)/usr/share/doc
 	ln -s $(p_base) debian/$(p_dbg)/usr/share/doc/$(p_dbg)
-	mv debian/tmp/usr/share/doc/glite-lb-harvester-@MAJOR@.@MINOR@.@REVISION@ debian/$(p_base)/usr/share/doc/$(p_base)
+	mv debian/tmp/usr/share/doc/$(p_base) debian/$(p_base)/usr/share/doc/$(p_base)
 	rm -rf debian/tmp/etc/init.d
 	cp -p config/startup.debian.harvester debian/glite-lb-harvester.init
 

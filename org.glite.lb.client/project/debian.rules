@@ -3,6 +3,7 @@
 
 -include /usr/share/dpkg/buildflags.mk
 
+p_base=glite-lb-client
 p_dev=libglite-lb-client-dev
 p_lib=libglite-lb-client14
 p_progs=glite-lb-client-progs
@@ -13,7 +14,7 @@ export DH_VERBOSE=1
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
-	/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=lib --project=emi --module lb.client
+	/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=lib --docdir=/usr/share/doc/$(p_base) --project=emi --module lb.client
 	touch $@
 
 build: build-arch build-indep
@@ -48,9 +49,9 @@ install: build-stamp
 	mkdir -p debian/$(p_progs)-dbg/usr/share/doc
 	ln -s $(p_lib) debian/$(p_lib)-dbg/usr/share/doc/$(p_lib)-dbg
 	ln -s $(p_lib) debian/$(p_progs)-dbg/usr/share/doc/$(p_progs)-dbg
-	mv debian/tmp/usr/share/doc/glite-lb-client-@MAJOR@.@MINOR@.@REVISION@/examples debian/$(p_dev)/usr/share/doc/$(p_dev)
-	mv debian/tmp/usr/share/doc/glite-lb-client-@MAJOR@.@MINOR@.@REVISION@/README-notify debian/$(p_progs)/usr/share/doc/$(p_progs)
-	rm -rf debian/tmp/usr/share/doc/glite-lb-client-@MAJOR@.@MINOR@.@REVISION@
+	mv debian/tmp/usr/share/doc/$(p_base)/examples debian/$(p_dev)/usr/share/doc/$(p_dev)
+	mv debian/tmp/usr/share/doc/$(p_base)/README-notify debian/$(p_progs)/usr/share/doc/$(p_progs)
+	rm -rf debian/tmp/usr/share/doc/$(p_base)
 
 binary-indep:
 

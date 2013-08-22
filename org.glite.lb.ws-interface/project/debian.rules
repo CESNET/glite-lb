@@ -11,7 +11,7 @@ export DH_VERBOSE=1
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
-	/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=lib --project=emi --module lb.ws-interface
+	/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=lib --docdir=/usr/share/doc/$(p_base) --project=emi --module lb.ws-interface
 	touch $@
 
 build: build-indep
@@ -38,7 +38,7 @@ install: build-stamp
 	dh_prep
 	dh_installdirs
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
-	#mv debian/tmp/usr/share/doc/glite-lb-ws-interface-@MAJOR@.@MINOR@.@REVISION@ debian/$(p_base)/usr/share/doc/$(p_base)
+	#mv debian/tmp/usr/share/doc/$(p_base) debian/$(p_base)/usr/share/doc/$(p_base)
 
 binary-indep: install
 	dh_testdir
