@@ -59,7 +59,6 @@ CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 %install
 rm -rf $RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
 %if 0%{?fedora}
 # preserve directory in /var/run

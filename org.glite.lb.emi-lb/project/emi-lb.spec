@@ -46,7 +46,6 @@ Obsoletes:      glite-LB <= 3.3.3-3
 
 %install
 rm -rf $RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT
 
 
 %clean
