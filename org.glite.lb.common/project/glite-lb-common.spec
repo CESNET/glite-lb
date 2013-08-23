@@ -12,10 +12,8 @@ BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  c-ares-devel
 BuildRequires:  chrpath
-BuildRequires:  classads
 BuildRequires:  classads-devel
 BuildRequires:  cppunit-devel
-BuildRequires:  expat
 BuildRequires:  expat-devel
 BuildRequires:  glite-jobid-api-cpp-devel
 BuildRequires:  glite-jobid-api-c-devel
@@ -84,8 +82,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %files devel
 %defattr(-,root,root)
-%dir %{_includedir}/glite/
-%dir %{_includedir}/glite/lb/
 %{_includedir}/glite/lb/*
 %{_libdir}/libglite_lb_common.so
 %{_libdir}/pkgconfig/*.pc
