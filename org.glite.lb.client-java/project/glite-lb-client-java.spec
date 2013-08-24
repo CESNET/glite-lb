@@ -1,4 +1,7 @@
 %global with_trustmanager 0
+%global groupId     org.glite
+%global artifactId  lb-client-java
+%{!?_mavenpomdir: %global _mavenpomdir %{_datadir}/maven2/poms}
 
 Name:           glite-lb-client-java
 Version:        @MAJOR@.@MINOR@.@REVISION@
@@ -27,15 +30,20 @@ BuildRequires:  glite-jobid-api-java
 BuildRequires:  glite-lb-types
 BuildRequires:  glite-lb-ws-interface
 BuildRequires:  jakarta-commons-lang
-BuildRequires:  java-devel
 BuildRequires:  jpackage-utils
 BuildRequires:  libtool
 BuildRequires:  log4j
 BuildRequires:  perl
 BuildRequires:  perl(Getopt::Long)
 BuildRequires:  perl(POSIX)
+%if 0%{?fedora} >= 18
+BuildRequires:  maven-local
+%else
+BuildRequires:  java-devel
+%endif
 Requires:       glite-jobid-api-java
 Requires:       jakarta-commons-lang
+Requires:       java
 Requires:       jpackage-utils
 
 %description
@@ -53,7 +61,7 @@ Requires:       emi-trustmanager
 Requires:       glite-jobid-api-java
 Requires:       jakarta-commons-lang
 Requires:       jpackage-utils
-%if 0%{?rhel} >= 6
+%if 0%{?rhel} >= 6 || 0%{?fedora}
 BuildArch:      noarch
 %endif
 
@@ -72,7 +80,7 @@ Requires:       emi-trustmanager
 Requires:       glite-jobid-api-java
 Requires:       jpackage-utils
 Requires:       log4j
-%if 0%{?rhel} >= 6
+%if 0%{?rhel} >= 6 || 0%{?fedora}
 BuildArch:      noarch
 %endif
 
@@ -87,7 +95,7 @@ Summary:        Java API documentation for %{name}
 Group:          Documentation
 Requires:       %{name} = %{version}-%{release}
 Requires:       jpackage-utils
-%if 0%{?rhel} >= 6
+%if 0%{?rhel} >= 6 || 0%{?fedora}
 BuildArch:      noarch
 %endif
 
@@ -118,16 +126,32 @@ rm -rf $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
 find $RPM_BUILD_ROOT -name '*.la' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*.a' -exec rm -rf {} \;
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
+mkdir -p $RPM_BUILD_ROOT%{_mavenpomdir}
+install -m 0644 JPP-%{name}.pom JPP-%{name}-axis.pom $RPM_BUILD_ROOT%{_mavenpomdir}
+%if 0%{?add_maven_depmap:1}
+%add_maven_depmap JPP-%{name}.pom %{name}.jar
+%add_maven_depmap JPP-%{name}-axis.pom %{name}-axis.jar -f axis
+%else
+%add_to_maven_depmap %{groupId} %{artifactId} %{version} JPP %{name}.jar
+%add_to_maven_depmap %{groupId} %{artifactId}-axis %{version} JPP %{name}-axis.jar
+%endif
 
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 
-%post -p /sbin/ldconfig
+%post
+/sbin/ldconfig
+%if 0%{?rhel} || 0%{?fedora} < 18
+%update_maven_depmap
+%endif
 
-
-%postun -p /sbin/ldconfig
+%postun
+/sbin/ldconfig
+%if 0%{?rhel} || 0%{?fedora} < 18
+%update_maven_depmap
+%endif
 
 
 %files
@@ -137,10 +161,16 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libglite_lb_sendviasocket.so.0
 %{_libdir}/libglite_lb_sendviasocket.so.0.0.0
 %{_javadir}/%{name}.jar
+%{_mavendepmapfragdir}/%{name}
+%{_mavenpomdir}/JPP-%{name}.pom
 
 %files axis
 %defattr(-,root,root)
 %{_javadir}/%{name}-axis.jar
+%if 0%{?add_maven_depmap:1}
+%{_mavendepmapfragdir}/%{name}-axis
+%endif
+%{_mavenpomdir}/JPP-%{name}-axis.pom
 
 %if %{with_trustmanager}
 %files examples
