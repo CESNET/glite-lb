@@ -1,0 +1,65 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                      http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.glite</groupId>
+  <artifactId>lb-client-java-examples</artifactId>
+  <version>@VERSION@</version>
+  <packaging>jar</packaging>
+
+  <dependencies>
+    <dependency>
+      <groupId>axis</groupId>
+      <artifactId>axis</artifactId>
+      <version>1.4</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.glite</groupId>
+      <artifactId>lb-client-java-axis</artifactId>
+    </dependency>
+  </dependencies>
+
+  <description>@DESCRIPTION@ This jar file contains various examples for L&amp;B java API.</description>
+  <url>http://egee.cesnet.cz/en/JRA1/LB/</url>
+  <inceptionYear>2008</inceptionYear>
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <organization>
+    <name>CESNET</name>
+    <url>http://cesnet.cz</url>
+  </organization>
+
+  <issueManagement>
+    <system>GitHub Issues</system>
+    <url>https://github.com/CESNET/glite-lb/issues</url>
+  </issueManagement>
+
+  <mailingLists>
+    <mailingList>
+      <name>EMI L&amp;B</name>
+      <post>emi-lb@metacentrum.cz</post>
+    </mailingList>
+  </mailingLists>
+
+  <scm>
+    <connection>scm:git:git://github.com/CESNET/glite-lb</connection>
+    <url>https://github.com/CESNET/glite-lb</url>
+  </scm>
+
+</project>

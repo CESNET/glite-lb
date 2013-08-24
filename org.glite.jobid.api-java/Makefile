@@ -16,9 +16,12 @@ SOURCES=\
 	build.xml Makefile \
 	nbproject/*.properties nbproject/*.xml \
 	nbproject/private/*.properties nbproject/private/*.xml \
+	project/pom.xml \
 	src/org/glite/jobid/*.java
 
-all compile doc:
+POM=JPP-${package}.pom
+
+all compile doc: ${POM}
 	${ant_prefix}/bin/ant ${ANT_ARGS}
 
 stage:
@@ -33,9 +36,15 @@ check:
 
 clean:
 	${ant_prefix}/bin/ant ${ANT_ARGS} clean
+	rm -fv ${POM}
 	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf project/changelog Makefile.inc *.spec debian/
+
+${POM}: ${top_srcdir}/project/pom.xml
+	sed -e "s:@DESCRIPTION@:$(shell cat ${top_srcdir}/project/package.description):" \
+	    -e "s:@VERSION@:${version}:" \
+	    $< > $@
 
 .PHONY: default all compile stage install check clean distclean dist distcheck

@@ -24,13 +24,13 @@ AXIS_CLASSES=$(AXIS_SOURCES:.java=.class) ServerConnection$$1.class ServerConnec
 
 SOURCES=\
 	examples/*.java examples/*/*.java \
-	project/list-jars.sh project/genEventTypes.pl \
+	project/list-jars.sh project/genEventTypes.pl project/client-java*.pom \
 	src_c/*.c src_c/Makefile \
 	src/org/glite/lb/*.java \
 	Makefile
 SOURCES_EXEC=project/list-jars.sh project/genEventTypes.pl
 
-VPATH := ${top_srcdir}/src/org/glite/lb ${top_srcdir}/examples ${top_srcdir}/examples/simple-ssl ${top_srcdir}/examples/simple-trustmanager
+VPATH := ${top_srcdir}/src/org/glite/lb ${top_srcdir}/examples ${top_srcdir}/examples/simple-ssl ${top_srcdir}/examples/simple-trustmanager ${top_srcdir}/project
 
 JAVAC:=${jdk_prefix}/bin/javac
 JAVAH:=${jdk_prefix}/bin/javah
@@ -44,21 +44,31 @@ axis_classpath:=$(shell ${top_srcdir}/project/list-jars.sh ${axis_prefix}/lib ${
 trustmanager_classpath:=$(shell ls -1 ${trustmanager_prefix}/share/java/glite-security-trustmanager.jar ${trustmanager_prefix}/share/java/trustmanager.jar ${trustmanager_prefix}/share/java/trustmanager-axis.jar ${stagedir}${prefix}/share/java/trustmanager.jar ${stagedir}${prefix}/share/java/trustmanager-axis.jar 2>/dev/null | tr '\012' :)
 
 JARS:=glite-lb-client-java.jar
+POM_SOURCES:=client-java.pom
 
 DOC_SOURCES=$(CORE_SOURCES)
 AXIS_TARGETS=build/classes/axis
 ifneq (${axis_prefix},no)
 # with axis generate the axis jar
 JARS+=glite-lb-client-java-axis.jar
+POM_SOURCES+=client-java-axis.pom
 ifneq (${trustmanager_prefix},no)
 # with trustmanager include the security code
 DOC_SOURCES+=$(AXIS_SOURCES)
 AXIS_TARGETS+=build/classes/security
 JARS+=glite-lb-client-java-examples.jar
+POM_SOURCES+=client-java-examples.pom
+POM_AXIS_SOURCE=client-java-axis-security.pom
+else
+POM_AXIS_SOURCE=client-java-axis-nosecurity.pom
 endif
 endif
 
-all compile: $(JARS) doc build/c
+POMS=$(addprefix JPP-glite-lb-,$(POM_SOURCES))
+
+all compile: $(JARS) doc build/c poms
+
+poms: $(POMS)
 
 wtf:
 	echo "axis_classpath: ${axis_classpath}"
@@ -158,9 +168,28 @@ install:
 
 clean:
 	rm -rf build
+	rm -vf *.pom
 	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
 	rm -rvf project/changelog Makefile.inc *.spec debian/
 
-.PHONY: default all compile compile-java-lb compile-java-gen compile-java-security doc check stage install clean distclean wtf dist distcheck
+client-java-axis.pom: ${POM_AXIS_SOURCE}
+	cp -p $< $@
+
+JPP-glite-lb-client-java.pom: client-java.pom
+	sed -e "s:@DESCRIPTION@:$(shell cat ${top_srcdir}/project/package.description | sed 's/&/\\\&amp;/g'):" \
+	    -e "s:@VERSION@:${version}:" \
+	    $< > $@; \
+
+JPP-glite-lb-client-java-axis.pom: client-java-axis.pom
+	sed -e "s:@DESCRIPTION@:$(shell cat ${top_srcdir}/project/package.description | sed 's/&/\\\&amp;/g'):" \
+	    -e "s:@VERSION@:${version}:" \
+	    $< > $@; \
+
+JPP-glite-lb-client-java-examples.pom: client-java-examples.pom
+	sed -e "s:@DESCRIPTION@:$(shell cat ${top_srcdir}/project/package.description | sed 's/&/\\\&amp;/g'):" \
+	    -e "s:@VERSION@:${version}:" \
+	    $< > $@; \
+
+.PHONY: default all compile compile-java-lb compile-java-gen compile-java-security doc check stage install clean distclean wtf dist distcheck poms
