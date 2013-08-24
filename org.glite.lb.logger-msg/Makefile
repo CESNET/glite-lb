@@ -102,10 +102,8 @@ all compile: ${PLUGIN_LIB} ${EXAMPLES} ${SCRIPTS}
 ${PLUGIN_LIB}: ${PLUGIN_LOBJS}
 	${SOLINK} -o $@ ${PLUGIN_LOBJS} ${EXT_LIB} -lglite_lb_common${default_flavour} -lglite_jobid -lglite_lbu_log
 
-${MAN_GZ}: ${MAN}
-	rm -f ${MAN_GZ} ${MAN}
-	cp $? .
-	gzip -f $(notdir $?)
+%.1.gz: %.1
+	gzip -9 -f -c $< > $@
 
 glite-lb-cmsclient: cmsclient.o
 	$(CXX) $< ${EXT_LIB} -o $@

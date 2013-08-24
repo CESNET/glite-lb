@@ -105,12 +105,11 @@ check: compile
 
 doc: ${MAN_GZ} ${MAN8_GZ}
 
-${MAN_GZ}: ${MAN}
-	cp $? .
-	gzip -9 -f $(notdir $?)
-${MAN8_GZ}: ${MAN8}
-	cp $? .
-	gzip -9 -f $(notdir $?)
+%.1.gz: %.1
+	gzip -9 -f -c $< > $@
+
+%.8.gz: %.8
+	gzip -9 -f -c $< > $@
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes

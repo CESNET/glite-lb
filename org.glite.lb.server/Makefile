@@ -362,8 +362,9 @@ lb_xml_parse.c: lb_xml_parse.c.T
 	${AT3} $< >$@ || ( rm -f $@; false )
 	chmod -w $@ >/dev/null
 
-${GSOAP_FILES_PREFIX}H.h ${GSOAP_FILES_PREFIX}C.c ${GSOAP_FILES_PREFIX}Server.c ${GSOAP_FILES_PREFIX}Client.c ${GSOAP_FILES_PREFIX}ServerLib.c ${GSOAP_FILES_PREFIX}ClientLib.c LoggingAndBookkeeping.nsmap: LB.xh
+${GSOAP_FILES_PREFIX}H.h ${GSOAP_FILES_PREFIX}C.c ${GSOAP_FILES_PREFIX}Server.c ${GSOAP_FILES_PREFIX}Client.c ${GSOAP_FILES_PREFIX}ServerLib.c ${GSOAP_FILES_PREFIX}ClientLib.c LoggingAndBookkeeping.nsmap gsoap.stamp: LB.xh
 	${gsoap_bin_prefix}/soapcpp2 -w -c -p ${GSOAP_FILES_PREFIX} LB.xh
+	touch gsoap.stamp
 
 # try several times -- LB.wsdl downloads BaseFault.xsd from www.ibm.com which may be failing
 # not used right now but may be useful one day
@@ -416,13 +417,15 @@ ${STATIC_LIB_BK}: ${LIB_OBJS_BK}
 ${LCAS_PLUGIN_LIB}: ${LCAS_PLUGIN_LOBJS}
 	${LINK} -o $@ $^
 
-doc: ${MAN_GZ}
+doc: man
 
 man: ${MAN_GZ}
 
-${MAN_GZ}: ${MAN}
-	cp $? .
-	gzip -9 -f $(notdir $?)
+%.1.gz: %.1
+	gzip -9 -f -c $< > $@
+
+%.8.gz: %.8
+	gzip -9 -f -c $< > $@
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
@@ -486,6 +489,7 @@ endif
 
 clean:
 	rm -rvf *.c *.cpp *.h *.ch *.xh *.xml *.nsmap *.o *.lo .libs glite-lb-bkindex glite-lb-bkserverd glite-lb-mon-db ${STATIC_LIB_BK} ${LCAS_PLUGIN_LIB} ${TESTS} ${MAN_GZ} ${EXAMPLES} ${SCRIPTS} ${SCRIPTS2} ${MAN_GZ}
+	rm -vf gsoap.stamp
 	rm -rvf test_xml.cpp
 	rm -rvf dist ${package}-*.tar.gz
 
@@ -498,9 +502,12 @@ distclean:
 	chmod -w $@ >/dev/null
 
 %.o: %.y
-	${YACC} -d ${YFLAGS} $<
-	mv y.tab.c $*.c
-	mv y.tab.h $*.h
+	-mkdir $*
+	(cd $*; \
+	 ${YACC} -d ${YFLAGS} ../$<; \
+	 mv y.tab.c ../$*.c; \
+	 mv y.tab.h ../$*.h)
+	rm -r $*
 	${CC} -c ${CFLAGS} $*.c
 	rm $*.c
 
@@ -528,7 +535,8 @@ soap_version.h:
 	-rm soapC.cpp soapH.h soapStub.h soapClient.cpp soapServer.cpp soapClientLib.cpp soapServerLib.cpp
 
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
-bkserverd.o ws_fault.o: soap_version.h
+bkserverd.o ws_fault.o: soap_version.h gsoap.stamp
+ws_fault.o ws_query.o ws_lb4agu.o ws_typeref.o: gsoap.stamp
 endif
 
 .PHONY: default all compile check test_coverage test.xml test.query examples doc man stage install clean distclean dist distcheck

@@ -254,50 +254,44 @@ ${THRPLUSLIB}: ${PLUSTHROBJS} ${THRLIB}
 	${LINKXX} ${version_info} -o $@ ${PLUSTHRLOBJS} -rpath ${rpath} ${THRLIB} ${PLUS_EXTRA_LIB}
 endif
 
-logevent: logevent.o args.o
+logevent: logevent.o args.o ${default_clientlib}
 	${LINK} -o $@ logevent.o args.o ${default_clientlib} ${default_commonlib} ${default_gsslib} ${EXT_LIB} ${PLUS_EXTRA_LIB} -lm
 
-notify: notify.o
+notify: notify.o ${default_clientpluslib} ${default_clientlib}
 	${LINK} -o $@ notify.o ${default_clientpluslib} ${default_clientlib} ${default_commonlib} ${default_gsslib} ${EXT_LIB} ${PLUS_EXTRA_LIB}
 
-register_sandbox: %: %.o
+register_sandbox: %: %.o ${default_clientlib}
 	${LINK} -o $@ $@.o ${default_clientlib} ${default_commonlib} ${default_gsslib} ${EXT_LIB} ${PLUS_EXTRA_LIB}
 
-${TOOLS} ${EXAMPLES} ${EXAMPLES_CL}: %: %.o
+${TOOLS} ${EXAMPLES} ${EXAMPLES_CL}: %: %.o ${default_clientlib}
 	${LINK} -o $@ $< ${default_clientlib} ${default_commonlib} ${default_gsslib} ${EXT_LIB} ${PLUS_EXTRA_LIB}
 
-${EXAMPLES_CL_THR}: %: %.o
+${EXAMPLES_CL_THR}: %: %.o ${default_clientlib_thr}
 	${LINK} -o $@ $< ${default_clientlib_thr} ${default_commonlib_thr} ${default_gsslib_thr} ${EXT_LIB} ${PLUS_EXTRA_LIB} -lpthread
 
-${TOOLS}: ${default_clientlib}
-
-${PLUSOBJS}: %.o: %.cpp
+${PLUSOBJS}: %.o: %.cpp ${GEN_HDRS}
 	${CXXCOMPILE} -c $<
 
-${PLUSTHROBJS}: %.thr.o: %.cpp
+${PLUSTHROBJS}: %.thr.o: %.cpp ${GEN_HDRS}
 	${CXXCOMPILE} -o $@ -c $<
 
-${EXAMPLES_PLUS}: ${default_clientpluslib}
-
-${EXAMPLES_PLUS}: %: %.o
+${EXAMPLES_PLUS}: %: %.o ${default_clientpluslib}
 	${LINKXX} -o $@ $< ${default_clientpluslib}
 
-${LIBOBJS}: %.o: %.c
+${LIBOBJS}: %.o: %.c ${GEN_HDRS}
 	${COMPILE} -c $<
 
-${LIBTHROBJS}: %.thr.o: %.c
+${LIBTHROBJS}: %.thr.o: %.c ${GEN_HDRS}
 	${COMPILE} -o $@ -c $<
 
-${MAN_GZ}: ${MAN}
-	rm -f ${MAN_GZ} ${MAN}
-	cp $? .
-	gzip -9 -f $(notdir $?)
+%.1.gz: %.1
+	gzip -9 -f -c $< > $@
 
 perftest_logjobs.o: perftest_logjobs.c
 	${CC} ${CFLAGS} -DLB_PERF_DROP -c $<
 
 # catches $TOOLS and logevent compilation
-%.lo %.o: %.c
+%.lo %.o: %.c ${GEN_HDRS}
 	${CC} ${CFLAGS} -c $<
 
 %.h: %.h.T
@@ -305,7 +299,7 @@ perftest_logjobs.o: perftest_logjobs.c
 	${AT3} $< >$@ || ( rm -f $@; false )
 	chmod -w $@ >/dev/null
 
-%.lo %.o: %.cpp
+%.lo %.o: %.cpp ${GEN_HDRS}
 	${CXX} ${CFLAGS} ${GLOBUSINC} -c $<
 
 %.c: %.c.T
@@ -335,8 +329,8 @@ check: compile
 check.producer: producer_test
 	./producer_test
 
-producer_test: producer_test.o prod_proto_test.o
-	${LINKXX} -o $@ ${default_clientlib} ${CPPUNIT_LIBS} $+ ${EXT_LIB}
+producer_test: producer_test.o prod_proto_test.o ${default_clientlib}
+	${LINKXX} -o $@ ${CPPUNIT_LIBS} $+ ${EXT_LIB}
 
 producer_test.o: %.o: %.cpp
 	${CXX} -c ${CXXFLAGS} ${CPPUNIT_CFLAGS} $<
@@ -437,5 +431,13 @@ post-install-rpath:
 			chrpath -d $$file; \
 		fi; \
 	done
+
+Event.cpp: Event.h
+Job.h: Event.h
+JobStatus.cpp: JobStatus.h
+Notification.h: JobStatus.h
+ServerConnection.h: JobStatus.h
+logevent.c: producer.h
+perftest_jobreg.c: producer.h
 
 .PHONY: default all compile examples check stage install clean distclean check_version link post-install post-install-rpath dist distcheck

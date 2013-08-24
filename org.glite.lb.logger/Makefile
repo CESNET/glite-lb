@@ -202,10 +202,8 @@ glite-lb-ws-interlogd: ${INTERLOG_WS_OBJS}
 #	${LINK} -o $@ ${INTERLOG_INLINE_EMPTY_OBJS} \
 #		${COMMON_LIB}${default_thrflavour}
 
-${MAN_GZ}: ${MAN}
-	rm -f ${MAN_GZ} ${MAN}
-	cp $? .
-	gzip -9 -f $(notdir $?)
+%.8.gz: %.8
+	gzip -9 -f -c $< > $@
 
 man: ${MAN_GZ}
 
