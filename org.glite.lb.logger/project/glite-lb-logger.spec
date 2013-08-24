@@ -54,7 +54,7 @@ This package contains header files for building plugins for gLite L&B logger.
 
 %build
 perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.logger
-CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
+CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make %{?_smp_mflags}
 
 
 %install

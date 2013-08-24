@@ -63,7 +63,7 @@ if [ "%gssapi_provider_kerberos" == "1" ]; then
     echo "GLOBUS_COMMON_LIBS=`pkg-config --libs globus-common`" >> Makefile.inc
 fi
 
-CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
+CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make %{?_smp_mflags}
 
 
 %install

@@ -29,7 +29,7 @@ Provides:       glite-yaim-lb = %{version}-%{release}
 
 %build
 perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.yaim
-make
+make %{?_smp_mflags}
 
 
 %install

@@ -41,7 +41,7 @@ common trio library.
 
 %build
 perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lbjp-common.trio
-CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
+CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make %{?_smp_mflags}
 
 
 %check

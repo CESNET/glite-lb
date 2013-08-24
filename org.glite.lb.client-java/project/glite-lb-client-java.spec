@@ -114,6 +114,7 @@ if [ "%with_trustmanager" == "0" ]; then
     echo >> Makefile.inc
     echo "trustmanager_prefix=no" >> Makefile.inc
 fi
+# parallel build not supported
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
 
 

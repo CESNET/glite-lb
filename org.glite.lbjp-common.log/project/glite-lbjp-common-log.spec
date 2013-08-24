@@ -38,7 +38,7 @@ common log module.
 
 %build
 perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --docdir=%{_pkgdocdir} --project=emi --module lbjp-common.log
-CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
+CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make %{?_smp_mflags}
 
 
 %check

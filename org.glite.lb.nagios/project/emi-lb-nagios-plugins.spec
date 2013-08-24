@@ -31,7 +31,7 @@ Provides:       glite-lb-nagios-plugins = %{name}-%{version}-%{release}
 
 %build
 perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.nagios
-make
+make %{?_smp_mflags}
 
 
 %install

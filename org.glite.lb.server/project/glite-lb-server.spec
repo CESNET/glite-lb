@@ -75,7 +75,7 @@ Requires(preun): initscripts
 
 %build
 perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --docdir=%{_pkgdocdir} --project=emi --module lb.server
-CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
+CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make %{?_smp_mflags}
 
 
 %install
