@@ -536,7 +536,7 @@ soap_version.h:
 
 ifeq ($(GLITE_LB_SERVER_WITH_WS),yes)
 bkserverd.o ws_fault.o: soap_version.h gsoap.stamp
-ws_fault.o ws_query.o ws_lb4agu.o ws_typeref.o: gsoap.stamp
+ws_fault.o ws_query.o ws_lb4agu.o ws_typeref.o bk_ws_C.o bk_ws_Client.o bk_ws_Server.o: gsoap.stamp
 endif
 
 .PHONY: default all compile check test_coverage test.xml test.query examples doc man stage install clean distclean dist distcheck
