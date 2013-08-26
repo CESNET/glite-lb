@@ -273,13 +273,13 @@ distclean:
 test_query_rec.o: query_rec.c
 	${COMPILE} ${CFLAGS} -DGLITE_LB_QUERY_REC_TEST -c $< -o $@
 
-%.o: %.c
+%.o: %.c ${GEN_HDRS}
 	${COMPILE} ${CFLAGS} -c $<
 
 il_int_test.o il_string_test.o il_test.o il_msg_test.o parse.o: %.o: %.cpp test_main.cpp
 	${CXX} -c ${CFLAGS} ${CPPUNIT_CFLAGS} $<
 
-%.thr.o: %.c
+%.thr.o: %.c ${GEN_HDRS}
 	${COMPILE} ${CFLAGS} -D_REENTRANT -DGLITE_LB_THREADED -o $@ -c $<
 
 %.h: %.h.T
