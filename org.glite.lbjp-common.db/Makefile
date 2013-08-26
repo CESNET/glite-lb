@@ -31,14 +31,14 @@ SOURCES=doc/C.dox examples/*.c interface/*.h project/.post* src/*.c test/*.cpp M
 
 DEBUG:=-g -O0 -W -Wall
 
-CFLAGS:= ${CFLAGS} \
+CFLAGS:= \
 	${DEBUG} \
 	-DVERSION=\"${version}\" \
 	-I${stagedir}${prefix}/include -I${top_srcdir}/src -I. \
 	-I${top_srcdir}/interface \
 	${COVERAGE_FLAGS} \
 	-D_GNU_SOURCE \
-	-DHAVE_SYSLOG_H=1
+	-DHAVE_SYSLOG_H=1 ${CFLAGS}
 
 ifdef LBS_DB_PROFILE
 	CFLAGS:=${CFLAGS} -DLBS_DB_PROFILE

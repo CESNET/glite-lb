@@ -30,13 +30,13 @@ SOURCES=interface/*.h project/.post* src/*.c Makefile
 
 DEBUG:=-g -O0 -W -Wall
 
-CFLAGS:= ${CFLAGS} \
+CFLAGS:= \
 	${DEBUG} \
 	-DVERSION=\"${version}\" \
 	-I${stagedir}${prefix}/include -I${top_srcdir}/src -I. \
 	-I${top_srcdir}/interface \
 	${COVERAGE_FLAGS} \
-	-D_GNU_SOURCE
+	-D_GNU_SOURCE ${CFLAGS}
 
 LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir} ${COVERAGE_FLAGS}
 
