@@ -1,5 +1,5 @@
-%global groupId     org.glite.jobid
-%global artifactId  api-java
+%global groupId     org.glite
+%global artifactId  jobid-api-java
 %{!?_mavenpomdir: %global _mavenpomdir %{_datadir}/maven2/poms}
 
 Name:           glite-jobid-api-java
@@ -29,6 +29,10 @@ BuildRequires:  java-devel
 Requires:       jakarta-commons-codec
 Requires:       java
 Requires:       jpackage-utils
+%if 0%{?rhel} || 0%{?fedora} < 18
+Requires(post): jpackage-utils
+Requires(postun): jpackage-utils
+%endif
 
 %description
 @DESCRIPTION@
@@ -64,7 +68,7 @@ install -m 0644 JPP-%{name}.pom $RPM_BUILD_ROOT%{_mavenpomdir}
 %if 0%{?add_maven_depmap:1}
 %add_maven_depmap JPP-%{name}.pom %{name}.jar
 %else
-%add_to_maven_depmap %{groupId} %{artifactId} %{version} JPP %{name}.jar
+%add_to_maven_depmap %{groupId} %{artifactId} %{version} JPP %{name}
 %endif
 
 

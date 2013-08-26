@@ -45,6 +45,10 @@ Requires:       glite-jobid-api-java
 Requires:       jakarta-commons-lang
 Requires:       java
 Requires:       jpackage-utils
+%if 0%{?rhel} || 0%{?fedora} < 18
+Requires(post): jpackage-utils
+Requires(postun): jpackage-utils
+%endif
 
 %description
 @DESCRIPTION@
@@ -133,8 +137,8 @@ install -m 0644 JPP-%{name}.pom JPP-%{name}-axis.pom $RPM_BUILD_ROOT%{_mavenpomd
 %add_maven_depmap JPP-%{name}.pom %{name}.jar
 %add_maven_depmap JPP-%{name}-axis.pom %{name}-axis.jar -f axis
 %else
-%add_to_maven_depmap %{groupId} %{artifactId} %{version} JPP %{name}.jar
-%add_to_maven_depmap %{groupId} %{artifactId}-axis %{version} JPP %{name}-axis.jar
+%add_to_maven_depmap %{groupId} %{artifactId} %{version} JPP %{name}
+%add_to_maven_depmap %{groupId} %{artifactId}-axis %{version} JPP %{name}-axis
 %endif
 
 
