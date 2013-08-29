@@ -89,6 +89,7 @@ d %{_localstatedir}/run/glite 0755 glite glite -
 EOF
 %endif
 install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT%{_pkgdocdir}
+rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
 mkdir -p $RPM_BUILD_ROOT/var/lib/glite/dump
 mkdir -p $RPM_BUILD_ROOT/var/lib/glite/purge

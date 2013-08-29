@@ -38,7 +38,8 @@ BuildRequires:  tex(multirow.sty)
 
 %build
 perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --docdir=%{_pkgdocdir} --project=emi --module lb.doc
-make %{?_smp_mflags}
+# parallel build not supported (problems with pdflatex)
+make
 
 
 %install
