@@ -30,7 +30,7 @@ BuildRequires:  pkgconfig
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
-BuildRequires: systemd
+BuildRequires:  systemd
 %else
 Requires(post): chkconfig
 Requires(preun): chkconfig

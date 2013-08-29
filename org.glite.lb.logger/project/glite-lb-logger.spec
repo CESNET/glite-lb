@@ -23,9 +23,10 @@ BuildRequires:  perl(Getopt::Long)
 BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
 %if 0%{?fedora}
-Requires(post): chkconfig
-Requires(preun): chkconfig
-Requires(preun): initscripts
+Requires(post): systemd
+Requires(preun): systemd
+Requires(postun): systemd
+BuildRequires:  systemd
 %else
 Requires(post): chkconfig
 Requires(preun): chkconfig
@@ -191,10 +192,10 @@ fi
 %ghost %{_localstatedir}/run/glite/glite-lb-proxy.sock
 %if 0%{?fedora}
 %{_prefix}/lib/tmpfiles.d/glite-lb-logger.conf
-%{_unitdir}//glite-lb-logd.service
-%{_unitdir}//glite-lb-interlogd.service
-%{_unitdir}//glite-lb-notif-interlogd.service
-%{_unitdir}//glite-lb-proxy-interlogd.service
+%{_unitdir}/glite-lb-logd.service
+%{_unitdir}/glite-lb-interlogd.service
+%{_unitdir}/glite-lb-notif-interlogd.service
+%{_unitdir}/glite-lb-proxy-interlogd.service
 %else
 %{_initrddir}/glite-lb-locallogger
 %{_initrddir}/glite-lb-logd

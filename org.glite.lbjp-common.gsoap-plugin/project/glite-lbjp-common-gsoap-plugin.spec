@@ -19,7 +19,6 @@ BuildRequires:  chrpath
 #  - gssapi from MIT Kerberos (krb5-devel)
 #  - gssapi from Heimdal Kerberos
 #BuildRequires: globus-gssapi-gsi-devel
-BuildRequires:  gsoap
 BuildRequires:  gsoap-devel
 BuildRequires:  glite-lbjp-common-gss-devel
 BuildRequires:  libtool

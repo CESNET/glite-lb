@@ -34,7 +34,7 @@ Requires:       %{name}%{?_isa} = %{version}-%{release}
 
 %description    devel
 This package contains development libraries and header files for gLite L&B/JP
-common DB module.
+common database module.
 
 
 %prep
