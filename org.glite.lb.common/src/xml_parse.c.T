@@ -119,14 +119,15 @@ static const char * const * const eventTags[] = {
 /* used when error unrecoverable*/
 #define unexpError() {\
         char    *e;\
+	int      ret; \
 \
         if (XMLCtx->errtxt) {\
-                asprintf(&e,"%s\nunexpected <%s> at line %d",XMLCtx->errtxt,\
-                        XMLCtx->element,XML_GetCurrentLineNumber(XMLCtx->p));\
+                ret = asprintf(&e,"%s\nunexpected <%s> at line %d",XMLCtx->errtxt,\
+                        XMLCtx->element,(int)XML_GetCurrentLineNumber(XMLCtx->p));\
                 free(XMLCtx->errtxt);\
-        } else asprintf(&e,"unexpected <%s> at line %d",\
-                XMLCtx->element,XML_GetCurrentLineNumber(XMLCtx->p));\
-        XMLCtx->errtxt = e;\
+        } else ret = asprintf(&e,"unexpected <%s> at line %d",\
+                XMLCtx->element,(int)XML_GetCurrentLineNumber(XMLCtx->p));\
+        XMLCtx->errtxt = (ret == -1 ? NULL : e);\
 }
 
 
@@ -138,15 +139,16 @@ static void emptyCall(void){
 // XXX quadratic complexity - problematic when lots of errors in long outputs (10.000's)
 #define unexpWarning() {\
         char    *e;\
+        int      ret;\
 \
 emptyCall(); \
         if (XMLCtx->warntxt) {\
-                asprintf(&e,"%s\nunexpected <%s> at line %d",XMLCtx->warntxt,\
-                        XMLCtx->element,XML_GetCurrentLineNumber(XMLCtx->p));\
+                ret = asprintf(&e,"%s\nunexpected <%s> at line %d",XMLCtx->warntxt,\
+                        XMLCtx->element,(int)XML_GetCurrentLineNumber(XMLCtx->p));\
                 free(XMLCtx->warntxt);\
-        } else asprintf(&e,"unexpected <%s> at line %d",\
-                XMLCtx->element,XML_GetCurrentLineNumber(XMLCtx->p));\
-        XMLCtx->warntxt = e;\
+        } else ret = asprintf(&e,"unexpected <%s> at line %d",\
+                XMLCtx->element,(int)XML_GetCurrentLineNumber(XMLCtx->p));\
+        XMLCtx->warntxt = (ret == -1 ? NULL : e);\
 }
 
 
@@ -1180,6 +1182,7 @@ static void endPurgeResult(void *data, const char *el UNUSED_VAR)
 {
         edg_wll_XML_ctx *XMLCtx = data;
         char *e;
+	int ret;
 
         if (XMLCtx->level == 2) {
                 if (!strcmp(XMLCtx->element,"server_file")) 
@@ -1192,13 +1195,13 @@ static void endPurgeResult(void *data, const char *el UNUSED_VAR)
 			{
 				/* XXX char_buf contains an escaped value, unescaping is done within edg_wll_from_string_to_string(), which failed */
 				if (XMLCtx->errtxt) {
-					asprintf(&e,"%s\n%s: invalid JobId at line %d",
+					ret = asprintf(&e,"%s\n%s: invalid JobId at line %d",
 						XMLCtx->errtxt, XMLCtx->char_buf,
-						XML_GetCurrentLineNumber(XMLCtx->p));
+						(int)XML_GetCurrentLineNumber(XMLCtx->p));
 					free(XMLCtx->errtxt);
-				} else asprintf(&e,"%s: invalid JobId at line %d",
-					XMLCtx->char_buf,XML_GetCurrentLineNumber(XMLCtx->p));
-				XMLCtx->errtxt = e;
+				} else ret = asprintf(&e,"%s: invalid JobId at line %d",
+					XMLCtx->char_buf,(int)XML_GetCurrentLineNumber(XMLCtx->p));
+				XMLCtx->errtxt = (ret == -1 ? NULL : e);
 			}
 		}
 	}
@@ -1387,9 +1390,9 @@ edg_wll_ErrorCode edg_wll_ParseQueryJobs(edg_wll_Context ctx, char *messageBody,
 	if (! XML_Parse(XMLCtx.p, messageBody, strlen(messageBody), 1)) {
 		char *errorMessage;
 
-		asprintf(&errorMessage, "XML parse error at line %d:\n%s\n",
-			XML_GetCurrentLineNumber(XMLCtx.p),
-			XML_ErrorString(XML_GetErrorCode(XMLCtx.p))); 
+		if (asprintf(&errorMessage, "XML parse error at line %d:\n%s\n",
+			(int)XML_GetCurrentLineNumber(XMLCtx.p),
+			XML_ErrorString(XML_GetErrorCode(XMLCtx.p))) == -1) errorMessage = NULL;
 
 		edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, errorMessage);
                 free(errorMessage);		
@@ -1513,9 +1516,9 @@ edg_wll_ErrorCode edg_wll_ParseQueryEvents(edg_wll_Context ctx, char *messageBod
                 char *errorMessage;
 
 
-                asprintf(&errorMessage, "XML parse error at line %d:\n%s\n",
-                        XML_GetCurrentLineNumber(XMLCtx.p),
-                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p)));
+                if (asprintf(&errorMessage, "XML parse error at line %d:\n%s\n",
+                        (int)XML_GetCurrentLineNumber(XMLCtx.p),
+                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p))) == -1) errorMessage = NULL;
 
 		edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, errorMessage);
 		free(errorMessage);
@@ -1598,9 +1601,9 @@ edg_wll_ErrorCode edg_wll_ParseUserJobs(edg_wll_Context ctx, char *messageBody, 
 		char *errorMessage;
 
 
-		asprintf(&errorMessage, "XML parse error at line %d:\n%s\n",
-			XML_GetCurrentLineNumber(XMLCtx.p),
-			XML_ErrorString(XML_GetErrorCode(XMLCtx.p))); 
+		if (asprintf(&errorMessage, "XML parse error at line %d:\n%s\n",
+			(int)XML_GetCurrentLineNumber(XMLCtx.p),
+			XML_ErrorString(XML_GetErrorCode(XMLCtx.p))) == -1) errorMessage = NULL;
 		*jobsOut = NULL;	
 
 		edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, errorMessage);
@@ -1670,9 +1673,9 @@ edg_wll_ErrorCode edg_wll_ParseJobStat(edg_wll_Context ctx, char *messageBody, l
                 char *errorMessage;
 
 
-                asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
-                        XML_GetCurrentLineNumber(XMLCtx.p),
-                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p)));
+                if (asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
+                        (int)XML_GetCurrentLineNumber(XMLCtx.p),
+                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p))) == -1) errorMessage = NULL;
 
                 edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, errorMessage);
                 free(errorMessage);
@@ -1715,8 +1718,8 @@ edg_wll_ErrorCode edg_wll_ParseStrList(edg_wll_Context ctx, char *messageBody, l
 	edg_wll_ResetError(ctx);	
 	XMLCtx.message_body = messageBody;
 	XMLCtx.ctx = ctx;
-	asprintf(&XMLCtx.XML_tag,"%s",tag);
-	asprintf(&XMLCtx.XML_tag2,"%s",tag2);
+	XMLCtx.XML_tag = strdup(tag);
+	XMLCtx.XML_tag2 = strdup(tag2);
 
         /* initialize parser */
 	XMLCtx.p = XML_ParserCreate(encoding);
@@ -1729,9 +1732,9 @@ edg_wll_ErrorCode edg_wll_ParseStrList(edg_wll_Context ctx, char *messageBody, l
                 char *errorMessage;
 
 
-                asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
-                        XML_GetCurrentLineNumber(XMLCtx.p),
-                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p)));
+                if (asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
+                        (int)XML_GetCurrentLineNumber(XMLCtx.p),
+                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p))) == -1) errorMessage = NULL;
 
                 edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, errorMessage);
                 free(errorMessage);
@@ -1793,7 +1796,7 @@ edg_wll_ErrorCode edg_wll_ParseIntList(edg_wll_Context ctx, char *messageBody, l
 	edg_wll_ResetError(ctx);	
 	XMLCtx.message_body = messageBody;
 	XMLCtx.ctx = ctx;
-	asprintf(&XMLCtx.XML_tag,"%s",tag);
+	XMLCtx.XML_tag = strdup(tag);
 	XMLCtx.tagToIndex = tagToIndex;
 
         /* initialize parser */
@@ -1807,9 +1810,9 @@ edg_wll_ErrorCode edg_wll_ParseIntList(edg_wll_Context ctx, char *messageBody, l
                 char *errorMessage;
 
 
-                asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
-                        XML_GetCurrentLineNumber(XMLCtx.p),
-                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p)));
+                if (asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
+                        (int)XML_GetCurrentLineNumber(XMLCtx.p),
+                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p))) == -1) errorMessage = NULL;
 
                 edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, errorMessage);
                 free(errorMessage);
@@ -1856,8 +1859,8 @@ edg_wll_ErrorCode edg_wll_ParseTagList(edg_wll_Context ctx, char *messageBody, l
 	edg_wll_ResetError(ctx);	
 	XMLCtx.message_body = messageBody;
 	XMLCtx.ctx = ctx;
-	asprintf(&XMLCtx.XML_tag,"%s",tag);
-	asprintf(&XMLCtx.XML_tag2,"%s",tag2);
+	XMLCtx.XML_tag = strdup(tag);
+	XMLCtx.XML_tag2 = strdup(tag2);
 
         /* initialize parser */
 	XMLCtx.p = XML_ParserCreate(encoding);
@@ -1870,9 +1873,9 @@ edg_wll_ErrorCode edg_wll_ParseTagList(edg_wll_Context ctx, char *messageBody, l
                 char *errorMessage;
 
 
-                asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
-                        XML_GetCurrentLineNumber(XMLCtx.p),
-                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p)));
+                if (asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
+                        (int)XML_GetCurrentLineNumber(XMLCtx.p),
+                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p))) == -1) errorMessage = NULL;
 
                 edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, errorMessage);
                 free(errorMessage);
@@ -1937,8 +1940,8 @@ edg_wll_ErrorCode edg_wll_ParseStsList(edg_wll_Context ctx, char *messageBody, l
 	edg_wll_ResetError(ctx);	
 	XMLCtx.message_body = messageBody;
 	XMLCtx.ctx = ctx;
-	asprintf(&XMLCtx.XML_tag,"%s",tag);
-	asprintf(&XMLCtx.XML_tag2,"%s",tag2);
+	XMLCtx.XML_tag = strdup(tag);
+	XMLCtx.XML_tag2 = strdup(tag2);
 
         /* initialize parser */
 	XMLCtx.p = XML_ParserCreate(encoding);
@@ -1951,9 +1954,9 @@ edg_wll_ErrorCode edg_wll_ParseStsList(edg_wll_Context ctx, char *messageBody, l
                 char *errorMessage;
 
 
-                asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
-                        XML_GetCurrentLineNumber(XMLCtx.p),
-                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p)));
+                if (asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
+                        (int)XML_GetCurrentLineNumber(XMLCtx.p),
+                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p))) == -1) errorMessage = NULL;
 
                 edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, errorMessage);
                 free(errorMessage);
@@ -2031,9 +2034,9 @@ edg_wll_ErrorCode edg_wll_ParsePurgeResult(edg_wll_Context ctx, char *messageBod
         if (! XML_Parse(XMLCtx.p, messageBody, strlen(messageBody), 1)) {
                 char *errorMessage;
 
-                asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
-                        XML_GetCurrentLineNumber(XMLCtx.p),
-                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p)));
+                if (asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
+                        (int)XML_GetCurrentLineNumber(XMLCtx.p),
+                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p))) == -1) errorMessage = NULL;
 
                 edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, errorMessage);
                 free(errorMessage);
@@ -2104,9 +2107,9 @@ edg_wll_ErrorCode edg_wll_ParseDumpResult(edg_wll_Context ctx, char *messageBody
         if (! XML_Parse(XMLCtx.p, messageBody, strlen(messageBody), 1)) {
                 char *errorMessage;
 
-                asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
-                        XML_GetCurrentLineNumber(XMLCtx.p),
-                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p)));
+                if (asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
+                        (int)XML_GetCurrentLineNumber(XMLCtx.p),
+                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p))) == -1) errorMessage = NULL;
 
                 edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, errorMessage);
                 free(errorMessage);
@@ -2169,9 +2172,9 @@ edg_wll_ErrorCode edg_wll_ParseLoadResult(edg_wll_Context ctx, char *messageBody
         if (! XML_Parse(XMLCtx.p, messageBody, strlen(messageBody), 1)) {
                 char *errorMessage;
 
-                asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
-                        XML_GetCurrentLineNumber(XMLCtx.p),
-                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p)));
+                if (asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
+                        (int)XML_GetCurrentLineNumber(XMLCtx.p),
+                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p))) == -1) errorMessage = NULL;
 
                 edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, errorMessage);
                 free(errorMessage);
@@ -2230,9 +2233,9 @@ edg_wll_ErrorCode edg_wll_ParseIndexedAttrs(edg_wll_Context ctx, char *messageBo
                 char *errorMessage;
 
 
-                asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
-                        XML_GetCurrentLineNumber(XMLCtx.p),
-                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p)));
+                if (asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
+                        (int)XML_GetCurrentLineNumber(XMLCtx.p),
+                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p))) == -1) errorMessage = NULL;
 
                 edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, errorMessage);
                 free(errorMessage);
@@ -2308,9 +2311,9 @@ edg_wll_ErrorCode edg_wll_ParseNotifResult(edg_wll_Context ctx, char *messageBod
         if (! XML_Parse(XMLCtx.p, messageBody, strlen(messageBody), 1)) {
                 char *errorMessage;
 
-                asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
-                        XML_GetCurrentLineNumber(XMLCtx.p),
-                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p)));
+                if (asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
+                        (int)XML_GetCurrentLineNumber(XMLCtx.p),
+                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p))) == -1) errorMessage = NULL;
 
                 edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, errorMessage);
                 free(errorMessage);
@@ -2372,9 +2375,9 @@ edg_wll_ErrorCode edg_wll_ParseQuerySequenceCodeResult(edg_wll_Context ctx, char
         if (! XML_Parse(XMLCtx.p, messageBody, strlen(messageBody), 1)) {
                 char *errorMessage;
 
-                asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
-                        XML_GetCurrentLineNumber(XMLCtx.p),
-                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p)));
+                if (asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
+                        (int)XML_GetCurrentLineNumber(XMLCtx.p),
+                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p))) == -1) errorMessage = NULL;
 
                 edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, errorMessage);
                 free(errorMessage);
@@ -2469,9 +2472,9 @@ edg_wll_ErrorCode edg_wll_ParseStatsResultFull(edg_wll_Context ctx, char *messag
         if (! XML_Parse(XMLCtx.p, messageBody, strlen(messageBody), 1)) {
                 char *errorMessage;
 
-                asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
-                        XML_GetCurrentLineNumber(XMLCtx.p),
-                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p)));
+                if (asprintf(&errorMessage, "Parse error at line %d:\n%s\n",
+                        (int)XML_GetCurrentLineNumber(XMLCtx.p),
+                        XML_ErrorString(XML_GetErrorCode(XMLCtx.p))) == -1) errorMessage = NULL;
 
                 edg_wll_SetError(ctx, EDG_WLL_ERROR_XML_PARSE, errorMessage);
                 free(errorMessage);
@@ -2560,8 +2563,8 @@ int edg_wll_JobQueryRecToXML(
 	        while (i < nconditions) {
 	                const char *pomOp;
 	                char       *pomValue;
-	
-	                asprintf(&pomValue,"%s","");
+
+			pomValue = strdup("");
 	
 	                switch (conditions[row][i].attr) {
 	                                /* job specific conditions */
@@ -2756,8 +2759,8 @@ int edg_wll_QueryEventsRequestToXML(
 		while (i < nevent_conditions) {
 			const char *pomOp;
 			char       *pomValue;
-	
-			asprintf(&pomValue,"%s","");
+
+			pomValue = strdup("");
 	
 			switch (event_conditions[row][i].attr) {
 				/* event specific conditions */

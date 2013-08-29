@@ -311,9 +311,11 @@ int edg_wll_UpdateError(edg_wll_Context ctx,int code,const char *desc)
 	/* first fill in the old_desc */
         if (ctx->errCode) {
                 if (ctx->errDesc) {
-                        if ((err_text)) // && (code) && (code <> ctx->errCode))
-                                asprintf(&old_desc,"%s;; %s",err_text,ctx->errDesc);
-                        else
+                        if ((err_text)) { // && (code) && (code <> ctx->errCode))
+				if (asprintf(&old_desc,"%s;; %s",err_text,ctx->errDesc) == -1) {
+					old_desc = NULL;
+				}
+                        } else
                                 old_desc = (char *) strdup(ctx->errDesc);
                 } else {
                         old_desc = (char *) strdup(err_text);
@@ -326,8 +328,12 @@ int edg_wll_UpdateError(edg_wll_Context ctx,int code,const char *desc)
 	/* update errDesc */
         if (old_desc) {
                 if (desc) {
-                        asprintf(&new_desc,"%s\n%s",desc,old_desc);
-                        ctx->errDesc = (char *) strdup(new_desc);
+			if (asprintf(&new_desc,"%s\n%s",desc,old_desc) == -1) {
+				new_desc = NULL;
+				ctx->errDesc = NULL;
+			} else {
+	                        ctx->errDesc = (char *) strdup(new_desc);
+			}
                 } else {
                         ctx->errDesc = (char *) strdup(old_desc);
 		}
@@ -423,7 +429,7 @@ char *edg_wll_GetSequenceCode(const edg_wll_Context ctx)
 			/* fall through */
 		case EDG_WLL_SEQ_NORMAL:
 			c = &ctx->p_seqcode.c[0];
-			asprintf(&ret, EDG_WLL_SEQ_FORMAT_PRINTF,
+			if (asprintf(&ret, EDG_WLL_SEQ_FORMAT_PRINTF,
 					c[EDG_WLL_SOURCE_USER_INTERFACE],
 					c[EDG_WLL_SOURCE_NETWORK_SERVER],
 					c[EDG_WLL_SOURCE_WORKLOAD_MANAGER],
@@ -432,16 +438,16 @@ char *edg_wll_GetSequenceCode(const edg_wll_Context ctx)
 					c[EDG_WLL_SOURCE_LOG_MONITOR],
 					c[EDG_WLL_SOURCE_LRMS],
 					c[EDG_WLL_SOURCE_APPLICATION],
-					c[EDG_WLL_SOURCE_LB_SERVER]);
+					c[EDG_WLL_SOURCE_LB_SERVER]) == -1) ret = NULL;
 			break;
 		case EDG_WLL_SEQ_PBS:
 			c = &ctx->p_seqcode.c[0];
-			asprintf(&ret, EDG_WLL_SEQ_PBS_FORMAT_PRINTF,
+			if (asprintf(&ret, EDG_WLL_SEQ_PBS_FORMAT_PRINTF,
 				 c[EDG_WLL_SOURCE_PBS_CLIENT],
 				 c[EDG_WLL_SOURCE_PBS_SERVER],
 				 c[EDG_WLL_SOURCE_PBS_SCHEDULER],
 				 c[EDG_WLL_SOURCE_PBS_SMOM],
-				 c[EDG_WLL_SOURCE_PBS_MOM]);
+				 c[EDG_WLL_SOURCE_PBS_MOM]) == -1) ret = NULL;
 			/* ret = strdup(ctx->p_seqcode.pbs); */
 			break;
 		case EDG_WLL_SEQ_CONDOR:
@@ -618,8 +624,8 @@ int edg_wll_GenerateSubjobIds(
 
 	for (subjob = 0; subjob < num_subjobs; subjob++) {
 
-		asprintf(&unhashed, "%s,%s,%d", p_unique, intseed, subjob);
-		if (unhashed == NULL) {
+		ret = asprintf(&unhashed, "%s,%s,%d", p_unique, intseed, subjob);
+		if (ret == -1 || unhashed == NULL) {
 			edg_wll_SetError(ctx, ENOMEM, "edg_wll_GenerateSubjobIds(): asprintf() error");
 			goto handle_error;
 		}
@@ -780,7 +786,7 @@ edg_wll_ParseMSGConf(char *msg_conf, char ***brokers, char ***prefixes) {
 					if (token == NULL) break;
 
 					tokens = (char**) realloc (tokens, sizeof(char**) * (ntoks + 2));
-					asprintf(&(tokens[ntoks]), "%s", token);
+					tokens[ntoks] = strdup(token);
 					tokens[++ntoks] = NULL;	
 				} 
 
