@@ -11,7 +11,11 @@ Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.sta
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  chrpath
+%if 0%{?rhel}
 BuildRequires:  classads-devel
+%else
+BuildRequires:  condor-classads-devel
+%endif
 BuildRequires:  expat-devel
 BuildRequires:  glite-jobid-api-c-devel
 BuildRequires:  glite-lb-common-devel

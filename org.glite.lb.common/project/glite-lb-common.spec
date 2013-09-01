@@ -12,7 +12,11 @@ BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  c-ares-devel
 BuildRequires:  chrpath
+%if 0%{?rhel}
 BuildRequires:  classads-devel
+%else
+BuildRequires:  condor-classads-devel
+%endif
 BuildRequires:  cppunit-devel
 BuildRequires:  expat-devel
 BuildRequires:  glite-jobid-api-cpp-devel

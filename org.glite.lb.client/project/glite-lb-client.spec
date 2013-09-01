@@ -12,7 +12,11 @@ Vendor:         EMI
 Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.client/%{version}/src/%{name}-%{version}.tar.gz
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
+%if 0%{?rhel}
 BuildRequires:  classads-devel
+%else
+BuildRequires:  condor-classads-devel
+%endif
 BuildRequires:  cppunit-devel
 BuildRequires:  chrpath
 BuildRequires:  glite-lb-types

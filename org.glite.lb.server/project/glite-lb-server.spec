@@ -37,7 +37,11 @@ BuildRequires:  c-ares-devel
 BuildRequires:  cppunit-devel
 BuildRequires:  flex
 BuildRequires:  voms-devel
+%if 0%{?rhel}
 BuildRequires:  classads-devel
+%else
+BuildRequires:  condor-classads-devel
+%endif
 BuildRequires:  libtool
 BuildRequires:  libxml2-devel
 BuildRequires:  expat-devel
