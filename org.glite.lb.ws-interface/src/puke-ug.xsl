@@ -29,8 +29,8 @@
 		<sect1>
 			<title>Types</title>
 			<!--xsl:apply-templates select="types"/ -->
-			<para> <emphasis><xsl:value-of select="document('../build/LBTypes.xml')/service/version"/></emphasis> </para>
-			<xsl:apply-templates select="document('../build/LBTypes.xml')/service/types"/>
+			<para> <emphasis><xsl:value-of select="document('LBTypes.xml')/service/version"/></emphasis> </para>
+			<xsl:apply-templates select="document('LBTypes.xml')/service/types"/>
 		</sect1>
 	</chapter>
 </xsl:template>

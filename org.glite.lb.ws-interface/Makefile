@@ -67,7 +67,7 @@ install:
 #	fi
 
 clean:
-	rm -vf *.h *.html *.xml *.wsdl glue2-copy.xsd
+	rm -vf *.h *.html *.xml *.wsdl glue2-copy.xsd puke-ug.xsl
 	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
@@ -85,7 +85,8 @@ ${WSDL}: %.wsdl: %.xml puke-wsdl.xsl
 #	-perl -i -n -e 'if (/^\s*$$/) { $$empty .= "\n"; } elsif (/^\s*<(xsd:)?(enumeration|element|input|output|fault)/) { print $$_; $$empty = "";} else { print "$$empty$$_"; $$empty=""; }; ' $@
 
 LB.html: doc.xml LBTypes.xml LB.xml puke-ug.xsl
-	${XSLTPROC} --novalid ${top_srcdir}/src/puke-ug.xsl $< >doc-html.xml
+	cp -p ${top_srcdir}/src/puke-ug.xsl ${top_srcdir}/src/LB.xml .
+	${XSLTPROC} --novalid puke-ug.xsl $< >doc-html.xml
 	-${TIDY} -xml -m doc-html.xml
 #	${XMLLINT} --valid --noout doc-html.xml
 	${XSLTPROC} --stringparam  chapter.autolabel 0 ${docbookxls} doc-html.xml >$@
