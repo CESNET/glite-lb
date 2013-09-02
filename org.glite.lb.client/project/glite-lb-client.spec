@@ -97,7 +97,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files devel
 %defattr(-,root,root)
-%dir %{_docdir}/%{name}-%{version}/examples/
+%dir %{_docdir}/%{_pkgdocdir}/examples/
 %dir %{_datadir}/emi/
 %dir %{_datadir}/emi/build/
 %dir %{_datadir}/emi/build/m4/
