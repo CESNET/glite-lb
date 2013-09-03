@@ -1,5 +1,10 @@
 %{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
 
+# condor classads requires 2011 ISO C++ standard since Fedora 19
+%if 0%{?fedora} >= 19
+%global classad_cxxflags -std=c++11
+%endif
+
 Name:           glite-lb-server
 Version:        @MAJOR@.@MINOR@.@REVISION@
 Release:        @AGE@%{?dist}
@@ -79,7 +84,7 @@ Requires(preun): initscripts
 
 %build
 perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --docdir=%{_pkgdocdir} --project=emi --module lb.server
-CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make %{?_smp_mflags}
+CFLAGS="%{?optflags}" CXXFLAGS="%{?optflags} %{?classad_cxxflags}" LDFLAGS="%{?__global_ldflags}" make %{?_smp_mflags}
 
 
 %install
