@@ -1460,11 +1460,11 @@ sub os_type {
 	close FH;
 
 	if (/Debian|Ubuntu/i) { return "debian"; }
-	elsif (/Scientific|Redhat|Centos|Fedora/i) {
+	elsif (/Scientific|Redhat|Red Hat|Centos|Fedora/i) {
 		`pkg-config --exists systemd`;
 		if ($? == 0) { return "fedora"; }
 		else { return "redhat"; }
-	}
+	} else { return "redhat"; }
 }
 
 sub usage {
