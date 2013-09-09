@@ -218,6 +218,8 @@ int edg_wll_ConfigurationToHTML(edg_wll_Context ctx, int admin, char **message, 
                 edg_wll_GetServerState(ctx, EDG_WLL_STATE_DUMP_END, &end);
 		add_row(&out, "dump_start", "Last dump start", start, NULL, text);
 		add_row(&out, "dump_end", "Last dump end", end, NULL, text);
+		add_row(&out, "dump_prefix", "Dump file prefix", ctx->dumpStorage, NULL, text);
+		add_row(&out, "purge_prefix", "Purge file prefix", ctx->purgeStorage, NULL, text);
 		add_row(&out, "html_header", "HTML Header file", ctx->html_header_file, NULL, text);
 
 		a = NULL;
