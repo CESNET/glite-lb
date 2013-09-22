@@ -49,8 +49,8 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_libexecdir}/grid-monitoring/
 %dir %{_libexecdir}/grid-monitoring/probes/
 %dir %{_libexecdir}/grid-monitoring/probes/emi.lb/
-%dir /var/lib/grid-monitoring/
-%dir %attr(0755, nagios, nagios) /var/lib/grid-monitoring/emi.lb/
+%dir %{_localstatedir}/lib/grid-monitoring/
+%dir %attr(0755, nagios, nagios) %{_localstatedir}/lib/grid-monitoring/emi.lb/
 %{_libexecdir}/grid-monitoring/probes/emi.lb/LB-probe
 %{_libexecdir}/grid-monitoring/probes/emi.lb/IL-probe
 

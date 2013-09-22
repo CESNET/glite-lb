@@ -100,10 +100,10 @@ EOF
 install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT%{_pkgdocdir}
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
-mkdir -p $RPM_BUILD_ROOT/var/lib/glite/dump
-mkdir -p $RPM_BUILD_ROOT/var/lib/glite/purge
-mkdir -p $RPM_BUILD_ROOT/var/log/glite
-mkdir -p $RPM_BUILD_ROOT/var/run/glite
+mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/lib/glite/dump
+mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/lib/glite/purge
+mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/log/glite
+mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/run/glite
 
 
 %clean
@@ -130,13 +130,13 @@ if [ $1 -eq 1 ] ; then
 fi
 
 # upgrade from lb.server <= 3.0.1 (L&B <= 4.0.1)
-if [ ! -d /var/run/glite ]; then
-  mkdir -p /var/run/glite
-  chown -R glite:glite /var/run/glite
+if [ ! -d %{_localstatedir}/run/glite ]; then
+  mkdir -p %{_localstatedir}/run/glite
+  chown -R glite:glite %{_localstatedir}/run/glite
 fi
-[ -f /var/glite/glite-lb-bkserverd.pid -a ! -f /var/run/glite/glite-lb-bkserverd.pid ] && cp -pv /var/glite/glite-lb-bkserverd.pid /var/run/glite/ || :
+[ -f /var/glite/glite-lb-bkserverd.pid -a ! -f %{_localstatedir}/run/glite/glite-lb-bkserverd.pid ] && cp -pv /var/glite/glite-lb-bkserverd.pid %{_localstatedir}/run/glite/ || :
 # upgrade from L&B server <= 3.0.2 (L&B <= 4.0.1)
-[ -f /var/glite/lb_server_stats -a ! -f /var/lib/glite/lb_server_stats ] && mv -v /var/glite/lb_server_stats /var/lib/glite/ || :
+[ -f /var/glite/lb_server_stats -a ! -f %{_localstatedir}/lib/glite/lb_server_stats ] && mv -v /var/glite/lb_server_stats %{_localstatedir}/lib/glite/ || :
 %endif
 
 

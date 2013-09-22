@@ -62,8 +62,8 @@ d %{_localstatedir}/run/glite 0755 glite glite -
 EOF
 %endif
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
-mkdir -p $RPM_BUILD_ROOT/var/lib/glite
-mkdir -p $RPM_BUILD_ROOT/var/run/glite
+mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/lib/glite
+mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/run/glite
 
 
 %clean
@@ -72,7 +72,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %pre
 getent group glite >/dev/null || groupadd -r glite
-getent passwd glite >/dev/null || useradd -r -g glite -d /var/lib/glite -c "gLite user" glite
+getent passwd glite >/dev/null || useradd -r -g glite -d %{_localstatedir}/lib/glite -c "gLite user" glite
 exit 0
 
 
@@ -90,11 +90,11 @@ if [ $1 -eq 1 ] ; then
 fi
 
 # upgrade from L&B harvester <= 1.3.4 (L&B <= 4.0.1)
-if [ ! -d /var/run/glite ]; then
-  mkdir -p /var/run/glite
-  chown -R glite:glite /var/run/glite
+if [ ! -d %{_localstatedir}/run/glite ]; then
+  mkdir -p %{_localstatedir}/run/glite
+  chown -R glite:glite %{_localstatedir}/run/glite
 fi
-[ -f /var/glite/glite-lb-harvester.pid -a ! -f /var/run/glite/glite-lb-harvester.pid ] && cp -pv /var/glite/glite-lb-harvester.pid /var/run/glite/ || :
+[ -f /var/glite/glite-lb-harvester.pid -a ! -f %{_localstatedir}/run/glite/glite-lb-harvester.pid ] && cp -pv /var/glite/glite-lb-harvester.pid %{_localstatedir}/run/glite/ || :
 %endif
 
 

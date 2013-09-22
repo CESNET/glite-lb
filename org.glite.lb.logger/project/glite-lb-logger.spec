@@ -71,11 +71,11 @@ EOF
 sed -i 's,\(lockfile=/var/lock\),\1/subsys,' $RPM_BUILD_ROOT/etc/rc.d/init.d/glite-lb-locallogger
 %endif
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
-mkdir -p $RPM_BUILD_ROOT/var/lib/glite
-mkdir -p $RPM_BUILD_ROOT/var/run/glite
-touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-interlogger.sock
-touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-notif.sock
-touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-proxy.sock
+mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/lib/glite
+mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/run/glite
+touch $RPM_BUILD_ROOT%{_localstatedir}/run/glite/glite-lb-interlogger.sock
+touch $RPM_BUILD_ROOT%{_localstatedir}/run/glite/glite-lb-notif.sock
+touch $RPM_BUILD_ROOT%{_localstatedir}/run/glite/glite-lb-proxy.sock
 
 
 %clean
@@ -84,7 +84,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %pre
 getent group glite >/dev/null || groupadd -r glite
-getent passwd glite >/dev/null || useradd -r -g glite -d /var/lib/glite -c "gLite user" glite
+getent passwd glite >/dev/null || useradd -r -g glite -d %{_localstatedir}/lib/glite -c "gLite user" glite
 exit 0
 
 
@@ -109,12 +109,12 @@ if [ $1 -eq 1 ] ; then
 fi
 
 # upgrade from lb.logger <= 2.4.10 (L&B <= 4.0.1)
-if [ ! -d /var/run/glite ]; then
-  mkdir -p /var/run/glite
-  chown -R glite:glite /var/run/glite
+if [ ! -d %{_localstatedir}/run/glite ]; then
+  mkdir -p %{_localstatedir}/run/glite
+  chown -R glite:glite %{_localstatedir}/run/glite
 fi
 for i in logd interlogd notif-interlogd proxy-interlogd; do
-  [ -f /var/glite/glite-lb-$i.pid -a ! -f /var/run/glite/glite-lb-$i.pid ] && cp -pv /var/glite/glite-lb-$i.pid /var/run/glite/ || :
+  [ -f /var/glite/glite-lb-$i.pid -a ! -f %{_localstatedir}/run/glite/glite-lb-$i.pid ] && cp -pv /var/glite/glite-lb-$i.pid %{_localstatedir}/run/glite/ || :
 done
 
 # upgrade from lb.logger <= 2.4.15 (L&B <= 4.0.4)
