@@ -229,6 +229,9 @@ install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/glite/lb
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/glite-lb-logger
+	-mkdir -p -m 0775 ${DESTDIR}${PREFIX}/var/spool/glite/lb-locallogger
+	-mkdir -p -m 0755 ${DESTDIR}${PREFIX}/var/spool/glite/lb-notif
+	-mkdir -p -m 0755 ${DESTDIR}${PREFIX}/var/spool/glite/lb-proxy
 	${INSTALL} -m 755 ${LOGD} ${DESTDIR}${PREFIX}${prefix}/bin
 	${INSTALL} -m 755 ${INTERLOGD} ${DESTDIR}${PREFIX}${prefix}/bin
 	${INSTALL} -m 755 ${NOTIF_INTERLOGD} ${DESTDIR}${PREFIX}${prefix}/bin

@@ -73,9 +73,6 @@ sed -i 's,\(lockfile=/var/lock\),\1/subsys,' $RPM_BUILD_ROOT/etc/rc.d/init.d/gli
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
 mkdir -p $RPM_BUILD_ROOT/var/lib/glite
 mkdir -p $RPM_BUILD_ROOT/var/run/glite
-mkdir -p $RPM_BUILD_ROOT/var/spool/glite/lb-locallogger
-mkdir -p $RPM_BUILD_ROOT/var/spool/glite/lb-notif
-mkdir -p $RPM_BUILD_ROOT/var/spool/glite/lb-proxy
 touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-interlogger.sock
 touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-notif.sock
 touch $RPM_BUILD_ROOT/var/run/glite/glite-lb-proxy.sock
@@ -112,6 +109,10 @@ if [ $1 -eq 1 ] ; then
 fi
 
 # upgrade from lb.logger <= 2.4.10 (L&B <= 4.0.1)
+if [ ! -d /var/run/glite ]; then
+  mkdir -p /var/run/glite
+  chown -R glite:glite /var/run/glite
+fi
 for i in logd interlogd notif-interlogd proxy-interlogd; do
   [ -f /var/glite/glite-lb-$i.pid -a ! -f /var/run/glite/glite-lb-$i.pid ] && cp -pv /var/glite/glite-lb-$i.pid /var/run/glite/ || :
 done
@@ -183,7 +184,7 @@ fi
 %dir %attr(0755, glite, glite) %{_localstatedir}/lib/glite
 %dir %attr(0755, glite, glite) %{_localstatedir}/run/glite
 %dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite
-%dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-locallogger
+%dir %attr(0775, glite, glite) %{_localstatedir}/spool/glite/lb-locallogger
 %dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-notif
 %dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-proxy
 %doc LICENSE project/ChangeLog

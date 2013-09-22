@@ -90,6 +90,10 @@ if [ $1 -eq 1 ] ; then
 fi
 
 # upgrade from L&B harvester <= 1.3.4 (L&B <= 4.0.1)
+if [ ! -d /var/run/glite ]; then
+  mkdir -p /var/run/glite
+  chown -R glite:glite /var/run/glite
+fi
 [ -f /var/glite/glite-lb-harvester.pid -a ! -f /var/run/glite/glite-lb-harvester.pid ] && cp -pv /var/glite/glite-lb-harvester.pid /var/run/glite/ || :
 %endif
 

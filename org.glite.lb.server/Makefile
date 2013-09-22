@@ -446,6 +446,9 @@ install:
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/cron.d
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/mysql/conf.d
 	-mkdir -p ${DESTDIR}${PREFIX}${sysdefaultdir}
+	-mkdir -p -m 0775 ${DESTDIR}${PREFIX}/var/spool/glite/lb-locallogger
+	-mkdir -p -m 0755 ${DESTDIR}${PREFIX}/var/spool/glite/lb-notif
+	-mkdir -p -m 0755 ${DESTDIR}${PREFIX}/var/spool/glite/lb-proxy
 	${INSTALL} -m 644 ${MAN1_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man1
 	${INSTALL} -m 644 ${MAN8_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 	for p in bkserverd bkindex mon-db; do \

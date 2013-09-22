@@ -104,9 +104,6 @@ mkdir -p $RPM_BUILD_ROOT/var/lib/glite/dump
 mkdir -p $RPM_BUILD_ROOT/var/lib/glite/purge
 mkdir -p $RPM_BUILD_ROOT/var/log/glite
 mkdir -p $RPM_BUILD_ROOT/var/run/glite
-mkdir -p $RPM_BUILD_ROOT/var/spool/glite/lb-locallogger
-mkdir -p $RPM_BUILD_ROOT/var/spool/glite/lb-notif
-mkdir -p $RPM_BUILD_ROOT/var/spool/glite/lb-proxy
 
 
 %clean
@@ -133,6 +130,10 @@ if [ $1 -eq 1 ] ; then
 fi
 
 # upgrade from lb.server <= 3.0.1 (L&B <= 4.0.1)
+if [ ! -d /var/run/glite ]; then
+  mkdir -p /var/run/glite
+  chown -R glite:glite /var/run/glite
+fi
 [ -f /var/glite/glite-lb-bkserverd.pid -a ! -f /var/run/glite/glite-lb-bkserverd.pid ] && cp -pv /var/glite/glite-lb-bkserverd.pid /var/run/glite/ || :
 # upgrade from L&B server <= 3.0.2 (L&B <= 4.0.1)
 [ -f /var/glite/lb_server_stats -a ! -f /var/lib/glite/lb_server_stats ] && mv -v /var/glite/lb_server_stats /var/lib/glite/ || :
@@ -178,7 +179,7 @@ fi
 %dir %attr(0755, glite, glite) %{_localstatedir}/log/glite
 %dir %attr(0755, glite, glite) %{_localstatedir}/run/glite
 %dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite
-%dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-locallogger
+%dir %attr(0775, glite, glite) %{_localstatedir}/spool/glite/lb-locallogger
 %dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-notif
 %dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-proxy
 %dir %{_datadir}/glite/

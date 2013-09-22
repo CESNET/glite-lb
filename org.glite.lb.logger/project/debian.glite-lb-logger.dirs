@@ -1,1 +1,5 @@
 usr/share/glite-lb-logger
+var/spool/glite
+var/spool/glite/lb-locallogger
+var/spool/glite/lb-notif
+var/spool/glite/lb-proxy

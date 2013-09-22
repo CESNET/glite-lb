@@ -1,2 +1,6 @@
 etc/glite-lb
 usr/share/glite
+var/spool/glite
+var/spool/glite/lb-locallogger
+var/spool/glite/lb-notif
+var/spool/glite/lb-proxy
