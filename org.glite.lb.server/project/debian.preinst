@@ -4,7 +4,6 @@ set -e
 getent group glite >/dev/null || addgroup --system glite
 getent passwd glite >/dev/null || adduser --system --group --home /var/lib/glite glite
 mkdir -p /var/lib/glite /var/log/glite /var/run/glite 2>/dev/null || :
-chown -R glite:glite /var/lib/glite /var/log/glite /var/run/glite /var/spool/glite/lb-locallogger /var/spool/glite/lb-notif /var/spool/glite/lb-proxy
-chmod 0775 /var/spool/glite/lb-locallogger
+chown -R glite:glite /var/lib/glite /var/log/glite /var/run/glite
 
 #DEBHELPER#

@@ -9,6 +9,8 @@ done
 # upgrade from L&B <= 4.0.4
 # problems with empty 'Default-Start'
 rm -fv /etc/rc*.d/*glite-lb-locallogger
-:
+
+chown -R glite:glite /var/spool/glite/lb-locallogger /var/spool/glite/lb-notif /var/spool/glite/lb-proxy
+chmod 0775 /var/spool/glite/lb-locallogger
 
 #DEBHELPER#
