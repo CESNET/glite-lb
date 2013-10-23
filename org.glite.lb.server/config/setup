@@ -432,7 +432,10 @@ fi
 
 if test "$setup_msg" = "1"; then
 	if test -x $GLITE_LOCATION/sbin/glite-lb-msg-config; then
-		out=`$GLITE_LOCATION/sbin/glite-lb-msg-config $GLITE_LOCATION_ETC/glite-lb/msg.conf 2>&1`
+		# launching glite-lb-msg-config from glite-lb-setup ==> set
+		# GLITE_LB_SETUP to proper handle the case with
+		# GLITE_LB_MSG_BROKER="once"
+		out=`GLITE_LB_SETUP=1 $GLITE_LOCATION/sbin/glite-lb-msg-config $GLITE_LOCATION_ETC/glite-lb/msg.conf 2>&1`
 		if test $? -eq 0; then
 			if test -z "$out"; then
 				out="(no changes)"

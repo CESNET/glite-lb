@@ -19,6 +19,12 @@ if [ -z "$TARGET" ]; then
 	TARGET=$TEMPLATE
 fi
 
+# no refresh if 'once' were requested,
+# but enable refresh when called from glite-lb-setup
+if [ "$GLITE_LB_MSG_BROKER" = 'once' -a -z "$GLITE_LB_SETUP" ]; then
+	exit 0
+fi
+
 # removing and resurrecting
 if [ "$GLITE_LB_MSG_BROKER" = 'false' ]; then
 	if [ -f "$TARGET" ]; then
@@ -45,7 +51,7 @@ fi
 HEADER="`cat $TEMPLATE | grep -B 1000 '^\[msg\]'`"
 PREFIX="`cat $TEMPLATE | grep -A 1000 '^\[msg\]' | grep prefix  | head -n -1`"
 
-if [ "$GLITE_LB_MSG_BROKER" = 'true' -o "$GLITE_LB_MSG_BROKER" = 'auto' -o -z "$GLITE_LB_MSG_BROKER" ]; then
+if [ "$GLITE_LB_MSG_BROKER" = 'true' -o "$GLITE_LB_MSG_BROKER" = 'auto' -o "$GLITE_LB_MSG_BROKER" = 'once' -o -z "$GLITE_LB_MSG_BROKER" ]; then
 	GLITE_LB_MSG_BROKER="`$GLITE_LOCATION/sbin/glite-lb-msg-brokers --bdii $LCG_GFAL_INFOSYS --network $GLITE_LB_MSG_NETWORK --sort find`" || exit $?
 	# bend for using in L&B configuration:
 	#   1) stomp not supported
