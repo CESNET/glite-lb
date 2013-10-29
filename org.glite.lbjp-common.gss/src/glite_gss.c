@@ -619,7 +619,9 @@ create_proxy(const char *cert_file, const char *key_file, char **proxy_file)
 
    *proxy_file = NULL;
 
-   asprintf(&name, "%s/%d.lb.XXXXXX", P_tmpdir, getpid());
+   ret = asprintf(&name, "%s/%d.lb.XXXXXX", P_tmpdir, getpid());
+   if (ret < 0)
+      return EDG_WLL_GSS_ERROR_ERRNO;
 
    out = mkstemp(name);
    if (out < 0)
@@ -1496,6 +1498,7 @@ edg_wll_gss_get_error(edg_wll_GssStatus *gss_err, const char *prefix, char **msg
    gss_buffer_desc min_status_string = GSS_C_EMPTY_BUFFER;
    char *str = NULL;
    char *line, *tmp;
+   int ret;
 
    str = strdup(prefix);
    do {
@@ -1512,22 +1515,25 @@ edg_wll_gss_get_error(edg_wll_GssStatus *gss_err, const char *prefix, char **msg
 	 break;
       }
 
-      asprintf(&line, ": %s (%s)", (char *)maj_status_string.value,
-	       (char *)min_status_string.value);
+      ret = asprintf(&line, ": %.*s (%.*s)", (int)maj_status_string.length,
+		(char *)maj_status_string.value, (int)min_status_string.length,
+		(char *)min_status_string.value);
       gss_release_buffer(&min_stat, &maj_status_string);
       gss_release_buffer(&min_stat, &min_status_string);
 
-      tmp = realloc(str, strlen(str) + strlen(line) + 1);
-      if (tmp == NULL) {
-         /* abort() ? */
-	 free(line);
-	 free(str);
-	 *msg = NULL;
-	 return ENOMEM;
+      if (ret > 0) {
+	tmp = realloc(str, strlen(str) + strlen(line) + 1);
+	if (tmp == NULL) {
+		/* abort() ? */
+		free(line);
+		free(str);
+		*msg = NULL;
+		return ENOMEM;
+	}
+	str = tmp;
+	strcat(str, line);
+	free(line);
       }
-      str = tmp;
-      strcat(str, line);
-      free(line);
    } while (!GSS_ERROR(maj_stat) && msg_ctx != 0);
 
    *msg = str;
@@ -1683,7 +1689,7 @@ edg_wll_gss_get_client_conn(edg_wll_GssConnection *connection,
       goto end;
    }
 
-   p->name = strdup(token.value);
+   p->name = strndup(token.value, token.length);
    p->flags = ctx_flags;
 
    *principal = p;
