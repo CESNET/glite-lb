@@ -77,14 +77,16 @@ all: compile
 
 compile: ${lib_LTLIBRARIES}
 
+ifeq (${thrflavour},)
+${commonlib}: ${OBJS}
+	${LINK} -o $@ ${OBJS} ${LIBS}
+else
 ${commonlib_nothr}: ${OBJS}
 	${LINK} -o $@ ${OBJS} ${LIBS}
 
 ${commonlib_thr}: ${THROBJS}
 	${LINK} -o $@ ${THROBJS} ${THRLIBS}
-
-${commonlib}: ${OBJS}
-	${LINK} -o $@ ${OBJS} ${LIBS}
+endif
 
 check: type_test
 	LD_LIBRARY_PATH=${log4c_prefix}/${libdir}:${log4c_prefix}/lib:${LD_LIBRARY_PATH} ./type_test type_test.xml

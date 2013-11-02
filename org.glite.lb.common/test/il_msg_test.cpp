@@ -44,7 +44,7 @@ public:
 	void setUp() {
 		il_octet_string_t s;
 
-		s.data = "zprava";
+		s.data = const_cast<char *>("zprava");
 		s.len = strlen(s.data);
 		len_msg = encode_il_msg(&buffer_msg, &s);
 		len_rep = encode_il_reply(&buffer_rep, 10, 20, "chyba");

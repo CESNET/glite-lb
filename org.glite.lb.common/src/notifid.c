@@ -118,5 +118,5 @@ edg_wll_NotifIdDup(const edg_wll_NotifId src)
    ret = edg_wll_NotifIdParse((const char *)str, &id);
    free(str);
 
-   return id;
+   return (ret == 0) ? id : NULL;
 }

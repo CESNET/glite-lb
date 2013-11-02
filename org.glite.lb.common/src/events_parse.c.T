@@ -42,7 +42,7 @@ char *my_edg_wll_ULMGetValueAt( p_edg_wll_ULMFields, int );
 /* Function for parsing name=value tag lists */
 int edg_wll_TagListParse(const char *src, edg_wll_TagValue **list) {
 	int n = 0;
-	char *p;
+	char *p, *tmpsrc, *ptr;
 	edg_wll_TagValue *tag;
 
 	if(NULL == src)
@@ -59,7 +59,8 @@ int edg_wll_TagListParse(const char *src, edg_wll_TagValue **list) {
 	if(NULL == *list) 
 		return -1;
 
-	for(p = strtok(src, ","), tag = *list; p; p = strtok(NULL, ",")) {
+	tmpsrc = strdup(src);
+	for(p = strtok_r(tmpsrc, ",", &ptr), tag = *list; p; p = strtok_r(NULL, ",", &ptr)) {
 		char *s = strchr(p, '=');
 
 		if(NULL == s || '\0' == *(s+1)) 
@@ -71,6 +72,7 @@ int edg_wll_TagListParse(const char *src, edg_wll_TagValue **list) {
 		tag->value = strdup(s+1);
 		tag++;
 	}
+	free(tmpsrc);
 	tag->tag = NULL;
 	tag->value = NULL;
 
@@ -79,9 +81,9 @@ int edg_wll_TagListParse(const char *src, edg_wll_TagValue **list) {
 
 
 /* Function for stringifying name=value tag lists */
-char * edg_wll_TagListToString(edg_wll_TagValue *list) {
+char * edg_wll_TagListToString(const edg_wll_TagValue *list) {
 	int len = 0;
-	edg_wll_TagValue *tag;
+	const edg_wll_TagValue *tag;
 	char *out, *p;
 
 	if(NULL == list) return NULL;

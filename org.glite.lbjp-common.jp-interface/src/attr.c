@@ -113,7 +113,7 @@ static char * fb_to_db_full(void *ctx,const glite_jp_attrval_t *attr)
 	/* 4x: + \0 + ASUF + BS + %12d */
 	char	*db = malloc(19 + (attr->origin_detail ? 2*strlen(attr->origin_detail) : 0) + vsize);
 
-	if (attr->origin < 0 || attr->origin > GLITE_JP_ATTR_ORIG_FILE) {
+	if (attr->origin < GLITE_JP_ATTR_ORIG_ANY || attr->origin > GLITE_JP_ATTR_ORIG_FILE) {
 		free(db); return NULL; 
 	}
 	len = sprintf(db,"%c:%ld:%c:",attr->binary ? 'B' : 'S',
@@ -148,6 +148,7 @@ static int fb_from_db(void *ctx,const char *str,glite_jp_attrval_t *attr)
 {
 	int 	p = 2;
 	char	*colon,*cp;
+	int	ret;
 
 	if (str[0] != 'B' && str[0] != 'S') return EINVAL;
 	attr->binary = str[0] == 'B';
@@ -173,8 +174,9 @@ static int fb_from_db(void *ctx,const char *str,glite_jp_attrval_t *attr)
 	if (cp[p++] != ':') return EINVAL;
 
 	if (attr->binary) {
-		attr->size = base64_decode(str+p,attr->value,strlen(str));
-		if (attr->size < 0) return EINVAL;
+		ret = base64_decode(str+p,attr->value,strlen(str));
+		if (ret < 0) return EINVAL;
+		attr->size = ret;
 	}
 	else strcpy(attr->value,str+p);
 

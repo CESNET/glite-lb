@@ -41,7 +41,6 @@ edg_wll_ErrorCode edg_wll_http_recv(edg_wll_Context ctx,char **firstOut,char ***
 	char	**hdr = NULL,*first = NULL,*body = NULL;
 	enum	{ FIRST, HEAD, BODY, DONE }	pstat = FIRST;
 	int	len, nhdr = 0,rdmore = 0,clen = 0,blen = 0;
-	int	sock;
 	edg_wll_GssStatus gss_code;
 
 #define bshift(shift) {\
@@ -50,9 +49,7 @@ edg_wll_ErrorCode edg_wll_http_recv(edg_wll_Context ctx,char **firstOut,char ***
 }
 	edg_wll_ResetError(ctx);
 
-	if (connPTR->gss.context != NULL)
-   		sock = connPTR->gss.sock;
-	else {
+	if (connPTR->gss.context == NULL) {
 		edg_wll_SetError(ctx,ENOTCONN,NULL);
 		goto error;
 	}

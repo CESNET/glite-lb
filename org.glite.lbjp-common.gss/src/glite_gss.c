@@ -900,6 +900,7 @@ gss_connect(edg_wll_GssCred cred, char const *hostname, int port,
 	ar.ent = (struct hostent *) calloc (1, sizeof(struct hostent));
 	switch (h_errno = asyn_getservbyname(ipver, &ar, hostname, port, timeout)) {
 		case NETDB_SUCCESS:
+			ret = 0;
 			break;
 		case TRY_AGAIN:
 			ret = EDG_WLL_GSS_ERROR_TIMEOUT;

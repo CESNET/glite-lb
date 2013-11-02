@@ -23,7 +23,7 @@ limitations under the License.
 
 int main() {
 	printf("sizeof(struct soap) = %lu, original size = %lu\n",
-		sizeof(struct soap), GSOAP_SIZEOF_STRUCT_SOAP);
+		sizeof(struct soap), (size_t)GSOAP_SIZEOF_STRUCT_SOAP);
 
 	return !(sizeof(struct soap) == GSOAP_SIZEOF_STRUCT_SOAP);
 }

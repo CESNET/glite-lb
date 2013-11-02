@@ -572,7 +572,7 @@ int glite_lbu_ExecPreparedStmtMysql_v(glite_lbu_Statement stmt_gen, int n, va_li
 	int ret, retry;
 	MYSQL_BIND *binds = NULL;
 	void **data = NULL;
-	unsigned long *lens;
+	unsigned long *lens = NULL;
 	glite_lbu_Statement newstmt;
 
 	// gather parameters

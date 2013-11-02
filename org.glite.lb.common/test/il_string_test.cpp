@@ -44,7 +44,7 @@ public:
 
 	void testPutString() {
 		il_octet_string_t s;
-		s.data = "ahoj";
+		s.data = const_cast<char *>("ahoj");
 		s.len = strlen(s.data);
 		put_string(buffer, &s);
 		CPPUNIT_ASSERT( !strncmp(buffer,"4 ahoj\n",7) );
@@ -63,7 +63,7 @@ public:
 		il_octet_string_t s;
 		int d;
 
-		s.data = "ahoj";
+		s.data = const_cast<char *>("ahoj");
 		s.len = strlen(s.data);
 		d = len_string(&s);
 		CPPUNIT_ASSERT( d == 7);

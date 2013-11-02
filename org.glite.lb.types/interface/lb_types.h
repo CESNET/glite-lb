@@ -65,7 +65,7 @@ int edg_wll_TagListCompare(edg_wll_TagValue *a, edg_wll_TagValue *b);
 /**
  *  Function for stringifying name=value tag lists
  */
-char * edg_wll_TagListToString(edg_wll_TagValue *list);
+char * edg_wll_TagListToString(const edg_wll_TagValue *list);
 
 
 #ifdef __cplusplus

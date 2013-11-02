@@ -909,7 +909,7 @@ quit:
 	free(valid_str);
 	free(refresh_str);
 	free(last_update_str);
-	return 0;
+	return retval;
 }
 #endif
 
@@ -1634,7 +1634,6 @@ void db_free_notifs() {
 static int daemon_listen(thread_t *t, const char *name, char *port, int *conn_out) {
 	struct	addrinfo *ai;
 	struct	addrinfo hints;
-	char	pretty_addr[256];
 	int	conn;
 	int 	gaie;
 	const int	zero = 0;

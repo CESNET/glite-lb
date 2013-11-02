@@ -57,8 +57,8 @@ void TypePluginTest::simple()
 	glite_jp_context_t	ctx;
 
 	glite_jp_attrval_t	attr = {
-		"myattr",
-		"short string",
+		const_cast<char *>("myattr"),
+		const_cast<char *>("short string"),
 		0,0,
 		GLITE_JP_ATTR_ORIG_USER,
 		NULL,
@@ -86,7 +86,7 @@ void TypePluginTest::binary()
 	glite_jp_context_t	ctx;
 
 	glite_jp_attrval_t	attr = {
-		"myattr",
+		const_cast<char *>("myattr"),
 		NULL,
 		1,1000,
 		GLITE_JP_ATTR_ORIG_USER,
@@ -115,7 +115,7 @@ void TypePluginTest::origin()
 	glite_jp_context_t	ctx;
 
 	glite_jp_attrval_t	attr = {
-		"myattr",
+		const_cast<char *>("myattr"),
 		NULL,
 		0,0,
 		GLITE_JP_ATTR_ORIG_USER,
@@ -127,8 +127,8 @@ void TypePluginTest::origin()
 
 	glite_jp_init_context(&ctx);
 	attr.timestamp = time(NULL);
-	attr.value = "origin test";
-	attr.origin_detail = "simple origin";
+	attr.value = const_cast<char *>("origin test");
+	attr.origin_detail = const_cast<char *>("simple origin");
 
 	db = glite_jp_attrval_to_db_full(ctx,&attr);
 
@@ -144,7 +144,7 @@ void TypePluginTest::origin2()
 	glite_jp_context_t	ctx;
 
 	glite_jp_attrval_t	attr = {
-		"myattr",
+		const_cast<char *>("myattr"),
 		NULL,
 		0,0,
 		GLITE_JP_ATTR_ORIG_USER,
@@ -156,8 +156,8 @@ void TypePluginTest::origin2()
 
 	glite_jp_init_context(&ctx);
 	attr.timestamp = time(NULL);
-	attr.value = "origin:test";
-	attr.origin_detail = "ftp://some.server:1234/ugly \\file";
+	attr.value = const_cast<char *>("origin:test");
+	attr.origin_detail = const_cast<char *>("ftp://some.server:1234/ugly \\file");
 
 	db = glite_jp_attrval_to_db_full(ctx,&attr);
 
