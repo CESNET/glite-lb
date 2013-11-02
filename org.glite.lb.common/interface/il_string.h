@@ -29,9 +29,9 @@ char *put_int(char *p, int d);
 char *_put_int(char *p, int d);
 char *put_string(char *p, il_octet_string_t *s);
 
-char *get_int(char *p, int *d);
-char *_get_int(char *p, int *d);
-char *get_string(char *p, il_octet_string_t *s);
+const char *get_int(const char *p, int *d);
+const char *_get_int(const char *p, int *d);
+const char *get_string(const char *p, il_octet_string_t *s);
 
 int len_string(il_octet_string_t *s);
 int len_int(int d);

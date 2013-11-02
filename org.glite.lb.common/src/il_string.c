@@ -51,8 +51,8 @@ len_string(il_octet_string_t *s)
 }
 
 
-char *
-get_string(char *p, il_octet_string_t *s)
+const char *
+get_string(const char *p, il_octet_string_t *s)
 {
   int len;
 

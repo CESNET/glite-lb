@@ -50,8 +50,8 @@ put_int(char *p, int d)
 }
 
 
-char *
-_get_int(char *p, int *d)
+const char *
+_get_int(const char *p, int *d)
 {
    char *end;
 
@@ -63,8 +63,8 @@ _get_int(char *p, int *d)
 }
   
 
-char *
-get_int(char *p, int *d)
+const char *
+get_int(const char *p, int *d)
 {
   assert( p != NULL );
   assert( d != NULL );

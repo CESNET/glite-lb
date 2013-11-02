@@ -86,7 +86,7 @@ encode_il_reply(char **buffer,
 int 
 decode_il_msg(il_octet_string_t *event, const char *buf)
 {
-  char *p;
+  const char *p;
   il_octet_string_t protocol_magic_word;
   int magic_word_check_failed = 0;
 
@@ -115,7 +115,7 @@ decode_il_msg(il_octet_string_t *event, const char *buf)
 int
 decode_il_reply(int *maj, int *min, char **err, const char * buf)
 {
-	char *p = (char*)buf;
+	const char *p = buf;
   il_octet_string_t e;
 
   p = get_int(p, maj);
