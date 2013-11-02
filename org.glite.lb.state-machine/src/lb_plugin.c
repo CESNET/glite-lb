@@ -1114,7 +1114,7 @@ static int lb_query(void *fpctx,void *handle, const char *attr,glite_jp_attrval_
                 if (h->status.pbs_resource_usage) {
                         av = calloc(2, sizeof(glite_jp_attrval_t));
                         av[0].name = strdup(attr);
-                        av[0].value = strdup(h->status.pbs_resource_usage);
+                        av[0].value = edg_wll_TagListToString(h->status.pbs_resource_usage);
                         av[0].size = -1;
                         av[0].timestamp = h->status.lastUpdateTime.tv_sec;
                 }
