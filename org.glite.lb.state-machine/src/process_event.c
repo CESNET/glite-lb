@@ -1082,7 +1082,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			break;
 		case EDG_WLL_EVENT_CREAMCANCEL:
 			if (USABLE(res, strict)) {
-                                if (e->CREAMCancel.status_code == EDG_WLL_CANCEL_DONE) {
+                                if (e->CREAMCancel.status_code == EDG_WLL_CREAMCANCEL_DONE) {
                                         js->pub.state = EDG_WLL_JOB_CANCELLED;
                                         js->pub.cream_state = EDG_WLL_STAT_CREAM_ABORTED;
                                 }
