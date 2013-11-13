@@ -238,7 +238,7 @@ int main(int argc AMQCPP_UNUSED, char* argv[] AMQCPP_UNUSED) {
 	if (!(outfile = fopen (outputfile,"w"))) outfile = stdout;
 
 	if (!argdestURI) {
-		printf("Usage: %s [-o <output_file>] <broker> <topic>\n", argv[0]);
+		printf("Usage: %s [-o <output_file>] [tcp://]<broker> <topic>\n", argv[0]);
 		return 1;
 	}
 
@@ -264,7 +264,8 @@ int main(int argc AMQCPP_UNUSED, char* argv[] AMQCPP_UNUSED) {
 	//	tcp://127.0.0.1:61616?wireFormat=openwire  same as above
 	//	tcp://127.0.0.1:61613?wireFormat=stomp	 use stomp instead
 	//
-	std::string brokerURI = "failover:(tcp://";
+	std::string brokerURI = "failover:(";
+	if (!strstr(argbrokerURI, "://")) brokerURI += "tcp://";
 	brokerURI += argbrokerURI;
 	brokerURI += ")";
 
