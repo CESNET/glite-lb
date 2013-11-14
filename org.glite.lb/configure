@@ -262,7 +262,7 @@ my @opts = (
 	'url=s' => \$url,
 	'url-source=s' => \$url_source,
 	'docdir=s' => \$docdir,
-	'mysqlconfdir' => \$mysqlconfdir,
+	'mysqlconfdir=s' => \$mysqlconfdir,
 );
 
 for (@nodes) {
