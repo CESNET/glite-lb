@@ -232,7 +232,7 @@ if [ -z "$GLITE_LB_LOCATION_VAR" ]; then
 fi
 
 if [ -z "$FilePrefix" ]; then
-	export FilePrefix=/var/tmp/glite-lb-notif
+	export FilePrefix=/var/spool/glite/lb-notif/dglogd.log
 	vecho 1 "WARNING: Notif file prefix not specified, using default"
 fi
 
