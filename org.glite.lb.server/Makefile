@@ -62,13 +62,16 @@ else
 endif
 
 ifeq ($(os_type),debian)
-sysdefaultdir=${sysconfdir}/default
+sysdefaultdir?=${sysconfdir}/default
 else
-sysdefaultdir=${sysconfdir}/sysconfig
+sysdefaultdir?=${sysconfdir}/sysconfig
 endif
 
 ifeq ($(os_type),fedora)
 unitdir=`pkg-config systemd --variable=systemdsystemunitdir`
+mysqlconfdir?=${sysconfdir}/my.cnf.d
+else
+mysqlconfdir?=${sysconfdir}/mysql/conf.d
 endif
 
 GSOAP_FILES_PREFIX:= bk_ws_
@@ -336,7 +339,7 @@ ${SCRIPTS}: ${SCRIPTS_SRC}
 	if echo "${localstatedir}" | grep 'glite'>/dev/null; then \
 		glite_var="${localstatedir}"; \
 	fi; \
-	sed -e 's:@glite_prefix@:${sysroot}${prefix}:g' -e 's:@glite_etc@:${sysconfdir}:g' -e "s:@glite_var@:$$glite_var:g" -e 's:@defaultdir@:${sysdefaultdir}:g' ${top_srcdir}/config/$@ > $@
+	sed -e 's:@glite_prefix@:${sysroot}${prefix}:g' -e 's:@glite_etc@:${sysconfdir}:g' -e "s:@glite_var@:$$glite_var:g" -e 's:@defaultdir@:${sysdefaultdir}:g' -e 's:@mysqlconfdir@:${mysqlconfdir}:' ${top_srcdir}/config/$@ > $@
 ifneq ($(os_type),debian)
 	sed -i 's/# \(Default-Start\|Default-Stop\):.*/# \1:/' $@
 endif
@@ -444,7 +447,7 @@ install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/logrotate.d
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/cron.d
-	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/mysql/conf.d
+	-mkdir -p ${DESTDIR}${PREFIX}${mysqlconfdir}
 	-mkdir -p ${DESTDIR}${PREFIX}${sysdefaultdir}
 	-mkdir -p -m 0775 ${DESTDIR}${PREFIX}/var/spool/glite/lb-locallogger
 	-mkdir -p -m 0755 ${DESTDIR}${PREFIX}/var/spool/glite/lb-notif
@@ -473,7 +476,7 @@ install:
 	${INSTALL} -m 644 glite-lb-proxy-purge.cron ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/${package}-purge-proxy
 	${INSTALL} -m 644 glite-lb-notif-keeper.cron ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/${package}-notif-keeper
 	${INSTALL} -m 644 ${top_srcdir}/config/glite-lb-server.logrotate ${DESTDIR}${PREFIX}${sysconfdir}/logrotate.d/glite-lb-server
-	${INSTALL} -m 644 ${top_srcdir}/config/my.cnf ${DESTDIR}${PREFIX}${sysconfdir}/mysql/conf.d/glite-lb-server.cnf
+	${INSTALL} -m 644 ${top_srcdir}/config/my.cnf ${DESTDIR}${PREFIX}${mysqlconfdir}/glite-lb-server.cnf
 	${INSTALL} -m 644 glite-lb ${DESTDIR}${PREFIX}${docdir}/glite-lb
 	${INSTALL} -m 644 glite-lb ${DESTDIR}${PREFIX}${sysdefaultdir}
 

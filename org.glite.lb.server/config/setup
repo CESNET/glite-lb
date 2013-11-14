@@ -310,13 +310,13 @@ if test "$setup_db" = 1; then
 		my_cnf=/etc/my.cnf
 	fi
 	if test -f "$my_cnf"; then
-		egrep '^!includedir[[:space:]]+/etc/mysql/conf.d/?' "$my_cnf" >/dev/null
+		egrep '^!includedir[[:space:]]+@mysqlconfdir@/?' "$my_cnf" >/dev/null
 		if ! test $? -eq 0; then
-			echo '!includedir /etc/mysql/conf.d/' >> "$my_cnf"
+			echo '!includedir @mysqlconfdir@/' >> "$my_cnf"
 		fi
 	else
 		echo "glite-lb-setup: WARNING: $my_cnf not found, check/add following line into MySQL configuration:"
-		echo "!includedir /etc/mysql/conf.d/"
+		echo "!includedir @mysqlconfdir@/"
 	fi
 
 	# restart for the new options

@@ -83,7 +83,7 @@ Requires(preun): initscripts
 
 
 %build
-perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --docdir=%{_pkgdocdir} --project=emi --module lb.server
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --docdir=%{_pkgdocdir} --mysqlconfdir=%{_sysconfdir}/my.cnf.d --project=emi --module lb.server
 CFLAGS="%{?optflags}" CXXFLAGS="%{?optflags} %{?classad_cxxflags}" LDFLAGS="%{?__global_ldflags}" make %{?_smp_mflags}
 
 
@@ -188,7 +188,7 @@ fi
 %config(noreplace) %{_sysconfdir}/cron.d/%{name}-*
 %config(noreplace) %{_sysconfdir}/glite-lb/*
 %config(noreplace) %{_sysconfdir}/logrotate.d/glite-lb-server
-%config(noreplace) %{_sysconfdir}/mysql/conf.d/glite-lb-server.cnf
+%config(noreplace) %{_sysconfdir}/my.cnf.d/glite-lb-server.cnf
 %config(noreplace missingok) %{_sysconfdir}/sysconfig/glite-lb
 %{_pkgdocdir}/ChangeLog
 %{_pkgdocdir}/LICENSE

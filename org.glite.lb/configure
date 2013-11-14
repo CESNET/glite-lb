@@ -56,6 +56,7 @@ my $debug = 0;
 my $url = $default_url;
 my $url_source;
 my $docdir;
+my $mysqlconfdir;
 my $pkg_config_env = (defined $ENV{PKG_CONFIG_PATH}) ? "$ENV{PKG_CONFIG_PATH}:" : '';
 
 my @nodes = qw/client server logger logger-msg nagios utils client-java doc ws-test db jpprimary jpindex jpclient harvester lb px proxyrenewal canl/;
@@ -261,6 +262,7 @@ my @opts = (
 	'url=s' => \$url,
 	'url-source=s' => \$url_source,
 	'docdir=s' => \$docdir,
+	'mysqlconfdir' => \$mysqlconfdir,
 );
 
 for (@nodes) {
@@ -1226,6 +1228,9 @@ top_srcdir = $top_srcdir
 		$d =~ s/\$\{age\}/$age/g;
 		print MKINC "docdir = $d\n";
 	}
+	if ($mysqlconfdir) {
+		print MKINC "mysqlconfdir = $mysqlconfdir\n";
+	}
 
 	for (@{$need_externs{$short}}) {
 		next unless defined $externs{$_} and defined $externs{$_}{prefix};
@@ -1482,6 +1487,7 @@ General options (defaults in []):
   --sysconfdir=DIR              system configuration directory [PREFIX/etc]
   --localstatedir=DIR           system local status directory [PREFIX/var]
   --docdir			documentation directory []
+  --mysqlconfdir		MySQL/MariaDB configuration directory []
   --os-type=DIST                system type (debian/redhat/fedora)
   --staged=module,module,...	what is already in PREFIX (specify without org.glite.)
   --thrflavour=flavour
