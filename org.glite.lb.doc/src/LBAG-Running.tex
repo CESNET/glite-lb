@@ -571,7 +571,8 @@ Therefore the notification events have their expiration time set,
 and glite-lb-interlogd purges expired undelivered notifications by default.
 Therefore the need for manual purge is even less likely.
 
-The event files have different prefix (\verb'/var/tmp/glite-lb-notif' by default).
+The event files have different prefix (\verb'/var/spool/lb-notif/dglogd.log' by
+default, \verb'/var/tmp/glite-lb-notif' in older versions of \LB).
 
 \subsubsection{Debug mode}
 
@@ -609,8 +610,8 @@ the latter with~\verb'-w, --wsport'.
 
 When \LB notifications are enabled (automatically in server startup script when 
 glite-lb-logger is also installed with the server), 
-\verb'/tmp/glite-lb-notif.sock' is used for communication with notification interlogger.
-It can be changed with \verb'--notif-il-sock'.
+\verb'/var/run/glite/glite-lb-notif-interlogd.sock' is used for communication
+with notification interlogger. It can be changed with \verb'--notif-il-sock'.
 
 \LB proxy communicates on two UNIX sockets:
 \verb'/tmp/lb_proxy_server.sock' (queries) and 
@@ -654,7 +655,7 @@ Also when purge and dump operations are invoked resulting files are left in thei
 directories and it is the responsibility of the operation caller to clean them up.
 
 \item[Notifications]
-(see above with Network ports) are stored in files with \verb'/var/tmp/glite-lb-notif'
+(see above with Network ports) are stored in files with \verb'/var/spool/glite/lb-notif/dglogd.log'
 prefix. It can be changed with \verb'--notif-il-fprefix'.
 
 Normal operation of notification interlogger purges these files when
@@ -675,7 +676,7 @@ to deliver events to their destinations.
 
 \item[Network and UNIX ports.]
 glite-lb-logd listens on 9002 (can be changed with \verb'-p' option).
-The daemons communicate over UNIX socket \verb'/tmp/interlogger.sock',
+The daemons communicate over UNIX socket \verb'/var/run/glite/glite-lb-interlogd.sock',
 can be changed with \verb'-s' (for both daemons simultaneously).
 
 \item[Event files] are stored
