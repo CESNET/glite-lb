@@ -458,7 +458,7 @@ install:
 		${INSTALL} -m 755 "glite-lb-$$p" "${DESTDIR}${PREFIX}${prefix}/bin/glite-lb-$$p"; \
 	done
 	if test -n "${LCAS_PLUGIN_LIB}"; then \
-		-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/modules
+		-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/modules; \
 		${INSTALL} -m 755 ${LCAS_PLUGIN_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}/modules; \
 		ln -sf liblcas_lb.so ${DESTDIR}${PREFIX}${prefix}/${libdir}/modules/lcas_lb.mod; \
 	fi
