@@ -3,7 +3,7 @@
 %global mysqlconfdir %{_sysconfdir}/my.cnf.d
 %else
 %global mysqlconfdir %{_sysconfdir}/mysql/conf.d
-%if
+%endif
 
 # condor classads requires 2011 ISO C++ standard since Fedora 19
 %if 0%{?fedora} >= 19
