@@ -677,8 +677,8 @@ check_acl(edg_wll_Context ctx,edg_wll_Event *e, enum edg_wll_ChangeACLPermission
 
 static int check_auth(edg_wll_Context ctx,edg_wll_Event *e)
 {
-	char	*jobid = edg_wlc_JobIdGetUnique(e->any.jobId);
-	char	*q = NULL,*owner = NULL;
+	char	*jobid = NULL;
+	char	*q = NULL, *owner = NULL;
 	glite_lbu_Statement	stmt = NULL;
 
 	edg_wll_ResetError(ctx);
@@ -686,8 +686,10 @@ static int check_auth(edg_wll_Context ctx,edg_wll_Event *e)
 	if (!ctx->isProxy && !ctx->peerName) 
 		return edg_wll_SetError(ctx,EPERM,"can't store using unauthenticated connection");
 
+	jobid = edg_wlc_JobIdGetUnique(e->any.jobId);
 	trio_asprintf(&q,"select u.cert_subj from jobs j, users u "
 				"where j.jobid='%|Ss' and u.userid=j.userid",jobid);
+	free(jobid);
 	glite_common_log_msg(LOG_CATEGORY_LB_SERVER_DB, LOG_PRIORITY_DEBUG, q);
 
 	if (edg_wll_ExecSQL(ctx,q,&stmt) < 0
