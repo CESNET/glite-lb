@@ -1647,10 +1647,8 @@ static int daemon_listen(thread_t *t, const char *name, char *port, int *conn_ou
 	gaie = getaddrinfo (name, port, &hints, &ai);
 	if (gaie != 0 || ai == NULL) {
 		hints.ai_family = 0;
-		gaie = getaddrinfo (NULL, port, &hints, &ai);
+		gaie = getaddrinfo (name, port, &hints, &ai);
 	}
-
-	gaie = getaddrinfo (name, port, &hints, &ai);
 	if (gaie != 0) {
 		lprintf(t, ERR, "getaddrinfo: %s", gai_strerror (gaie));
 		return 1;

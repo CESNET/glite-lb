@@ -148,10 +148,8 @@ static int daemon_listen(const char *name, char *port, int *conn_out) {
 	gaie = getaddrinfo (name, port, &hints, &ai);
 	if (gaie != 0 || ai == NULL) {
 		hints.ai_family = 0;
-		gaie = getaddrinfo (NULL, port, &hints, &ai);
+		gaie = getaddrinfo (name, port, &hints, &ai);
 	}
-
-	gaie = getaddrinfo (name, port, &hints, &ai);
 	if (gaie != 0) {
 		glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "getaddrinfo: %s", gai_strerror (gaie));
 		return 1;
