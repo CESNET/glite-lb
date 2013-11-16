@@ -63,6 +63,7 @@ int edg_wll_DumpEventsServer(edg_wll_Context ctx,const edg_wll_DumpRequest *req,
 	char *event_s, *dumpline;
 	int		len, written, total;
 	intJobStat *stat;
+	size_t i;
 
 	from_s = to_s = stmt = stmt2 = NULL;
 	memset(res,0,sizeof res);
@@ -143,6 +144,7 @@ int edg_wll_DumpEventsServer(edg_wll_Context ctx,const edg_wll_DumpRequest *req,
 		free(event_s);
 		free(dumpline);
 		edg_wll_FreeEvent(f);
+		for (i = 0; i < sizofa(res2); i++) free(res2[i]);
 		if (total != len) goto clean; 
 	}
 
@@ -162,13 +164,12 @@ int edg_wll_DumpEventsServer(edg_wll_Context ctx,const edg_wll_DumpRequest *req,
 
 	while ((ret = edg_wll_FetchRow(ctx,q,sizeof(res)/sizeof(res[0]),NULL,res)) > 0) {
 		assert(ret == sizofa(res));
-		event = atoi(res[0]); free(res[0]); res[0] = NULL;
+		event = atoi(res[0]);
 
 		if (convert_event_head(ctx,res+1,&e)
 			|| edg_wll_get_event_flesh(ctx,event,&e))
 		{
 			char	*et,*ed;
-			int	i;
 
 		/* Most likely sort of internal inconsistency. 
 		 * Must not be fatal -- just complain
@@ -176,7 +177,6 @@ int edg_wll_DumpEventsServer(edg_wll_Context ctx,const edg_wll_DumpRequest *req,
 			edg_wll_Error(ctx,&et,&ed);
 			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_WARN, "%s event %d: %s (%s)", res[1], event, et, ed);
 			free(et); free(ed);
-			for (i=0; i<sizofa(res); i++) free(res[i]);
 			edg_wll_ResetError(ctx);
 		}
 		else {
@@ -196,7 +196,9 @@ int edg_wll_DumpEventsServer(edg_wll_Context ctx,const edg_wll_DumpRequest *req,
 				total += written;
 			}
 			free(event_s);
+			free(dumpline);
 		}
+		for (i=0; i<sizofa(res); i++) free(res[i]);
 		edg_wll_FreeEvent(&e); memset(&e,0,sizeof e);
 	}
 

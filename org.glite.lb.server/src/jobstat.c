@@ -1582,6 +1582,8 @@ edg_wll_ErrorCode edg_wll_getConnectedJobs(edg_wll_Context ctx, glite_jobid_cons
 		conns[i].reltype = EDG_WLL_JOBCONNECTION_UNDEFINED;
 	}
 
+	glite_lbu_FreeStmt(&sh);
+
 	*connections = conns;
 
 	return edg_wll_Error(ctx, NULL, NULL);
