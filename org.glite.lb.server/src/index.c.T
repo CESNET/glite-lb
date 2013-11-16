@@ -229,8 +229,8 @@ char *edg_wll_JDLStatToSQL(edg_wll_JobStat const *stat,edg_wll_QueryRec col_rec)
         if (ad) {
                 if (!cclassad_evaluate_to_string(ad, col_rec.attr_id.tag, &extr_val)) { // Extract attribute value
                         extr_val = NULL;
-                        cclassad_delete(ad);
                 }
+                cclassad_delete(ad);
         }
 
 	if (extr_val) {
