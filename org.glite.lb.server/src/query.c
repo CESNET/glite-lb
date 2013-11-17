@@ -373,7 +373,9 @@ static int queryjobs_cb(edg_wll_Context ctx, glite_jobid_t jobid, edg_wll_JobSta
 	store->jobs[n] = jobid;
 	store->jobs[n + 1] = NULL;
 
-	if (!(store->flags & EDG_WLL_STAT_NO_STATES)) {
+	if ((store->flags & EDG_WLL_STAT_NO_STATES)) {
+		edg_wll_FreeStatus(status);
+	} else {
 		if (status) store->states[n] = *status;
 		else memset(&store->states[n], 0, sizeof(*store->states));
 		memset(&store->states[n + 1], 0, sizeof(*store->states));
