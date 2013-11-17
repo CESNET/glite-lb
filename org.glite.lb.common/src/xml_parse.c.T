@@ -3064,17 +3064,18 @@ int edg_wll_QuerySequenceCodeToXML(
                 char **message)
 {
 	char *pomA=NULL, *pomC=NULL;
-
+	char *pomSource=NULL;
 
 	pomA = strdup("");
 	edg_wll_add_jobid_to_XMLBody(&pomA, jobId, "jobId", NULL);
-	edg_wll_add_string_to_XMLBody(&pomA, edg_wll_SourceToString(ctx->p_source), "source", NULL);
+	edg_wll_add_string_to_XMLBody(&pomA, pomSource = edg_wll_SourceToString(ctx->p_source), "source", NULL);
 
 	trio_asprintf(&pomC,"%s%s%s",
 		QUERY_SEQUENCE_CODE_REQUEST_BEGIN,pomA,QUERY_SEQUENCE_CODE_REQUEST_END);
 
 
 	free(pomA);
+	free(pomSource);
         *message = pomC;
 
         return 0;

@@ -247,10 +247,21 @@ static void reset_branch(intJobStat *js, edg_wll_Event *e)
 	rep(js->deep_resubmit_seqcode, e->any.seqcode);
 }
 
-static char* location_string(const char *source, const char *host, const char *instance)
+static char* location_string_source(const edg_wll_Source source, const char *host, const char *instance)
+{
+	char *ret, *source_name = NULL;
+
+	source_name = edg_wll_SourceToString(source);
+	trio_asprintf(&ret, "%s/%s/%s", source_name, host, instance);
+	free(source_name);
+	return ret;
+}
+
+static char* location_string_queue(const char *queue, const char *host, const char *instance)
 {
 	char *ret;
-	trio_asprintf(&ret, "%s/%s/%s", source, host, instance);
+
+	trio_asprintf(&ret, "%s/%s/%s", queue, host, instance);
 	return ret;
 }
 
@@ -387,13 +398,13 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 
 				free(js->pub.location);
 				if (e->transfer.result == EDG_WLL_TRANSFER_OK) {
-					js->pub.location = location_string(
-						edg_wll_SourceToString(e->transfer.destination),
+					js->pub.location = location_string_source(
+						e->transfer.destination,
 						e->transfer.dest_host,
 						e->transfer.dest_instance);
 				} else {
-					js->pub.location = location_string(
-						edg_wll_SourceToString(e->transfer.source),
+					js->pub.location = location_string_source(
+						e->transfer.source,
 						e->transfer.host,
 						e->transfer.src_instance);
 				}
@@ -432,8 +443,8 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			if (USABLE(res, strict)) {
 				js->pub.state = new_state;
 				free(js->pub.location);
-				js->pub.location = location_string(
-						edg_wll_SourceToString(e->accepted.source),
+				js->pub.location = location_string_source(
+						e->accepted.source,
 						e->accepted.host,
 						e->accepted.src_instance);
 			}
@@ -468,8 +479,8 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 				rep(js->pub.reason, e->refused.reason);
 
 				free(js->pub.location);
-				js->pub.location = location_string(
-						edg_wll_SourceToString(e->refused.from),
+				js->pub.location = location_string_source(
+						e->refused.from,
 						e->refused.from_host,
 						e->refused.from_instance);
 			}
@@ -510,15 +521,15 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 
 				free(js->pub.location);
 				if (e->enQueued.result == EDG_WLL_ENQUEUED_OK) {
-					js->pub.location = location_string(
+					js->pub.location = location_string_queue(
 						e->enQueued.queue,
 						e->enQueued.host,
 						e->enQueued.src_instance);
 					if (e->enQueued.source == EDG_WLL_SOURCE_LOG_MONITOR)
 						js->pub.resubmitted = 1;
 				} else {
-					js->pub.location = location_string(
-						edg_wll_SourceToString(e->enQueued.source),
+					js->pub.location = location_string_source(
+						e->enQueued.source,
 						e->enQueued.host,
 						e->enQueued.src_instance);
 				}
@@ -556,8 +567,8 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			if (USABLE(res, strict)) {
 				js->pub.state = new_state;
 				free(js->pub.location);
-				js->pub.location = location_string(
-						edg_wll_SourceToString(e->deQueued.source),
+				js->pub.location = location_string_source(
+						e->deQueued.source,
 						e->deQueued.host,
 						e->deQueued.src_instance);
 			}
@@ -569,7 +580,7 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			if (USABLE(res, strict)) {
 				js->pub.state = EDG_WLL_JOB_WAITING;
 				free(js->pub.location);
-				js->pub.location = location_string(
+				js->pub.location = location_string_queue(
 						e->helperCall.helper_name,
 						e->helperCall.host,
 						e->helperCall.src_instance);
@@ -580,8 +591,8 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			if (USABLE(res, strict)) {
 				js->pub.state = EDG_WLL_JOB_WAITING;
 				free(js->pub.location);
-				js->pub.location = location_string(
-						edg_wll_SourceToString(EDG_WLL_SOURCE_WORKLOAD_MANAGER),
+				js->pub.location = location_string_source(
+						EDG_WLL_SOURCE_WORKLOAD_MANAGER,
 						e->helperReturn.host,
 						e->helperReturn.src_instance);
 				/* roles and retvals used only for debugging */
@@ -592,8 +603,8 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 				js->pub.state = EDG_WLL_JOB_RUNNING;
 				js->pub.jw_status = EDG_WLL_STAT_WRAPPER_RUNNING;
 				free(js->pub.location);
-				js->pub.location = location_string(
-						edg_wll_SourceToString(EDG_WLL_SOURCE_LRMS),
+				js->pub.location = location_string_source(
+						EDG_WLL_SOURCE_LRMS,
 						"worknode",
 						e->running.node);
 			}
@@ -666,8 +677,8 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			if (USABLE_DATA(res, strict)) {
 				js->pub.state = EDG_WLL_JOB_RUNNING;
 				free(js->pub.location);
-				js->pub.location = location_string(
-						edg_wll_SourceToString(EDG_WLL_SOURCE_LRMS),
+				js->pub.location = location_string_source(
+						EDG_WLL_SOURCE_LRMS,
 						"worknode",
 						e->running.node);
 				js->pub.payload_running = 1;
@@ -770,8 +781,8 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 						// fall through
 					default:
 						free(js->pub.location);
-						js->pub.location = location_string(
-							edg_wll_SourceToString(e->done.source),
+						js->pub.location = location_string_source(
+							e->done.source,
 							e->done.host,
 							e->done.src_instance);
 				}
@@ -897,8 +908,8 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 		case EDG_WLL_EVENT_MATCH:
 			if (USABLE(res, strict)) {
 				js->pub.state = EDG_WLL_JOB_WAITING;
-				js->pub.location = location_string(
-						edg_wll_SourceToString(EDG_WLL_SOURCE_WORKLOAD_MANAGER),
+				js->pub.location = location_string_source(
+						EDG_WLL_SOURCE_WORKLOAD_MANAGER,
 						e->match.host,
 						e->match.src_instance);
 			}
@@ -918,8 +929,8 @@ static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int 
 			if (USABLE(res, strict)) {
 				js->pub.state = EDG_WLL_JOB_WAITING;
 				rep(js->pub.reason, e->pending.reason);
-				js->pub.location = location_string(
-						edg_wll_SourceToString(EDG_WLL_SOURCE_WORKLOAD_MANAGER),
+				js->pub.location = location_string_source(
+						EDG_WLL_SOURCE_WORKLOAD_MANAGER,
 						e->match.host,
 						e->match.src_instance);
 			}
