@@ -99,9 +99,9 @@ static const char* const response_headers_plain[] = {
 volatile sig_atomic_t purge_quit = 0;
 
 
-char *edg_wll_HTTPErrorMessage(int errCode)
+const char *edg_wll_HTTPErrorMessage(int errCode)
 {
-	char *msg;
+	const char *msg;
 	
 	switch (errCode) {
 		case HTTP_OK: msg = "OK"; break;
@@ -126,7 +126,8 @@ char *edg_wll_HTTPErrorMessage(int errCode)
 /* returns non-zero if old style (V21) protocols incompatible */
 static int is_protocol_incompatibleV21(char *user_agent)
 {
-        char *version, *comp_proto, *needle;
+	const char *comp_proto;
+	char *version, *needle;
         double  v, c, my_v = strtod(PROTO_VERSION_V21, (char **) NULL), my_c;
 
 
@@ -166,7 +167,8 @@ static int is_protocol_incompatibleV21(char *user_agent)
 /* returns non-zero if protocols incompatible */
 static int is_protocol_incompatible(char *user_agent)
 {
-        char *version, *comp_proto, *needle;
+	const char *comp_proto;
+        char *version, *needle;
         double  v, c, my_v = strtod(PROTO_VERSION, (char **) NULL), my_c;
 
 
@@ -221,7 +223,7 @@ static int outputHTML(char **headers)
 }
 
 
-static int check_request_for_query(char *request, char *query) {
+static int check_request_for_query(char *request, const char *query) {
 	char *found = strstr(request, query);
 
 	if (found && (!strcspn(found+strlen(query),"? \f\n\r\t\v"))) return 1;
@@ -409,8 +411,8 @@ static void hup_handler(int sig) {
 	purge_quit = 1;
 }
 
-static char *glite_location() {
-	char *location = NULL;
+static const char *glite_location() {
+	const char *location = NULL;
 	struct stat info;
 
 	if (!(location = getenv("GLITE_LB_LOCATION")))
@@ -429,7 +431,7 @@ static char *glite_location() {
 int edg_wll_ParseQueryConditions(edg_wll_Context ctx, const char *query, edg_wll_QueryRec ***conditions) {
 	edg_wll_QueryRec  **conds = NULL;
 	char *q = glite_lbu_UnescapeURL(query);
-	char *vartok, *vartok2, *cond, *attribute, *op, *operator, *value, *orvals, *errmsg = NULL;
+	char *vartok = NULL, *vartok2 = NULL, *cond, *attribute, *op, *operator, *value, *orvals, *errmsg = NULL;
 	int len, i=0, j, attr, shift;
 	edg_wll_ErrorCode err = 0;
 

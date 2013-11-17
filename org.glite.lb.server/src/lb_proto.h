@@ -69,7 +69,7 @@ typedef enum _http_extra_option{
         HTTP_EXTRA_OPTION_LAST
 } http_extra_option;
 
-extern char *edg_wll_HTTPErrorMessage(int);
+extern const char *edg_wll_HTTPErrorMessage(int);
 
 int edg_wll_ParseQueryConditions(edg_wll_Context ctx, const char *query, edg_wll_QueryRec ***conditions);
 

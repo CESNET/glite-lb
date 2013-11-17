@@ -454,8 +454,7 @@ int edg_wll_QueryJobsServerStream(
 						eidrm = 0,
 						limit = 0, offset = 0,
 						limit_loop = 1,
-						where_flags = 0,
-						first_or;
+						where_flags = 0;
 	size_t				n = 0;
 
 
@@ -1946,8 +1945,9 @@ static int cmp_string(const char *s1,edg_wll_QueryOp op,const char *s2,const cha
 		case EDG_WLL_QUERY_OP_GREATER:	return strcmp(s1,s2)>0;
 		case EDG_WLL_QUERY_OP_WITHIN:
 			if (strcmp(s1, s2) >= 0 && strcmp(s1, s2b) <= 0) return 0;
+		default:
+			return 0;
 	}
-	return 0;
 }
 
 
