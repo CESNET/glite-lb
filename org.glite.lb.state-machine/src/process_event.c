@@ -296,7 +296,7 @@ static int badEvent(intJobStat *js UNUSED_VAR, edg_wll_Event *e, int ev_seq UNUS
 
 #define USABLE_BRANCH(fine_res) ((fine_res) != RET_TOOOLD && (fine_res) != RET_BADBRANCH)
 #define LRMS_STATE(state) ((state) == EDG_WLL_JOB_RUNNING || (state) == EDG_WLL_JOB_DONE)
-#define PARSABLE_SEQCODE(code) ((code) && component_seqcode((code),0) >= 0)
+#define PARSABLE_SEQCODE(code) ((code) && component_seqcode((code), EDG_WLL_SOURCE_NONE + 1) >= 0)
 
 static int processEvent_glite(intJobStat *js, edg_wll_Event *e, int ev_seq, int strict, char **errstring)
 {
