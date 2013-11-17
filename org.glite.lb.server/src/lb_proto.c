@@ -930,6 +930,11 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 				for (i=0; jobsOut[i]; i++) edg_wlc_JobIdFree(jobsOut[i]);
 				free(jobsOut);
 			}
+			if (statesOut) {
+				for (i=0; statesOut[i].state != EDG_WLL_JOB_UNDEF; i++)
+					edg_wll_FreeStatus(&statesOut[i]);
+				free(statesOut);
+			}
 	        } 
 
 	/* GET /[jobId]: Job Status */
