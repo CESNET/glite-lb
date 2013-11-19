@@ -218,19 +218,70 @@ Install and configure a clean system, the \textbf{EPEL} repository, and the \tex
 
 Install and configure OS and basic services (certificates, CAs, time synchronization, software repositories) according to the \htmladdnormallink{https://twiki.cern.ch/twiki/bin/view/LCG/GenericInstallGuide320}{https://twiki.cern.ch/twiki/bin/view/LCG/GenericInstallGuide320}. Then install metapackage \texttt{glite-LB} from an appropriate gLite software repository.
 
+%\item Installing from \textbf{native distribution repositories}
+%\TODO{only several packages available in Fedora/EPEL for now}
+%
+%Install and configure OS and basic services (certificates, CAs, time synchronization, software repositories). See \htmladdnormallink{https://wiki.egi.eu/wiki/EGI\_IGTF\_Release}{https://wiki.egi.eu/wiki/EGI\_IGTF\_Release} (CAs), \htmladdnormallink{http://fedoraproject.org/wiki/EPEL}{http://fedoraproject.org/wiki/EPEL} (RHEL/Scientific Linux). Then select and install packages:
+%
+%\begin{itemize}
+%
+%\item \LB server
+%
+%\texttt{glite-lb-server glite-lb-logger glite-lb-logger-msg glite-lb-harvester}
+%
+%\item Information systems - BDII
+%
+%\texttt{bdii glite-info-provider-service glue-schema}
+%
+%\item Information systems - EMIR
+%
+%\texttt{emir-serp}
+%
+%\item Recommended packages
+%
+%\texttt{fetch-crl glite-lb-doc}
+%
+%\item Other packages
+%
+%\texttt{glite-lb-client-java glite-lb-ws-test emi-lb-nagios-plugins}
+%
+%\end{itemize}
+%
 \end{itemize}
 
-YAIM configuration can be done then:
+Configuration can be done by YAIM or by provided script \texttt{glite-lb-setup}. YAIM can do full configuration (even for different nodes), \texttt{glite-lb-setup} solves only \LB part of the setup, Information Systems, and fetch-crl.
+
+\subsubsection{YAIM configuration}
+
+YAIM configuration can be done:
 
 \begin{quote}
 \texttt{/opt/glite/yaim/bin/yaim -c -s site-info.def -n glite-LB}
 \end{quote}
 
+Where \texttt{site-info.def} file contains configuration parameters.
+
+\subsubsection{\LB setup script}
+
+Edit \texttt{/etc/sysconfig/glite-lb} or \texttt{/etc/default/glite-lb} (according to the distribution).
+
+Note, MySQL password is not set by \texttt{glite-lb-setup} script. If there is password already set, it can be provided by environment variable MYSQL\_PASSWORD (see \ref{inst:parameters}).
+
+Then launch:
+\begin{quote}
+\texttt{glite-lb-setup}
+\end{quote}
+
+\LB setup script can be instruted to perform only specific setup actions, if needed. See manual page of \texttt{glite-lb-setup} for details.
+
+\subsubsection{Configuration parameters}
+\label{inst:parameters}
+
 Available parameters specific to LB server are (mandatory parameters are \textbf{highlighted}):
 
 %variable&meaning&default value &further details\\
 \begin{itemize}
-\item \textbf{MYSQL\_PASSWORD} -- root password of MySQL server (mandatory)
+\item \textbf{MYSQL\_PASSWORD} -- root password of MySQL server (mandatory for YAIM)
 \item \texttt{GLITE\_LB\_EXPORT\_PURGE\_ARGS} -- purge timeouts (default: \texttt{--cleared 2d --aborted 15d --cancelled 15d --other 60d})
 
 According to local retention policy you may want to use different purge timeouts (for example WLCG would need \texttt{--cleared 90d --aborted 90d --cancelled 90d --other 90d}).
