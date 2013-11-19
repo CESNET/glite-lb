@@ -66,8 +66,8 @@ function lookup_notifid() {
 
 function setup_new() {
 	opts=${OPTIONS[$1]}
-	vecho 2 glite-lb-notify new ${opts}
-	retnotifid=`glite-lb-notify new ${opts} | grep -E "notification ID: " | sed 's/^notification ID: //'` 
+	vecho 2 glite-lb-notify new -t 36000 ${opts}
+	retnotifid=`glite-lb-notify new -t 36000 ${opts} | grep -E "notification ID: " | sed 's/^notification ID: //'` 
 	vecho 2 $retnotifid
 }
 
@@ -80,8 +80,8 @@ function drop() {
 
 function extend() {
 	notifid=${NOTIFID[${1}]}
-	vecho 2 glite-lb-notify refresh $notifid
-	glite-lb-notify refresh $notifid > /dev/null
+	vecho 2 glite-lb-notify refresh -t 36000 $notifid
+	glite-lb-notify refresh -t 36000 $notifid > /dev/null
 	if [ $? -gt 0 ]; then
 		vecho 1 Failed to refresh notification for handle ${HANDLES[${1}]}
 		NOTIFID[${1}]=""
