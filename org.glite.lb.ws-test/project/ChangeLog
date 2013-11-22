@@ -161,3 +161,12 @@
 1.4.8-1
 - Merge branch 'branch_3_2' into branch_4_0
 
+1.4.9-1
+- Warnings fixes: make, const strings in C++ tests, replace strtok by strtok_r and not write to const strings, ...
+- Enable parallel build in rpm packaging as recommended in Fedora review #965848
+- Creating $RPM_BUILD_ROOT directory not needed in RPM packages
+- Updated Fedora Packaging Guidelines
+- New version of machine readable Debian copyright file
+- Arch-specific build dependencies in all rpm packages
+- Improve packaging based on Fedora review
+
