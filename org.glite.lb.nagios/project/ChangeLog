@@ -81,3 +81,11 @@
 1.2.12-1
 - Merge branch 'branch_3_2' into branch_4_0
 
+1.2.13-1
+- Prefer macros in RPMs
+- Enable parallel build in rpm packaging as recommended in Fedora review #965848
+- Creating $RPM_BUILD_ROOT directory not needed in RPM packages
+- 'make check' in rpm only for packages with unittests
+- New version of machine readable Debian copyright file
+- Improve packaging based on Fedora review
+
