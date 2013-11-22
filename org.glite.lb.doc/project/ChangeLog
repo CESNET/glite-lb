@@ -256,3 +256,19 @@
 1.4.14-1
 - Extended querying capability for temporal attributes explained
 
+1.4.15-1
+- Mention glite-lb-setup script as alternative to YAIM in L&B Admin Guide
+- Update runtime files locations in documentation.
+- Possibility to get MSG brokers from BDII only during setup and disable auto-refresh by using GLITE_LB_MSG_BROKERS=once
+  - easier than specifying MSG broker URL directly
+- Fix rpm package build after latest changes
+- Enable parallel build in rpm packaging as recommended in Fedora review #965848
+- Slight simplification of documentation packaging in Debian
+- Creating $RPM_BUILD_ROOT directory not needed in RPM packages
+- Update RPM packaging of documentation (Fedora review #885703)
+- Changeable module documentation directory
+- 'make check' in rpm only for packages with unittests
+- New version of machine readable Debian copyright file
+- Unify copyright texts (without other changes or updates)
+- Improve packaging based on Fedora review
+
