@@ -125,3 +125,16 @@
 1.3.8-1
 - Build-time warnings fixed
 
+1.3.9-1
+- Simpler removal of libtool and static libraries (as suggested in Fedora review #1001104)
+- Enable parallel build in rpm packaging as recommended in Fedora review #965848
+- Slight simplification of documentation packaging in Debian
+- Creating $RPM_BUILD_ROOT directory not needed in RPM packages
+- Update RPM packaging of documentation (Fedora review #885703)
+- Changeable module documentation directory
+- Updated Fedora Packaging Guidelines
+- New version of machine readable Debian copyright file
+- Take precedence to CFLAGS from package system
+- Arch-specific build dependencies in all rpm packages
+- Improve packaging based on Fedora review
+
