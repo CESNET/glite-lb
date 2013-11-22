@@ -256,3 +256,6 @@
 - Warnings fixes backported from master
 - More cleaning to make newer Debians happy (backported from HEAD)
 
+5.1.9-1
+- Enable purging even when GLITE_LB_TYPE is empty
+
