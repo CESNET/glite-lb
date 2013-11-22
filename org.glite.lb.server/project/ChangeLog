@@ -666,3 +666,45 @@
 - Statistics file preserver during upgrade
 - Fixed purging with yaim-less setup
 
+3.0.16-1
+- Warnings fixes
+- Memleak fixes
+- Syntax fixes
+- Leaving mysql configuration directory the same on Scientific Linux
+- Proper makefile syntax
+- Modules directory needed only with LCAS, which is not built
+- MySQL L&B server configuration in /etc/my.cnf.d on Fedora
+- Update notification files location in notif-keeper
+- Fixing server purge from cron (script broken after added GSS mechanisms support)
+  - GLITE_GSS_MECH must not be used at all, or must have values "GSI" or "KRB5"
+  - Use 'export', which won't set unused environent variables explicitly to ""
+- Possibility to get MSG brokers from BDII only during setup and disable auto-refresh by using GLITE_LB_MSG_BROKERS=once
+  - it can be easier than specifying MSG broker URL directly
+- Do permissions changes on directories from Debian package in postinstallation scripts (fixes package installation after previous changes)
+- Prefer macros in RPMs
+- Set group permissions of interlogger spool directory for CREAM, create spool directories by make install
+- Display dump file prefixes in the configuration page, admin section
+- Distinguish C and C++ compile flags in server, add necessary C++ flags needed by condor classads since Fedora 19
+- Prefer the newer condor-classads over classads on Fedora
+- Fix rpm package build after latest changes
+- More rpm packaging fixes
+- Simpler removing of libtool and static libraries (as suggested in Fedora review #1001104)
+- Support for parallel build
+- Slight simplification of documentation packaging in Debian
+- Update RPM packaging of documentation (Fedora review #885703)
+- Changeable module documentation directory
+- 'make check' in rpm only for packages with unittests
+- Updated Fedora Packaging Guidelines
+- No login shell needed anymore
+- Create /var/run/glite in startup scripts on Debian (fixes startup on Debian 7 with /var/run mounted as tmpfs)
+- New version of machine readable Debian copyright file
+- Fix classads namespace detection - hopefully final version
+- Missing headers for stat(). Fixes build on Debian 7 without globus GSSAPI
+- Fix classads namespace detection
+- Expect classads with namespace if it can't be detected automatically (fixes build on Debian 7)
+- Support Kerberos mechanism for purging. Not create directories for export to JP when not needed (fixes errors in purges logs)
+- Arch-specific build dependencies in all rpm packages
+- Improve packaging based on Fedora review of glite-lb-types (perl build dependencies), https://bugzilla.redhat.com/show_bug.cgi?id=892597
+- Fix propagation of log4c and Kerberos environment variables, spaces in paths not supported
+- Update setup of Kerberos for L&B server - only checks are performed now
+
