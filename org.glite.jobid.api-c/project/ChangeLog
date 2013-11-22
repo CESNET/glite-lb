@@ -133,3 +133,10 @@
 - chrpath not needed in jobid.api-c
 - Removing bundled libcrypto files, use external -lcrypto from openssl instead
 
+2.2.11-1
+- Simpler removal of libtool and static libraries as suggested in Fedora review #1001104
+- Parallel build in rpm packaging enabled, as recommended in Fedora review #965848
+- Creating $RPM_BUILD_ROOT directory not needed in RPM packages
+- Updates in Fedora Packaging Guidelines
+- New version of machine readable Debian copyright file
+
