@@ -169,3 +169,13 @@
 3.2.9-1
 - Merge branch 'branch_3_2' into branch_4_0
 
+3.2.10-1
+- More rpm packaging fixes
+- Simpler removal of libtool and static libraries (as suggested in Fedora review #1001104)
+- Enable parallel build in rpm packaging as recommended in Fedora review #965848
+- Updated Fedora Packaging Guidelines
+- New version of machine readable Debian copyright file
+- Explicit link all needed libraries (fixes build on Debian 7)
+- Arch-specific build dependencies in all rpm packages
+- Improve packaging based on Fedora review
+
