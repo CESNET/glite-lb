@@ -127,3 +127,6 @@
 - configure set as executable
 - More cleaning to make newer Debians happy (backported from HEAD)
 
+4.4.7-1
+- Proper check for the include line in my.cnf, check if my.cnf file exists. (Fixes issue #15)
+
