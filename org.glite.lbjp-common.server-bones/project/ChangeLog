@@ -137,3 +137,15 @@ Clean of legacy build files
 2.3.8-1
 - Merge branch 'branch_3_2' into branch_4_0
 
+2.3.9-1
+- Memleak fixes: duplicate getaddrinfo() in network listen helper code
+- Package descriptions polishing
+- Simpler removal of libtool and static libraries (as suggested in Fedora review #1001104)
+- Enable parallel build in rpm packaging as recommended in Fedora review #965848
+- Creating $RPM_BUILD_ROOT directory not needed in RPM packages
+- Updated Fedora Packaging Guidelines
+- New version of machine readable Debian copyright file
+- Explicit link all needed libraries (fixes build on Debian 7)
+- Arch-specific build dependencies in all rpm packages
+- Improve packaging based on Fedora review
+
