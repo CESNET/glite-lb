@@ -140,3 +140,16 @@
 2.0.4-1
 - Merge branch 'branch_3_2' into branch_4_0
 
+2.0.5-1
+- Simpler removal of libtool and static libraries (as suggested in Fedora review #1001104)
+- Fix maven pom files packaging in java modules on EPEL and Fedora < 18
+- Enable parallel build in rpm packaging as recommended in Fedora review #965848
+- Fedora Review #965848
+- Add maven pom files for jobid.api-java and lb.client-java (solves issue #18)
+- Slight simplification of documentation packaging in Debian
+- Creating $RPM_BUILD_ROOT directory not needed in RPM packages
+- Changeable module documentation directory
+- 'make check' in rpm only for packages with unittests
+- New version of machine readable Debian copyright file
+- Improve packaging based on Fedora review
+
