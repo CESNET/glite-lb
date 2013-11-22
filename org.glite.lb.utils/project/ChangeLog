@@ -160,3 +160,16 @@
 2.3.8-1
 - Missing dependency for glite-lb-statistics added (L&B plugin), GGUS #93410
 
+2.3.9-1
+- Support for parallel build (missing dependencies, race conditions during launching bison and compressing manpages, ...)
+- Enable parallel build in rpm packaging as recommended in Fedora review #965848
+- Slight simplification of documentation packaging in Debian
+- Creating $RPM_BUILD_ROOT directory not needed in RPM packages
+- Update RPM packaging of documentation (Fedora review #885703)
+- Changeable module documentation directory
+- 'make check' in rpm only for packages with unittests
+- Updated Fedora Packaging Guidelines
+- New version of machine readable Debian copyright file
+- Arch-specific build dependencies in all rpm packages
+- Improve packaging based on Fedora review
+
