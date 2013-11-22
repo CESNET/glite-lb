@@ -199,3 +199,18 @@
 2.0.6-1
 - Merge branch 'branch_3_2' into branch_4_0
 
+2.0.7-1
+- Make sure wn_seq is set in ReallyRunning event (not initialized sequence number field has been used in the sequence number check)
+- Memleak fixes
+- Proper copy of pbs_resource_usage in state machine L&B plugin
+- Warning fixes
+- Prefer the newer condor-classads over classads on Fedora
+- Simpler removal of libtool and static libraries (as suggested in Fedora review #1001104)
+- Enable parallel build in rpm packaging
+- Creating $RPM_BUILD_ROOT directory not needed in RPM packages
+- 'make check' in rpm only for packages with unittests
+- Updated Fedora Packaging Guidelines
+- New version of machine readable Debian copyright file
+- Arch-specific build dependencies in all rpm packages
+- Improve packaging based on Fedora review
+
