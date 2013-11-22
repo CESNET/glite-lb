@@ -163,3 +163,12 @@
 2.0.7-1
 - Merge branch 'branch_3_2' into branch_4_0
 
+2.0.8-1
+- Warnings fixes
+- More rpm packaging fixes
+- Enable parallel build in rpm packaging as recommended in Fedora review #965848
+- Creating $RPM_BUILD_ROOT directory not needed in RPM packages
+- New version of machine readable Debian copyright file
+- Runtime perl dependencies on Debian
+- Improve packaging based on Fedora review
+
