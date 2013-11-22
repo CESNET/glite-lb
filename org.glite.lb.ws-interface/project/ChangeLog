@@ -149,3 +149,15 @@
 4.0.6-1
 - Merge branch 'branch_3_2' into branch_4_0
 
+4.0.7-1
+- Package descriptions polishing
+- Fix generating of ws-interface documentation
+- Enable parallel build in rpm packaging as recommended in Fedora review #965848
+- Slight simplification of documentation packaging in Debian
+- Creating $RPM_BUILD_ROOT directory not needed in RPM packages
+- Changeable module documentation directory
+- 'make check' in rpm only for packages with unittests
+- License and Copyrights exceptions
+- New version of machine readable Debian copyright file
+- Improve packaging based on Fedora review
+
