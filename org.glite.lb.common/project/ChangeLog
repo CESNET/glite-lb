@@ -279,3 +279,21 @@
 9.0.7-1
 - Generating JSON format strictly according to RFC 4627
 
+9.0.8-1
+- Memleak fixes: conversions from edg_wll_Source
+- Warning fixes: add 'const' to some L&B common API functions
+- Warnings fixes: make, const strings in C++ tests, replace strtok by strtok_r and not write to const strings, ...
+- Prefer the newer condor-classads over classads on Fedora
+- Simpler removing of libtool and static libraries (as suggested in Fedora review #1001104)
+- Check return value of asprintf() (fixes most of the warnings on recent distributions)
+- Support parallel build in lb.common (missing dependency on generated header files)
+- Enable parallel build in rpm packaging as recommended in Fedora review #965848
+- Cleanups in lb.common and lb.client rpm packaging
+- Creating $RPM_BUILD_ROOT directory not needed in RPM packages
+- Changeable module documentation directory
+- Updated Fedora Packaging Guidelines
+- pkg-config files for L&B common and client libraries
+- New version of machine readable Debian copyright file
+- Arch-specific build dependencies in all rpm packages.
+- Improve packaging based on Fedora
+
