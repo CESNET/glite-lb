@@ -329,3 +329,25 @@
 6.0.7-1
 - Default socket path fixed in L&B client library (using central constants from log_proto.h), Meta RT #38352
 
+6.0.8-1
+- Fix rpm package build of lb.client on Fedora 20+
+- Package descriptions polishing
+- Prefer the newer condor-classads over classads on Fedora
+- Simpler removal of libtool and static libraries (as suggested in Fedora review #1001104)
+- Support for parallel build (missing dependencies, race conditions during launching bison and compressing manpages, ...)
+- Enable parallel build in rpm packaging as recommended in Fedora review #965848
+- Cleanups in lb.common and lb.client rpm packaging
+- Slight simplification of documentation packaging in Debian
+- Creating $RPM_BUILD_ROOT directory not needed in RPM packages
+- Fix RPM package build
+- Update RPM packaging of documentation (Fedora review #885703)
+- Changeable module documentation directory
+- 'make check' in rpm only for packages with unittests
+- Updated Fedora Packaging Guidelines
+- pkg-config files for L&B common and client libraries
+- New version of machine readable Debian copyright file
+- Explicit link all needed libraries (fixes build on Debian 7)
+- Runtime perl dependencies on Debian
+- Arch-specific build dependencies in all rpm packages
+- Improve packaging based on Fedora review
+
