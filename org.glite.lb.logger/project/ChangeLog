@@ -328,3 +328,23 @@ gLite L&B setup script:
 - Startup on Fedora fixed
 - Refreshing Kerberos ticket explicitly during start (interlogger and proxy interlogger should be enough for that), Meta RT# 38262
 
+2.4.21-1
+- Memleak fixes: duplicate getaddrinfo() in network listen helper code
+- Do permissions changes on directories from Debian package in postinstallation scripts (fixes package installation after previous changes)
+- Prefer macros in RPMs
+- Set group permissions of interlogger spool directory for CREAM, create spool directories by make install
+- Output errors to syslog instead of stdout/stderr during ticket renewing (CESNET RT# 75962)
+- More rpm packaging fixes
+- Support for parallel build (missing dependencies, race conditions during launching bison and compressing manpages, ...)
+- Enable parallel build in rpm packaging as recommended in Fedora review #965848
+- Creating $RPM_BUILD_ROOT directory not needed in RPM packages
+- 'make check' in rpm only for packages with unittests
+- Updated Fedora Packaging Guidelines
+- No login shell needed anymore
+- Create /var/run/glite in startup scripts on Debian (fixes startup on Debian 7 with /var/run mounted as tmpfs)
+- New version of machine readable Debian copyright file
+- One more issue with upgrade on Debian
+- Improve packaging based on Fedora review
+- Fix propagation of log4c and Kerberos environment variables, spaces in paths not supported
+- Workaround the problem with AFS in Heimdal Kerberos, use it only for Heimdal
+
