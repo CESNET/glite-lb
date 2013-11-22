@@ -209,3 +209,14 @@
 3.2.13-1
 - Merge branch 'branch_3_2' into branch_4_0
 
+3.2.14-1
+- Warnings fixes: make, const strings in C++ tests, replace strtok by strtok_r and not write to const strings, ...
+- Simpler removal of libtool and static libraries (as suggested in Fedora review #1001104)
+- Enable parallel build in rpm packaging as recommended in Fedora review #965848.
+- Creating $RPM_BUILD_ROOT directory not needed in RPM packages
+- Updated Fedora Packaging Guidelines
+- New version of machine readable Debian copyright file
+- Improve packaging based on Fedora review
+- Arch-specific build dependencies
+- Giving precedence to CFLAGS from package system
+
