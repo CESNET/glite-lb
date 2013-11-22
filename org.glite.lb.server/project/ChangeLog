@@ -442,3 +442,7 @@
 - Improved handling of connections lost or dropped by the client
 - More cleaning to make newer Debians happy (backported from HEAD)
 
+2.3.11-1
+- Notif Keeper now requests notifications with longer validity
+- Warning and Standard error reporting fixed
+
