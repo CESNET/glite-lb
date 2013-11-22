@@ -148,3 +148,16 @@ Clean of legacy build files
 2.3.10-1
 - Avoid escaping the solidus character in JSON
 
+2.3.11-1
+- Simpler removal of libtool and static libraries (as suggested in Fedora review #1001104)
+- Enable parallel build in rpm packaging as recommended in Fedora review #965848
+- Creating $RPM_BUILD_ROOT directory not needed in RPM packages
+- Updated Fedora Packaging Guidelines
+- Presenting rather ISC license instead of MIT (Fedora review https://bugzilla.redhat.com/show_bug.cgi?id=877810).
+- License and Copyrights exceptions:
+  - trio uses a code licensed under MIT-like license
+  - glue2.xsd file copyright from INFN
+- New version of machine readable Debian copyright file
+- Arch-specific build dependencies in all rpm packages
+- Improve packaging based on Fedora review
+
