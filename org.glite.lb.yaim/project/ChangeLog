@@ -184,3 +184,11 @@
 4.5.12-1
 - Merge branch 'branch_3_2' into branch_4_0
 
+4.5.13-1
+- Enable parallel build in rpm packaging as recommended in Fedora review #965848
+- Creating $RPM_BUILD_ROOT directory not needed in RPM packages
+- 'make check' in rpm only for packages with unittests
+- New version of machine readable Debian copyright file
+- Unify copyright texts (without other changes or updates)
+- Improve packaging based on Fedora review
+
