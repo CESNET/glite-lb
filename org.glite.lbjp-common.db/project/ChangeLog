@@ -173,3 +173,15 @@
 3.2.8-1
 - Merge branch 'branch_3_2' into branch_4_0
 
+3.2.9-1
+- Warnings fixed: make, const strings in C++ tests, replace strtok by strtok_r and not write to const strings, ...
+- More rpm packaging fixes
+- Simpler removal of libtool and static libraries (as suggested in Fedora review #1001104)
+- Giving precedence to CFLAGS from packaging system
+- Creating $RPM_BUILD_ROOT directory not needed in RPM packages
+- Changeable module documentation directory
+- Updated Fedora Packaging Guidelines
+- New version of machine readable Debian copyright file
+- Arch-specific build dependencies in all rpm packages
+- Improve packaging based on Fedora review
+
