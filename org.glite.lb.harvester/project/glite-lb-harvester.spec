@@ -1,3 +1,5 @@
+%global _hardened_build 1
+
 %{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
 
 Name:           glite-lb-harvester

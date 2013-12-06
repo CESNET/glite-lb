@@ -1,4 +1,7 @@
+%global _hardened_build 1
+
 %{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
+
 %if 0%{?fedora}
 %global mysqlconfdir %{_sysconfdir}/my.cnf.d
 %else

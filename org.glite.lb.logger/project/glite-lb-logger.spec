@@ -1,3 +1,5 @@
+%global _hardened_build 1
+
 Name:           glite-lb-logger
 Version:        @MAJOR@.@MINOR@.@REVISION@
 Release:        @AGE@%{?dist}
