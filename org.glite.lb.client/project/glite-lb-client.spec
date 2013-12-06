@@ -69,6 +69,9 @@ CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make %{?_smp_mflags}
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
+# another installed documentation can't be combined with %%doc on EPEL 5/6,
+# install these file here instead
+install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT%{_pkgdocdir}
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
@@ -86,11 +89,13 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%doc project/ChangeLog LICENSE
+%dir %{_pkgdocdir}/
 %{_libdir}/libglite_lb_client.so.14
 %{_libdir}/libglite_lb_client.so.14.*
 %{_libdir}/libglite_lb_clientpp.so.14
 %{_libdir}/libglite_lb_clientpp.so.14.*
+%{_pkgdocdir}/ChangeLog
+%{_pkgdocdir}/LICENSE
 
 %files devel
 %defattr(-,root,root)
