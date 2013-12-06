@@ -85,8 +85,6 @@ rm -rf $RPM_BUILD_ROOT
 %files devel
 %defattr(-,root,root)
 %doc examples
-%dir %{_includedir}/glite
-%dir %{_includedir}/glite/security
 %{_includedir}/glite/security/glite_gscompat.h
 %{_includedir}/glite/security/glite_gsplugin.h
 %{_includedir}/glite/security/glite_gsplugin-int.h
