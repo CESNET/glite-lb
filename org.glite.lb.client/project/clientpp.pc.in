@@ -1,6 +1,6 @@
 prefix=@PREFIX@
 exec_prefix=${prefix}
-libdir=/usr/@LIBDIR@
+libdir=${prefix}/@LIBDIR@
 includedir=${prefix}/include
 
 Name: gLite Logging and Bookkeeping client C++ library
