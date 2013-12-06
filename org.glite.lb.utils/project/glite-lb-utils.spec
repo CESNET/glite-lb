@@ -62,7 +62,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/glite-lb-purge
 %{_bindir}/glite-lb-state_history
 %{_bindir}/glite-lb-statistics
-%{_mandir}/*/*.gz
+%{_mandir}/man1/glite-lb-mon.1*
+%{_mandir}/man8/glite-lb-dump.8*
+%{_mandir}/man8/glite-lb-load.8*
+%{_mandir}/man8/glite-lb-purge.8*
 
 
 %changelog

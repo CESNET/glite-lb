@@ -207,10 +207,10 @@ fi
 %{_bindir}/*
 %{_sbindir}/*
 %{_datadir}/glite/*
-%{_mandir}/man1/glite-lb-mon-db.1.gz
-%{_mandir}/man8/glite-lb-bkindex.8.gz
-%{_mandir}/man8/glite-lb-bkserverd.8.gz
-%{_mandir}/man8/glite-lb-setup.8.gz
+%{_mandir}/man1/glite-lb-mon-db.1*
+%{_mandir}/man8/glite-lb-bkindex.8*
+%{_mandir}/man8/glite-lb-bkserverd.8*
+%{_mandir}/man8/glite-lb-setup.8*
 
 
 %changelog

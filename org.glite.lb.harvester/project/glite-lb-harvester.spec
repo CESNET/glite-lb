@@ -151,7 +151,7 @@ fi
 %{_pkgdocdir}/LICENSE
 %{_pkgdocdir}/README
 %{_datadir}/glite/*
-%{_mandir}/man1/glite-lb-harvester.1.gz
+%{_mandir}/man1/glite-lb-harvester.1*
 
 
 %changelog

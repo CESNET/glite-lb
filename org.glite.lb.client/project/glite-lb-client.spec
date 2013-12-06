@@ -114,8 +114,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/glite-lb-register_sandbox
 %{_libdir}/glite-lb/examples/*
 %{_pkgdocdir}/README-notify
-%{_mandir}/man1/glite-lb-notify.1.gz
-%{_mandir}/man1/glite-lb-logevent.1.gz
+%{_mandir}/man1/glite-lb-notify.1*
+%{_mandir}/man1/glite-lb-logevent.1*
 
 
 %changelog
