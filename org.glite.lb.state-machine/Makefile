@@ -93,7 +93,7 @@ ${PLUGIN_LIB}: ${PLUGIN_LOBJS}
 	${SOLINK} -module -o $@ ${PLUGIN_LOBJS} ${PLUGIN_LIBS}
 
 ${MACHINE_LIB}:  ${MACHINE_OBJS}
-	${SOLINK} -o $@ ${MACHINE_LOBJS} ${COMMON_LIBS}
+	${SOLINK} ${version_info} -o $@ ${MACHINE_LOBJS} ${COMMON_LIBS}
 #	ar crv $@ ${MACHINE_OBJS}
 #	-ranlib $@
 
