@@ -57,7 +57,7 @@ LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir} \
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 COMPILEXX:=libtool --mode=compile ${CXX} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} ${LDFLAGS}
-LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
+LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 SOLINK:=libtool --mode=link ${CXX} -module ${LDFLAGS} -rpath ${stagedir}${prefix}/${libdir}
 

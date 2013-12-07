@@ -49,11 +49,9 @@ CFLAGS:= \
 	-I${top_srcdir}/interface ${GLITE_LBJP_COMMON_GSS_CFLAGS} ${CFLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir}  ${LDFLAGS} 
-SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}${prefix}/${libdir}
-LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS} 
+LINK:=libtool --mode=link ${CC} ${LDFLAGS}
+SOLINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
-LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
 XSLTPROC:=xsltproc --novalid
 
 ifeq (${thrflavour},)
@@ -92,10 +90,10 @@ version_info:=-version-info ${shell \
         perl -e '$$,=":"; @F=split /\./,"${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 
 ${PLUGIN_LIB}: ${PLUGIN_LOBJS}
-	${SOLINK} -o $@ ${PLUGIN_LOBJS} ${PLUGIN_LIBS}
+	${SOLINK} -module -o $@ ${PLUGIN_LOBJS} ${PLUGIN_LIBS}
 
 ${MACHINE_LIB}:  ${MACHINE_OBJS}
-	${LINK} ${version_info} -o $@ ${MACHINE_LOBJS} ${COMMON_LIBS}
+	${SOLINK} -o $@ ${MACHINE_LOBJS} ${COMMON_LIBS}
 #	ar crv $@ ${MACHINE_OBJS}
 #	-ranlib $@
 

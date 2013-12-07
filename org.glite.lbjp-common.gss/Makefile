@@ -59,8 +59,9 @@ CFLAGS:= ${DEBUG} \
 LDFLAGS:=${LDFLAGS} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
-LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
+LINK:=libtool --mode=link ${CC} ${LDFLAGS}
+SOLINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
+LINKXX:=libtool --mode=link  ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
 CPPUNIT_LIBS?=-L${cppunit_prefix}/${libdir} -lcppunit
@@ -143,7 +144,7 @@ ${GSS_STATICLIB}: ${GSS_THROBJS}
 	ranlib $@
 
 ${GSS_LTLIB}: ${GSS_THROBJS}
-	${LINK} ${version_info} -o $@ ${GSS_THRLOBJS} ${GSSAPI_THR_LIBS} ${LIBCARES_LIBS} -lpthread
+	${SOLINK} ${version_info} -o $@ ${GSS_THRLOBJS} ${GSSAPI_THR_LIBS} ${LIBCARES_LIBS} -lpthread
 else
 ${GSS_NOTHRSTATICLIB}: ${GSS_OBJS}
 	ar crv $@ ${GSS_OBJS}
@@ -154,10 +155,10 @@ ${GSS_THRSTATICLIB}: ${GSS_THROBJS}
 	ranlib $@
 
 ${GSS_NOTHRLTLIB}: ${GSS_OBJS}
-	${LINK} ${version_info} -o $@ ${GSS_LOBJS} ${GSSAPI_NOTHR_LIBS} ${LIBCARES_LIBS}
+	${SOLINK} ${version_info} -o $@ ${GSS_LOBJS} ${GSSAPI_NOTHR_LIBS} ${LIBCARES_LIBS}
 
 ${GSS_THRLTLIB}: ${GSS_THROBJS}
-	${LINK} ${version_info} -o $@ ${GSS_THRLOBJS} ${GSSAPI_THR_LIBS} ${LIBCARES_LIBS} -lpthread
+	${SOLINK} ${version_info} -o $@ ${GSS_THRLOBJS} ${GSSAPI_THR_LIBS} ${LIBCARES_LIBS} -lpthread
 endif
 
 

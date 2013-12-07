@@ -46,7 +46,7 @@ version_info:=-version-info ${shell \
 	perl -e '$$,=":"; @F=split "\\.","${version}"; print $$F[0]+$$F[1]+${offset},$$F[2],$$F[1]' }
 
 
-LINK:=libtool --mode=link ${CC} ${LDFLAGS} -rpath ${stagedir}${prefix}/${libdir} ${version_info}
+SOLINK:=libtool --mode=link ${CC} ${LDFLAGS} -rpath ${stagedir}${prefix}/${libdir} ${version_info}
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS} 
 INSTALL:=libtool --mode=install install
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
@@ -79,13 +79,13 @@ compile: ${lib_LTLIBRARIES}
 
 ifeq (${thrflavour},)
 ${commonlib}: ${OBJS}
-	${LINK} -o $@ ${OBJS} ${LIBS}
+	${SOLINK} -o $@ ${OBJS} ${LIBS}
 else
 ${commonlib_nothr}: ${OBJS}
-	${LINK} -o $@ ${OBJS} ${LIBS}
+	${SOLINK} -o $@ ${OBJS} ${LIBS}
 
 ${commonlib_thr}: ${THROBJS}
-	${LINK} -o $@ ${THROBJS} ${THRLIBS}
+	${SOLINK} -o $@ ${THROBJS} ${THRLIBS}
 endif
 
 check: type_test

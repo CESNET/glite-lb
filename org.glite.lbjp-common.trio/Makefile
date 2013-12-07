@@ -27,8 +27,8 @@ DEBUG:=-g -O0 -W -Wall
 CFLAGS:=${DEBUG} -I${top_srcdir}/src -I${top_srcdir}/interface -I. -DDATAGRID_EXTENSION ${CFLAGS}
 
 COMPILE:=libtool --mode=compile ${CC}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
-LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
+LINK:=libtool --mode=link ${CC} ${LDFLAGS}
+LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
 SOURCES=\
@@ -80,7 +80,7 @@ ${STATICLIB}: ${OBJS}
 	ranlib $@
 
 ${LTLIB}: ${OBJS}
-	${LINK} ${version_info} -o $@ ${LOBJS} -lm
+	${LINK} -rpath ${stagedir}${prefix}/${libdir} ${version_info} -o $@ ${LOBJS} -lm
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes

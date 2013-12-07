@@ -43,7 +43,7 @@ CFLAGS:= ${DEBUG} \
 LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
+LINK:=libtool --mode=link ${CC} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
 OBJS:=log.o
@@ -96,7 +96,7 @@ check: test
 	LOG4C_RCPATH=${top_srcdir}/tests ./test
 
 ${LTLIB}: ${LOBJS}
-	${LINK} ${version_info} -o $@ $+ ${LOG4C_LIBS}
+	${LINK} -rpath ${stagedir}${prefix}/${libdir} ${version_info} -o $@ $+ ${LOG4C_LIBS}
 
 test: test.o
 	${LINK} -o $@ $+ ${LTLIB} ${LOG4C_LIBS}

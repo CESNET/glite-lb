@@ -200,10 +200,10 @@ endif
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 CXXCOMPILE:=libtool --mode=compile ${CXX} ${CXXFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir}  ${LDFLAGS} 
+LINK:=libtool --mode=link ${CC} ${LDFLAGS}
 SOLINK:=libtool --mode=link ${CC} -module ${LDFLAGS} -rpath ${stagedir}${prefix}/${libdir}
 INSTALL:=libtool --mode=install install
-LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
+LINKXX:=libtool --mode=link  ${CXX} ${LDFLAGS}
 XSLTPROC:=xsltproc --novalid
 
 gsoap_bin_prefix:=${shell if [ -x  ${gsoap_prefix}/bin/soapcpp2 ]; then echo ${gsoap_prefix}/bin; else echo ${gsoap_prefix}; fi }
@@ -422,7 +422,7 @@ ${STATIC_LIB_BK}: ${LIB_OBJS_BK}
 	ranlib $@
 
 ${LCAS_PLUGIN_LIB}: ${LCAS_PLUGIN_LOBJS}
-	${LINK} -o $@ $^
+	${SOLINK} -o $@ $^
 
 doc: man
 

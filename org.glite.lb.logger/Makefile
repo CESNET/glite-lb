@@ -89,9 +89,9 @@ CFLAGS:=${DEBUG} \
 LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir} \
 	${COVERAGE_FLAGS} 
 
-COMPILE:=libtool --mode=compile ${CC} 
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
-LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
+COMPILE:=libtool --mode=compile ${CC}
+LINK:=libtool --mode=link ${CC} ${LDFLAGS}
+LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
 #ifneq (${expat_prefix},/usr)

@@ -49,10 +49,9 @@ CFLAGS:= \
 LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir}  ${LDFLAGS} 
-LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS} 
+LINK:=libtool --mode=link ${CC} ${LDFLAGS}
+LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
-LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
 XSLTPROC:=xsltproc --novalid
 
 EXT_LIBS:=

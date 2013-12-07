@@ -63,8 +63,9 @@ LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 COMPILEXX:=libtool --mode=compile ${CXX} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
-LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
+LINK:=libtool --mode=link ${CC} ${LDFLAGS}
+SOLINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
+LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
 EXT_LIBS:=-lglite_lbu_trio -lglite_lbu_log ${MYSQL_LIBS} ${PSQL_LIBS}
@@ -92,10 +93,10 @@ version_info:=-version-info ${shell \
 all: compile doc
 
 libglite_lbu_db.la: ${LOBJS}
-	${LINK} ${version_info} -o $@ $+ ${EXT_LIBS}
+	${SOLINK} ${version_info} -o $@ $+ ${EXT_LIBS}
 
 libglite_lbu_dbtest.la: ${LTESTOBJS}
-	${LINK} ${version_info} -o $@ $+ ${EXT_LIBS}
+	${SOLINK} ${version_info} -o $@ $+ ${EXT_LIBS}
 
 dbtest.lo dbtest.o: db.c db.h
 	${COMPILE} -DGLITE_LBU_DEFAULT_RESULT_BUFFER_LENGTH=10 -c $< -o $@

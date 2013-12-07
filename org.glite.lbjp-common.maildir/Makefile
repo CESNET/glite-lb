@@ -41,7 +41,7 @@ CFLAGS:= \
 LDFLAGS:=${LDFLAGS} -L${stagedir}${prefix}/${libdir} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
+LINK:=libtool --mode=link ${CC} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
 EXT_LIBS:=
@@ -67,7 +67,7 @@ version_info:=-version-info ${shell \
 all: compile doc
 
 libglite_lbu_maildir.la: ${LOBJS}
-	${LINK} ${version_info} -o $@ $< ${EXT_LIBS}
+	${LINK} -rpath ${stagedir}${prefix}/${libdir} ${version_info} -o $@ $< ${EXT_LIBS}
 
 compile: libglite_lbu_maildir.la
 

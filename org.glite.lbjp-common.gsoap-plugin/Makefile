@@ -115,15 +115,18 @@ LDFLAGS:=${LDFLAGS} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
 COMPILEXX:=libtool --mode=compile ${CXX} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
-LINKXX:=libtool --mode=link ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
+LINK:=libtool --mode=link ${CC} ${LDFLAGS}
+LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
-LINK_lang:=PATH=${top_srcdir2}/project/libtoolhack:${PATH} libtool --mode=link ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
+LINK_lang:=PATH=${top_srcdir2}/project/libtoolhack:${PATH} libtool --mode=link ${CXX} ${LDFLAGS}
+SOLINK_lang:=PATH=${top_srcdir2}/project/libtoolhack:${PATH} libtool --mode=link ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
 ifeq (${lang},c)
 LINK_lang:=${LINK}
+SOLINK_lang:=${LINK} -rpath ${stagedir}${prefix}/${libdir}
 endif
 ifeq (${lang},cxx)
 LINK_lang:=${LINKXX}
+SOLINK_lang:=${LINKXX} -rpath ${stagedir}${prefix}/${libdir}
 endif
 
 EX_NOTHRLIBS:=-L${stagedir}${prefix}/${libdir} -lglite_security_gss_${nothrflavour}
@@ -190,14 +193,14 @@ ${STATICLIB}: ${OBJS}
 	ranlib $@
 
 ${LTLIB}: ${OBJS}
-	${LINK_lang} ${version_info} -o $@ ${LOBJS} ${EX_LIBS}
+	${SOLINK_lang} ${version_info} -o $@ ${LOBJS} ${EX_LIBS}
 
 ${STATICLIB_S}: ${OBJS_S}
 	ar crv $@ ${OBJS_S}
 	ranlib $@
 
 ${LTLIB_S}: ${OBJS_S}
-	${LINK_lang} ${version_info} -o $@ ${LOBJS_S} ${EX_LIBS} ${GSOAP_DEFAULT_LIBS}
+	${SOLINK_lang} ${version_info} -o $@ ${LOBJS_S} ${EX_LIBS} ${GSOAP_DEFAULT_LIBS}
 else
 ${NOTHRSTATICLIB}: ${OBJS}
 	ar crv $@ ${OBJS}
@@ -208,10 +211,10 @@ ${THRSTATICLIB}: ${THROBJS}
 	ranlib $@
 
 ${NOTHRLTLIB}: ${OBJS} 
-	${LINK_lang} ${version_info} -o $@ ${LOBJS} ${EX_NOTHRLIBS}
+	${SOLINK_lang} ${version_info} -o $@ ${LOBJS} ${EX_NOTHRLIBS}
 
 ${THRLTLIB}: ${THROBJS}
-	${LINK_lang} ${version_info} -o $@ ${THRLOBJS} ${EX_THRLIBS}
+	${SOLINK_lang} ${version_info} -o $@ ${THRLOBJS} ${EX_THRLIBS}
 
 ${NOTHRSTATICLIB_S}: ${OBJS_S}
 	ar crv $@ ${OBJS_S}
@@ -222,10 +225,10 @@ ${THRSTATICLIB_S}: ${THROBJS_S}
 	ranlib $@
 
 ${NOTHRLTLIB_S}: ${OBJS_S} 
-	${LINK_lang} ${version_info} -o $@ ${LOBJS_S} ${EX_NOTHRLIBS} ${GSOAP_DEFAULT_LIBS}
+	${SOLINK_lang} ${version_info} -o $@ ${LOBJS_S} ${EX_NOTHRLIBS} ${GSOAP_DEFAULT_LIBS}
 
 ${THRLTLIB_S}: ${THROBJS_S}
-	${LINK_lang} ${version_info} -o $@ ${THRLOBJS_S} ${EX_THRLIBS} ${GSOAP_DEFAULT_LIBS}
+	${SOLINK_lang} ${version_info} -o $@ ${THRLOBJS_S} ${EX_THRLIBS} ${GSOAP_DEFAULT_LIBS}
 endif
 
 all compile: \

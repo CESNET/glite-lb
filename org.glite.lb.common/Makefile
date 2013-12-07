@@ -90,8 +90,9 @@ ifdef LB_PROF
 endif
 
 COMPILE:=libtool --mode=compile ${CC}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
-LINKXX:=libtool --mode=link  ${CXX} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS} 
+LINK:=libtool --mode=link ${CC} ${LDFLAGS}
+SOLINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
+LINKXX:=libtool --mode=link  ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
 OBJS:=${JOBID_OBJS} ${PERF_OBJS} lb_plain_io.o events.o mini_http.o query_rec.o \
@@ -168,7 +169,7 @@ ${STATICLIB}: ${THROBJS}
 	ranlib $@
 
 ${LTLIB}: ${THROBJS}
-	${LINK} ${version_info} -o $@ ${THRLOBJS} \
+	${SOLINK} ${version_info} -o $@ ${THRLOBJS} \
 		-lglite_security_gss \
 		${EXT_LIBS} \
 		-lm
@@ -182,13 +183,13 @@ ${THRSTATICLIB}: ${THROBJS}
 	ranlib $@
 
 ${NOTHRLTLIB}: ${OBJS}
-	${LINK} ${version_info} -o $@ ${LOBJS} \
+	${SOLINK} ${version_info} -o $@ ${LOBJS} \
 		-lglite_security_gss_${nothrflavour} \
 		${EXT_LIBS} \
 		-lm
 
 ${THRLTLIB}: ${THROBJS}
-	${LINK} ${version_info} -o $@ ${THRLOBJS} \
+	${SOLINK} ${version_info} -o $@ ${THRLOBJS} \
 		-lglite_security_gss_${thrflavour} \
 		${EXT_LIBS} \
 		-lm

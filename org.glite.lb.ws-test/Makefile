@@ -53,7 +53,7 @@ CFLAGS:=-I${gsoap_prefix}/include -I${gsoap_prefix}/ \
 	${DEBUG} ${GLITE_LBJP_COMMON_CFLAGS} ${CFLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
+LINK:=libtool --mode=link ${CC} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
 GSOAP_FILES_PREFIX:= bk_ws_

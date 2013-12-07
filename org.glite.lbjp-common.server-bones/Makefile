@@ -40,7 +40,7 @@ ifdef LB_PROF
 endif
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
-LINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
+LINK:=libtool --mode=link ${CC} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
 STATICLIB:=libglite_lbu_server_bones.a
@@ -75,7 +75,7 @@ ${STATICLIB}: ${OBJS}
 	ranlib $@
 
 ${LTLIB}: ${LOBJS}
-	${LINK} ${version_info} -o $@ ${LOBJS} -lglite_lbu_log
+	${LINK} -rpath ${stagedir}${prefix}/${libdir} ${version_info} -o $@ ${LOBJS} -lglite_lbu_log
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
