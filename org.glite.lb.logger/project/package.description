@@ -1,1 +1,1 @@
-glite-lb-logger is the gLite LB local-logger and inter-logger. This package contains the local-logger (glite-lb-logd), inter-logger (glite-lb-interlogd) and notification inter-logger (glite-lb-notif-interlogd) daemons.
+glite-lb-logger is the gLite L&B local-logger and inter-loggers. This package contains the local-logger (glite-lb-logd), inter-logger (glite-lb-interlogd), notification inter-logger (glite-lb-notif-interlogd) and proxy inter-logger (glite-lb-proxy-interlogd) daemons.
