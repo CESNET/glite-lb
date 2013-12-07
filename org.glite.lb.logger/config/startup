@@ -148,10 +148,10 @@ start()
 	[ -n "$GLITE_LB_IL_FPREFIX" ] && fprefix="--file-prefix $GLITE_LB_IL_FPREFIX"
 
         (cd /tmp && ls -f /tmp |grep ^dglogd_sock_ |xargs rm -f)
-	start_daemon "glite-lb-logd" "$LL_PIDFILE" "$GLITE_LOCATION/bin/glite-lb-logd \
+	start_daemon "glite-lb-logd" "$LL_PIDFILE" "$GLITE_LOCATION/sbin/glite-lb-logd \
 		-i $LL_PIDFILE $port $sock $fprefix"
 
-	start_daemon "glite-lb-interlogd" "$IL_PIDFILE" "$GLITE_LOCATION/bin/glite-lb-interlogd \
+	start_daemon "glite-lb-interlogd" "$IL_PIDFILE" "$GLITE_LOCATION/sbin/glite-lb-interlogd \
 		-i $IL_PIDFILE $sock $fprefix" "${GLITE_LB_IL_SOCK:-$IL_SOCKFILE}"
 }
 

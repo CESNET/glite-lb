@@ -15,7 +15,7 @@ EnvironmentFile=-/etc/profile.d/grid-env.sh
 EnvironmentFile=-/etc/sysconfig/glite-lb
 EnvironmentFile=-/etc/sysconfig/glite-lb-proxy-interlogd
 PIDFile=/var/run/glite/glite-lb-proxy-interlogd.pid
-ExecStart=/usr/bin/glite-lb-proxy-interlogd $GLITE_LB_PROXY_IL_OPTIONS
+ExecStart=/usr/sbin/glite-lb-proxy-interlogd $GLITE_LB_PROXY_IL_OPTIONS
 
 [Install]
 WantedBy=multi-user.target

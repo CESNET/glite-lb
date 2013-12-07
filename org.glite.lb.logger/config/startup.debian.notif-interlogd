@@ -13,7 +13,7 @@
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="L&B notification interlogger"
 NAME=glite-lb-notif-interlogd
-DAEMON=/usr/bin/$NAME
+DAEMON=/usr/sbin/$NAME
 PIDFILE=/var/run/glite/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 RUN_NOTIF_IL=yes

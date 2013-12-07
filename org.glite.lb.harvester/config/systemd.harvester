@@ -15,7 +15,7 @@ EnvironmentFile=-/etc/profile.d/grid-env.sh
 EnvironmentFile=-/etc/sysconfig/glite-lb
 PIDFile=/var/run/glite/glite-lb-harvester.pid
 # '-m $GLITE_LB_HARVESTER_DBCS' or '-c /etc/glite-lb-harvester.conf' in $GLITE_LB_HARVESTER_OPTIONS required if we want to do something
-ExecStart=/usr/bin/glite-lb-harvester $GLITE_LB_HARVESTER_OPTIONS
+ExecStart=/usr/sbin/glite-lb-harvester $GLITE_LB_HARVESTER_OPTIONS
 
 [Install]
 WantedBy=multi-user.target

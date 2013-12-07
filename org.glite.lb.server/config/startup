@@ -252,12 +252,12 @@ start()
 		;;
 	esac
 
-	start_daemon glite-lb-bkserver "$BK_PIDFILE" "$lcas_log $GLITE_LOCATION/bin/glite-lb-bkserverd \
+	start_daemon glite-lb-bkserver "$BK_PIDFILE" "$lcas_log $GLITE_LOCATION/sbin/glite-lb-bkserverd \
 		$super -i $BK_PIDFILE $bkargs $dumpdir $purgedir $lbreg_maildir $bkproxy $policy\
 		$GLITE_LB_SERVER_OTHER_OPTIONS" "/tmp/lb_proxy_serve.sock /tmp/lb_proxy_store.sock"
 
-	if test -x $GLITE_LOCATION/bin/glite-lb-notif-interlogd; then
-		start_daemon glite-lb-notif-interlogd "$NOTIF_IL_PIDFILE" "$GLITE_LOCATION/bin/glite-lb-notif-interlogd \
+	if test -x $GLITE_LOCATION/sbin/glite-lb-notif-interlogd; then
+		start_daemon glite-lb-notif-interlogd "$NOTIF_IL_PIDFILE" "$GLITE_LOCATION/sbin/glite-lb-notif-interlogd \
 			-i $NOTIF_IL_PIDFILE -M 10485760 \
 			$notifargs \
 			$GLITE_LB_NOTIF_IL_OTHER_OPTIONS" "$GLITE_LB_NOTIF_SOCK"
@@ -274,8 +274,8 @@ start()
 	fi
 
 	if test x"$GLITE_LB_TYPE" = x"proxy" -o x"$GLITE_LB_TYPE" = x"both" ; then
-		if test -x $GLITE_LOCATION/bin/glite-lb-proxy-interlogd; then
-			start_daemon glite-lb-proxy-interlogd "$PROXY_IL_PIDFILE" "$GLITE_LOCATION/bin/glite-lb-proxy-interlogd \
+		if test -x $GLITE_LOCATION/sbin/glite-lb-proxy-interlogd; then
+			start_daemon glite-lb-proxy-interlogd "$PROXY_IL_PIDFILE" "$GLITE_LOCATION/sbin/glite-lb-proxy-interlogd \
 				-i $PROXY_IL_PIDFILE $ilproxy \
 				$GLITE_LB_PROXY_IL_OTHER_OPTIONS" "$GLITE_LB_PROXY_SOCK"
 		else

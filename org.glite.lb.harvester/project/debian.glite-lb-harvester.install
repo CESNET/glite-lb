@@ -1,4 +1,4 @@
-usr/bin/*
+usr/sbin/*
 usr/lib/glite-lb/examples/*
 usr/share/glite/*
-usr/share/man/man1/*
+usr/share/man/man8/*

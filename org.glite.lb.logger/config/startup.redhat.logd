@@ -23,7 +23,7 @@
 . /etc/init.d/functions
 
 prog=glite-lb-logd
-exec=/usr/bin/$prog
+exec=/usr/sbin/$prog
 lockfile=/var/lock/subsys/$prog
 
 GLITE_USER='glite'

@@ -368,7 +368,7 @@ if test "$setup_db" = 1; then
 	# 1) if L&B with local harvester or L&B for Real Time Monitoring ==> lastUpdateTime needed
 	# 2) if GLITE_LB_INDEX_OWNER specified ==> create owner index
 	need_reindex=0
-	$GLITE_LOCATION/bin/glite-lb-bkindex -d 2>/dev/null | tail -n +3 | head -n -2 | sed 's/\([^,]\)$/\1,/' > /tmp/glite-lb-bkindex.$$
+	$GLITE_LOCATION/sbin/glite-lb-bkindex -d 2>/dev/null | tail -n +3 | head -n -2 | sed 's/\([^,]\)$/\1,/' > /tmp/glite-lb-bkindex.$$
 	if test x"$GLITE_LB_RTM_ENABLED" = x"true" -o x"$GLITE_LB_HARVESTER_ENABLED" = x"true"; then
 		if ! grep 'name = "lastUpdateTime"' /tmp/glite-lb-bkindex.$$ >/dev/null; then
 			echo '[ type = "system"; name = "lastUpdateTime" ],' >> /tmp/glite-lb-bkindex.$$
@@ -382,7 +382,7 @@ if test "$setup_db" = 1; then
 		fi
 	fi
 	if test $need_reindex -eq 1; then
-		$GLITE_LOCATION/bin/glite-lb-bkindex -rv <<EOF
+		$GLITE_LOCATION/sbin/glite-lb-bkindex -rv <<EOF
 [
 	JobIndices = {
 `cat /tmp/glite-lb-bkindex.$$`
@@ -737,7 +737,7 @@ if test "$setup_krb" = "1"; then
 		echo "glite-lb-setup: ERROR: kerberos clients not found"
 		kerberos=0
 	fi
-	if ldd $GLITE_LOCATION/bin/glite-lb-bkserverd | grep libglobus_gssapi_gsi >/dev/null 2>&1; then
+	if ldd $GLITE_LOCATION/sbin/glite-lb-bkserverd | grep libglobus_gssapi_gsi >/dev/null 2>&1; then
 		echo "glite-lb-setup: ERROR: Kerberos support requires L&B built with Kerberos libraries"
 		kerberos=0
 	fi
@@ -759,7 +759,7 @@ if test "$setup_krb" = "1"; then
 fi
 
 if test "$setup_krbgsi" = "1"; then
-	if ! ldd $GLITE_LOCATION/bin/glite-lb-bkserverd | grep libheim >/dev/null 2>&1; then
+	if ! ldd $GLITE_LOCATION/sbin/glite-lb-bkserverd | grep libheim >/dev/null 2>&1; then
 		echo "glite-lb-setup: ERROR: GSI mode with kerberos requires L&B built in Heimdal Kerberos implementation"
 		error="$error krbgsi"
 		kerberos=0
@@ -785,16 +785,16 @@ fi
 # ==== startup ====
 
 if test "$setup_startup" = "1"; then
-	if test ! -x $GLITE_LOCATION/bin/glite-lb-bkserverd; then
+	if test ! -x $GLITE_LOCATION/sbin/glite-lb-bkserverd; then
 		echo "glite-lb-setup: ERROR: glite-lb-server not installed"
 		startup_error=1
 	fi
-	if test ! -x $GLITE_LOCATION/bin/glite-lb-logd; then
+	if test ! -x $GLITE_LOCATION/sbin/glite-lb-logd; then
 		echo "glite-lb-setup: ERROR: glite-lb-logger not installed"
 		startup_error=1
 	fi
 	if test x"$GLITE_LB_HARVESTER_ENABLED" = x"true"; then
-		if test ! -x $GLITE_LOCATION/bin/glite-lb-harvester; then
+		if test ! -x $GLITE_LOCATION/sbin/glite-lb-harvester; then
 			echo "glite-lb-setup: ERROR: glite-lb-harvester not installed"
 			startup_error=1
 		fi

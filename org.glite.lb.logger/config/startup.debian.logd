@@ -13,7 +13,7 @@
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="L&B local logger"
 NAME=glite-lb-logd
-DAEMON=/usr/bin/$NAME
+DAEMON=/usr/sbin/$NAME
 PIDFILE=/var/run/glite/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 RUN_LOGD=yes

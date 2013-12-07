@@ -454,14 +454,14 @@ install:
 	-mkdir -p -m 0755 ${DESTDIR}${PREFIX}/var/spool/glite/lb-proxy
 	${INSTALL} -m 644 ${MAN1_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man1
 	${INSTALL} -m 644 ${MAN8_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man8
-	for p in bkserverd bkindex mon-db; do \
-		${INSTALL} -m 755 "glite-lb-$$p" "${DESTDIR}${PREFIX}${prefix}/bin/glite-lb-$$p"; \
-	done
+	${INSTALL} -m 755 glite-lb-mon-db ${DESTDIR}${PREFIX}${prefix}/bin/glite-lb-mon-db
 	if test -n "${LCAS_PLUGIN_LIB}"; then \
 		-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/modules; \
 		${INSTALL} -m 755 ${LCAS_PLUGIN_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}/modules; \
 		ln -sf liblcas_lb.so ${DESTDIR}${PREFIX}${prefix}/${libdir}/modules/lcas_lb.mod; \
 	fi
+	${INSTALL} -m 755 glite-lb-bkindex ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-bkindex
+	${INSTALL} -m 755 glite-lb-bkserverd ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-bkserverd
 	${INSTALL} -m 755 export.sh ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-export
 	${INSTALL} -m 755 notif-keeper.sh ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-notif-keeper
 

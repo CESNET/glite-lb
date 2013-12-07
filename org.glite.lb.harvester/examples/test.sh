@@ -189,7 +189,7 @@ create_db() {
 	}
 ]
 EOF
-		LBDB="$GLITE_LB_TEST_DB" $GLITE_LOCATION/bin/glite-lb-bkindex -r `pwd`/LB/glite-lb-index.conf || return $?
+		LBDB="$GLITE_LB_TEST_DB" $GLITE_LOCATION/sbin/glite-lb-bkindex -r `pwd`/LB/glite-lb-index.conf || return $?
 		lb_db_created="1"
 		echo -n "."
 	else
@@ -280,7 +280,7 @@ run_daemons() {
 	# run L&B server
 	echo -n "L"
 	X509_USER_KEY=${X509_USER_KEY} X509_USER_CERT=${X509_USER_CERT} \
-	$GLITE_LOCATION/bin/glite-lb-bkserverd \
+	$GLITE_LOCATION/sbin/glite-lb-bkserverd \
 	  -m $GLITE_LB_TEST_DB \
 	  -p $GLITE_LB_TEST_SERVER_PORT -w $(($GLITE_LB_TEST_SERVER_PORT + 3))\
 	  -i ${GLITE_LB_TEST_PIDFILE} \
@@ -301,7 +301,7 @@ run_daemons() {
 	# run L&B interlogger
 	echo -n "L"
 	X509_USER_KEY=${X509_USER_KEY} X509_USER_CERT=${X509_USER_CERT} \
-	$GLITE_LOCATION/bin/glite-lb-interlogd \
+	$GLITE_LOCATION/sbin/glite-lb-interlogd \
 	  --file-prefix `pwd`/LB/proxy-data --socket `pwd`/LB/proxy-il.sock \
 	  --pidfile $GLITE_LB_PROXY_IL_PIDFILE > `pwd`/LB/glite-interlog-test-pre.log 2>&1
 	if [ x"$?" != x"0" ]; then
@@ -316,7 +316,7 @@ run_daemons() {
 	# run L&B notification interlogger
 	echo -n "N"
 	X509_USER_KEY=${X509_USER_KEY} X509_USER_CERT=${X509_USER_CERT} \
-	$GLITE_LOCATION/bin/glite-lb-notif-interlogd \
+	$GLITE_LOCATION/sbin/glite-lb-notif-interlogd \
 	  --file-prefix `pwd`/LB/notif-data --socket `pwd`/LB/notif.sock \
 	  --pidfile $GLITE_LB_NOTIF_IL_PIDFILE > `pwd`/LB/glite-notif-test-pre.log 2>&1
 	if [ x"$?" != x"0" ]; then

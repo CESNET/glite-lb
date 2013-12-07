@@ -146,14 +146,14 @@ fi
 %else
 %{_initrddir}/glite-lb-harvester
 %endif
-%{_bindir}/glite-lb-harvester
+%{_sbindir}/glite-lb-harvester
 %{_libdir}/glite-lb/examples/glite-lb-harvester-test.sh
 %{_libdir}/glite-lb/examples/glite-lb-harvester-dbg
 %{_pkgdocdir}/ChangeLog
 %{_pkgdocdir}/LICENSE
 %{_pkgdocdir}/README
 %{_datadir}/glite/*
-%{_mandir}/man1/glite-lb-harvester.1*
+%{_mandir}/man8/glite-lb-harvester.8*
 
 
 %changelog

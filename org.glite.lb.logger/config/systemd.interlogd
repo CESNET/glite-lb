@@ -15,7 +15,7 @@ EnvironmentFile=-/etc/profile.d/grid-env.sh
 EnvironmentFile=-/etc/sysconfig/glite-lb
 EnvironmentFile=-/etc/sysconfig/glite-lb-interlogd
 PIDFile=/var/run/glite/glite-lb-interlogd.pid
-ExecStart=/usr/bin/glite-lb-interlogd $GLITE_LB_IL_OPTIONS
+ExecStart=/usr/sbin/glite-lb-interlogd $GLITE_LB_IL_OPTIONS
 
 [Install]
 WantedBy=multi-user.target

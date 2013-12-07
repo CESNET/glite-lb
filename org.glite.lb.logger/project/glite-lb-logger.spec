@@ -206,10 +206,10 @@ fi
 %{_initrddir}/glite-lb-notif-interlogd
 %{_initrddir}/glite-lb-proxy-interlogd
 %endif
-%{_bindir}/glite-lb-interlogd
-%{_bindir}/glite-lb-logd
-%{_bindir}/glite-lb-notif-interlogd
-%{_bindir}/glite-lb-proxy-interlogd
+%{_sbindir}/glite-lb-interlogd
+%{_sbindir}/glite-lb-logd
+%{_sbindir}/glite-lb-notif-interlogd
+%{_sbindir}/glite-lb-proxy-interlogd
 %{_datadir}/glite-lb-logger/lb_krb_ticket.sh
 %{_mandir}/man8/glite-lb-interlogd.8*
 %{_mandir}/man8/glite-lb-logd.8*

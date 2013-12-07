@@ -225,17 +225,17 @@ check.il: ${INTERLOG_TEST_OBJS}
 	${LINKXX} -o $@ ${COMMON_LIB}${default_thrflavour} ${CPPUNIT_LIBS} ${GLITE_GSS_LIB} -lglite_jobid -lpthread ${DL_LIBS} $+
 
 install:
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/glite/lb
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/glite-lb-logger
 	-mkdir -p -m 0775 ${DESTDIR}${PREFIX}/var/spool/glite/lb-locallogger
 	-mkdir -p -m 0755 ${DESTDIR}${PREFIX}/var/spool/glite/lb-notif
 	-mkdir -p -m 0755 ${DESTDIR}${PREFIX}/var/spool/glite/lb-proxy
-	${INSTALL} -m 755 ${LOGD} ${DESTDIR}${PREFIX}${prefix}/bin
-	${INSTALL} -m 755 ${INTERLOGD} ${DESTDIR}${PREFIX}${prefix}/bin
-	${INSTALL} -m 755 ${NOTIF_INTERLOGD} ${DESTDIR}${PREFIX}${prefix}/bin
-	${INSTALL} -m 755 ${INTERLOGD} ${DESTDIR}${PREFIX}${prefix}/bin/glite-lb-proxy-interlogd
+	${INSTALL} -m 755 ${LOGD} ${DESTDIR}${PREFIX}${prefix}/sbin
+	${INSTALL} -m 755 ${INTERLOGD} ${DESTDIR}${PREFIX}${prefix}/sbin
+	${INSTALL} -m 755 ${NOTIF_INTERLOGD} ${DESTDIR}${PREFIX}${prefix}/sbin
+	${INSTALL} -m 755 ${INTERLOGD} ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-proxy-interlogd
 	${INSTALL} -m 755 ${top_srcdir}/src/lb_krb_ticket.sh ${DESTDIR}${PREFIX}${prefix}/share/glite-lb-logger
 ifdef LB_PERF
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin

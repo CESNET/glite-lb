@@ -165,7 +165,7 @@ start()
 
 	[ -n "$GLITE_LB_HARVESTER_PORT" ] && port="-p $GLITE_LB_HARVESTER_PORT"
 
-	start_daemon glite-lb-harvester "$pidfile" "$GLITE_LOCATION/bin/glite-lb-harvester \
+	start_daemon glite-lb-harvester "$pidfile" "$GLITE_LOCATION/sbin/glite-lb-harvester \
 		$creds $conf -i $pidfile -d $level $port --daemon\
 		$GLITE_LB_HARVESTER_OTHER_OPTIONS" "$HARVESTER_NOTIFSFILE"
 }

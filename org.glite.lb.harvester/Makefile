@@ -86,23 +86,23 @@ check:
 
 debug: harvester-dbg
 
-doc: glite-lb-harvester.1
+doc: glite-lb-harvester.8
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir}
 
 install: compile
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples \
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples \
 		${DESTDIR}${PREFIX}${docdir} \
 		${DESTDIR}${PREFIX}${prefix}/share/glite \
-		${DESTDIR}${PREFIX}${prefix}/share/man/man1 \
+		${DESTDIR}${PREFIX}${prefix}/share/man/man8 \
 		${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
-	${INSTALL} -m 755 harvester ${DESTDIR}${PREFIX}${prefix}/bin/glite-lb-harvester
+	${INSTALL} -m 755 harvester ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-harvester
 	${INSTALL} -m 755 harvester-dbg ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/glite-lb-harvester-dbg
 	${INSTALL} -m 755 ${top_srcdir}/examples/test.sh ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples/glite-lb-harvester-test.sh
 	${INSTALL} -m 444 ${top_srcdir}/examples/test.sql ${DESTDIR}${PREFIX}${prefix}/share/glite/glite-lb-harvester-test-dbsetup.sql
 	${INSTALL} -m 444 ${top_srcdir}/doc/README ${DESTDIR}${PREFIX}${docdir}
-	${INSTALL} -m 444 glite-lb-harvester.1 ${DESTDIR}${PREFIX}${prefix}/share/man/man1
+	${INSTALL} -m 444 glite-lb-harvester.8 ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 ifeq ($(os_type),redhat)
 	mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/rc.d/init.d
 	${INSTALL} -m 755 ${top_srcdir}/config/startup.redhat.harvester ${DESTDIR}${PREFIX}${sysconfdir}/rc.d/init.d/glite-lb-harvester
@@ -118,7 +118,7 @@ endif
 
 clean:
 	rm -rfv *.o *.lo *.loT .libs/ manpage.links manpage.refs *.log
-	rm -rvf harvester harvester-dbg glite-lb-harvester.1 startup
+	rm -rvf harvester harvester-dbg glite-lb-harvester.8 startup
 	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
@@ -136,7 +136,7 @@ harvester-dbg.o: harvester.c
 %.o: %.c
 	${COMPILE} -c $<
 
-%.1: %.sgml
+%.8: %.sgml
 	docbook2man $<
 
 .PHONY: default all compile debug check doc stage install clean distclean dist distcheck

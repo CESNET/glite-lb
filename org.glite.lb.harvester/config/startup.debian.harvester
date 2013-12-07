@@ -17,7 +17,7 @@
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="L&B harvester"
 NAME=glite-lb-harvester
-DAEMON=/usr/bin/$NAME
+DAEMON=/usr/sbin/$NAME
 PIDFILE=/var/run/glite/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 RUN_HARVESTER=yes

@@ -81,7 +81,7 @@ echo "b) events stored to files and sent by IPC"
 echo ""
 fi
 
-PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-interlogd-perf-empty
+PERFTEST_CONSUMER=$STAGEDIR/sbin/glite-lb-interlogd-perf-empty
 CONSUMER_ARGS="-i /tmp/perftest_il.pid -d $COMM_ARGS"
 }
 
@@ -116,7 +116,7 @@ group_a_test_b () {
 # echo ""
 # echo -e "\tavg_job \t big_job \t avg_dag \t big_dag"
 
-# PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-interlogd-perf
+# PERFTEST_CONSUMER=$STAGEDIR/sbin/glite-lb-interlogd-perf
 # LOGJOBS_ARGS="--nofile $COMM_ARGS"
 
 # CONSUMER_ARGS="-d --nosend --noparse $COMM_ARGS"
@@ -158,7 +158,7 @@ echo "d) lazy bkserver connection close"
 echo "e) normal operation"
 echo ""
 fi
-PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-interlogd-perf
+PERFTEST_CONSUMER=$STAGEDIR/sbin/glite-lb-interlogd-perf
 LOGJOBS_ARGS=" $COMM_ARGS"
 }
 
@@ -225,9 +225,9 @@ group_b_test_e ()
 # echo ""
 # echo -e "\tavg_job \t big_job \t avg_dag \t big_dag"
 
-# PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-bkserverd
+# PERFTEST_CONSUMER=$STAGEDIR/sbin/glite-lb-bkserverd
 # CONSUMER_ARGS="-d --perf-sink=1"
-# PERFTEST_COMPONENT=$STAGEDIR/bin/glite-lb-interlogd-perf
+# PERFTEST_COMPONENT=$STAGEDIR/sbin/glite-lb-interlogd-perf
 # LOGJOBS_ARGS="--nofile $COMM_ARGS"
 
 
@@ -276,9 +276,9 @@ echo "e) normal operation"
 echo ""
 fi
 
-PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-bkserverd
+PERFTEST_CONSUMER=$STAGEDIR/sbin/glite-lb-bkserverd
 CONSUMER_ARGS="-g -S /tmp -D /tmp -t 1 -d --perf-sink=1 -p 10500 -w 10503"
-PERFTEST_COMPONENT=$STAGEDIR/bin/glite-lb-interlogd-perf
+PERFTEST_COMPONENT=$STAGEDIR/sbin/glite-lb-interlogd-perf
 LOGJOBS_ARGS=" -m localhost:10500 $COMM_ARGS"
 }
 

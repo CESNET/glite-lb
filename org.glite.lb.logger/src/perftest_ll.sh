@@ -71,7 +71,7 @@ Number of jobs: $numjobs
 group_a_test_a ()
 {
 echo -n "a)"
-PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-logd-perf-nofile
+PERFTEST_CONSUMER=$STAGEDIR/sbin/glite-lb-logd-perf-nofile
 CONSUMER_ARGS="-d --noIPC --noParse $COMM_ARGS"
 init_result
 run_test ll $numjobs
@@ -83,7 +83,7 @@ print_result
 group_a_test_b ()
 {
 echo -n "b)"
-PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-logd-perf-nofile
+PERFTEST_CONSUMER=$STAGEDIR/sbin/glite-lb-logd-perf-nofile
 CONSUMER_ARGS="-d --noIPC $COMM_ARGS"
 init_result
 run_test ll $numjobs
@@ -95,7 +95,7 @@ print_result
 group_a_test_c () 
 {
 echo -n "c)"
-PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-logd-perf
+PERFTEST_CONSUMER=$STAGEDIR/sbin/glite-lb-logd-perf
 CONSUMER_ARGS="-d --noIPC $COMM_ARGS"
 init_result
 run_test ll $numjobs
@@ -108,9 +108,9 @@ rm -f /tmp/perftest.log.*
 group_a_test_d ()
 {
 echo -n "d)"
-PERFTEST_CONSUMER=$STAGEDIR/bin/glite-lb-interlogd-perf-empty
+PERFTEST_CONSUMER=$STAGEDIR/sbin/glite-lb-interlogd-perf-empty
 CONSUMER_ARGS="-d -s /tmp/perftest.sock"
-PERFTEST_COMPONENT=$STAGEDIR/bin/glite-lb-logd-perf
+PERFTEST_COMPONENT=$STAGEDIR/sbin/glite-lb-logd-perf
 COMPONENT_ARGS="-d -s /tmp/perftest.sock $COMM_ARGS"
 init_result
 run_test ll $numjobs

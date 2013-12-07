@@ -1,4 +1,4 @@
 etc/init.d/glite-lb-locallogger
-usr/bin/*
+usr/sbin/*
 usr/share/man/man8/*
 usr/share/glite-lb-logger/*
