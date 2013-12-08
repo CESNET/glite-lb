@@ -190,10 +190,10 @@ glite-lb-notif-interlogd: ${INTERLOG_NOTIF_OBJS}
 	${LINK} -export-dynamic -o $@ ${INTERLOG_NOTIF_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB} -lpthread ${DL_LIBS}
 
 glite-lb-interlogd-perf: ${INTERLOG_PERF_OBJS}
-	${LINK} -o $@ ${INTERLOG_PERF_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB} -lpthread
+	${LINK} -o $@ ${INTERLOG_PERF_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB} -lpthread ${DL_LIBS}
 
 glite-lb-interlogd-perf-empty: ${INTERLOG_EMPTY_OBJS}
-	${LINK} -o $@ ${INTERLOG_EMPTY_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB} -lpthread
+	${LINK} -o $@ ${INTERLOG_EMPTY_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB} -lpthread ${DL_LIBS}
 
 glite-lb-ws-interlogd: ${INTERLOG_WS_OBJS}
 	${LINK} -o $@ ${INTERLOG_WS_OBJS} ${COMMON_LIB}${default_thrflavour} ${EXT_LIB} -lpthread
@@ -235,10 +235,9 @@ install:
 	${INSTALL} -m 755 ${LOGD} ${DESTDIR}${PREFIX}${prefix}/sbin
 	${INSTALL} -m 755 ${INTERLOGD} ${DESTDIR}${PREFIX}${prefix}/sbin
 	${INSTALL} -m 755 ${NOTIF_INTERLOGD} ${DESTDIR}${PREFIX}${prefix}/sbin
-	${INSTALL} -m 755 ${INTERLOGD} ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-proxy-interlogd
+	${INSTALL} -m 755 glite-lb-interlogd ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-proxy-interlogd
 	${INSTALL} -m 755 ${top_srcdir}/src/lb_krb_ticket.sh ${DESTDIR}${PREFIX}${prefix}/share/glite-lb-logger
 ifdef LB_PERF
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_ll.sh ${DESTDIR}${PREFIX}${prefix}/sbin
 	${INSTALL} -m 755 ${top_srcdir}/src/perftest_il.sh ${DESTDIR}${PREFIX}${prefix}/sbin
 endif
