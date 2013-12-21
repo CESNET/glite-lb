@@ -100,8 +100,8 @@ rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
 %if 0%{?fedora}
 # preserve directory in /var/run
-mkdir -p ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d
-cat > ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d/glite-lb-server.conf <<EOF
+mkdir -p ${RPM_BUILD_ROOT}%{_tmpfilesdir}
+cat > ${RPM_BUILD_ROOT}%{_tmpfilesdir}/glite-lb-server.conf <<EOF
 d %{_localstatedir}/run/glite 0755 glite glite -
 EOF
 %endif
@@ -126,11 +126,7 @@ exit 0
 
 %post
 %if 0%{?fedora}
-# Fedora 18: systemd_post glite-lb-bkserverd.service
-if [ $1 -eq 1 ] ; then
-    # Initial installation
-    /bin/systemctl daemon-reload >/dev/null 2>&1 || :
-fi
+systemd_post glite-lb-bkserverd.service
 %else
 /sbin/chkconfig --add glite-lb-bkserverd
 if [ $1 -eq 1 ] ; then
@@ -150,12 +146,7 @@ fi
 
 %preun
 %if 0%{?fedora}
-# Fedora 18: systemd_preun glite-lb-bkserverd.service
-if [ $1 -eq 0 ] ; then
-    # Package removal, not upgrade
-    /bin/systemctl --no-reload disable glite-lb-bkserverd.service > /dev/null 2>&1 || :
-    /bin/systemctl stop glite-lb-bkserverd.service > /dev/null 2>&1 || :
-fi
+systemd_preun glite-lb-bkserverd.service
 %else
 if [ $1 -eq 0 ] ; then
     /sbin/service glite-lb-bkserverd stop >/dev/null 2>&1
@@ -166,12 +157,7 @@ fi
 
 %postun
 %if 0%{?fedora}
-# Fedora 18: systemd_postun_with_restart glite-lb-bkserverd.service
-/bin/systemctl daemon-reload >/dev/null 2>&1 || :
-if [ $1 -ge 1 ] ; then
-    # Package upgrade, not uninstall
-    /bin/systemctl try-restart glite-lb-bkserverd.service >/dev/null 2>&1 || :
-fi
+systemd_postun_with_restart glite-lb-bkserverd.service
 %else
 if [ "$1" -ge "1" ] ; then
     /sbin/service glite-lb-bkserverd condrestart >/dev/null 2>&1 || :
@@ -202,7 +188,7 @@ fi
 %{_pkgdocdir}/LICENSE
 %{_pkgdocdir}/glite-lb
 %if 0%{?fedora}
-%{_prefix}/lib/tmpfiles.d/glite-lb-server.conf
+%{_tmpfilesdir}/glite-lb-server.conf
 %{_unitdir}/glite-lb-bkserverd.service
 %else
 %{_initrddir}/glite-lb-bkserverd

@@ -14,8 +14,8 @@ BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  cppunit-devel
 BuildRequires:  chrpath
-BuildRequires:  glite-lb-common-devel
 BuildRequires:  glite-jobid-api-c-devel
+BuildRequires:  glite-lb-common-devel
 BuildRequires:  glite-lbjp-common-gss-devel
 BuildRequires:  glite-lbjp-common-trio-devel
 BuildRequires:  glite-lbjp-common-log-devel
@@ -65,8 +65,8 @@ rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
 %if 0%{?fedora}
 # preserve directory in /var/run
-mkdir -p ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d
-cat > ${RPM_BUILD_ROOT}%{_prefix}/lib/tmpfiles.d/glite-lb-logger.conf <<EOF
+mkdir -p ${RPM_BUILD_ROOT}%{_tmpfilesdir}
+cat > ${RPM_BUILD_ROOT}%{_tmpfilesdir}/glite-lb-logger.conf <<EOF
 d %{_localstatedir}/run/glite 0755 glite glite -
 EOF
 %else
@@ -92,11 +92,7 @@ exit 0
 
 %post
 %if 0%{?fedora}
-# Fedora 18: systemd_post glite-lb-....service
-if [ $1 -eq 1 ] ; then
-    # Initial installation
-    /bin/systemctl daemon-reload >/dev/null 2>&1 || :
-fi
+%systemd_post glite-lb-logd.service glite-lb-interlogd.service glite-lb-notif-interlogd.service glite-lb-proxy-interlogd.service
 %else
 /sbin/chkconfig --add glite-lb-logd
 /sbin/chkconfig --add glite-lb-interlogd
@@ -128,21 +124,7 @@ done
 
 %preun
 %if 0%{?fedora}
-# Fedora 18: systemd_preun glite-lb-logd.service
-# Fedora 18: systemd_preun glite-lb-interlogd.service
-# Fedora 18: systemd_preun glite-lb-notif-interlogd.service
-# Fedora 18: systemd_preun glite-lb-proxy-interlogd.service
-if [ $1 -eq 0 ] ; then
-    # Package removal, not upgrade
-    /bin/systemctl --no-reload disable glite-lb-logd.service > /dev/null 2>&1 || :
-    /bin/systemctl --no-reload disable glite-lb-interlogd.service > /dev/null 2>&1 || :
-    /bin/systemctl --no-reload disable glite-lb-notif-interlogd.service > /dev/null 2>&1 || :
-    /bin/systemctl --no-reload disable glite-lb-proxy-interlogd.service > /dev/null 2>&1 || :
-    /bin/systemctl stop glite-lb-logd.service > /dev/null 2>&1 || :
-    /bin/systemctl stop glite-lb-interlogd.service > /dev/null 2>&1 || :
-    /bin/systemctl stop glite-lb-notif-interlogd.service > /dev/null 2>&1 || :
-    /bin/systemctl stop glite-lb-proxy-interlogd.service > /dev/null 2>&1 || :
-fi
+%systemd_preun glite-lb-logd.service glite-lb-interlogd.service glite-lb-notif-interlogd.service glite-lb-proxy-interlogd.service
 %else
 if [ $1 -eq 0 ] ; then
     /sbin/service glite-lb-logd stop >/dev/null 2>&1
@@ -159,18 +141,7 @@ fi
 
 %postun
 %if 0%{?fedora}
-# Fedora 18: systemd_postun_with_restart glite-lb-logd.service
-# Fedora 18: systemd_postun_with_restart glite-lb-interlogd.service
-# Fedora 18: systemd_postun_with_restart glite-lb-notif-interlogd.service
-# Fedora 18: systemd_postun_with_restart glite-lb-proxy-interlogd.service
-/bin/systemctl daemon-reload >/dev/null 2>&1 || :
-if [ $1 -ge 1 ] ; then
-    # Package upgrade, not uninstall
-    /bin/systemctl try-restart glite-lb-logd.service >/dev/null 2>&1 || :
-    /bin/systemctl try-restart glite-lb-interlogd.service >/dev/null 2>&1 || :
-    /bin/systemctl try-restart glite-lb-notif-interlogd.service >/dev/null 2>&1 || :
-    /bin/systemctl try-restart glite-lb-proxy-interlogd.service >/dev/null 2>&1 || :
-fi
+%systemd_postun_with_restart glite-lb-logd.service glite-lb-interlogd.service glite-lb-notif-interlogd.service glite-lb-proxy-interlogd.service
 %else
 if [ "$1" -ge "1" ] ; then
     /sbin/service glite-lb-logd condrestart >/dev/null 2>&1 || :
@@ -194,7 +165,7 @@ fi
 %ghost %{_localstatedir}/run/glite/glite-lb-notif.sock
 %ghost %{_localstatedir}/run/glite/glite-lb-proxy.sock
 %if 0%{?fedora}
-%{_prefix}/lib/tmpfiles.d/glite-lb-logger.conf
+%{_tmpfilesdir}/glite-lb-logger.conf
 %{_unitdir}/glite-lb-logd.service
 %{_unitdir}/glite-lb-interlogd.service
 %{_unitdir}/glite-lb-notif-interlogd.service
@@ -216,8 +187,6 @@ fi
 
 %files devel
 %defattr(-,root,root)
-%dir %{_includedir}/glite/
-%dir %{_includedir}/glite/lb/
 %{_includedir}/glite/lb/*.h
 
 
