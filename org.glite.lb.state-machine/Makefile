@@ -104,12 +104,12 @@ stage: compile
 	$(MAKE) install PREFIX=${stagedir}
 
 install:
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir} ${DESTDIR}${PREFIX}${prefix}/interface ${DESTDIR}${PREFIX}${prefix}/include/glite/lb
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir} ${DESTDIR}${PREFIX}${prefix}/share/glite-lb/xsd ${DESTDIR}${PREFIX}${prefix}/include/glite/lb
 	${INSTALL} -m 755 ${MACHINE_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	${INSTALL} -m 755 ${PLUGIN_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
-	install -m 644 ${top_srcdir}/interface/lb-job-attrs.xsd ${DESTDIR}${PREFIX}${prefix}/interface
-	install -m 644 lb-job-attrs2.xsd ${DESTDIR}${PREFIX}${prefix}/interface
-	install -m 644 ${top_srcdir}/interface/lb-job-record.xsd ${DESTDIR}${PREFIX}${prefix}/interface
+	install -m 644 ${top_srcdir}/interface/lb-job-attrs.xsd ${DESTDIR}${PREFIX}${prefix}/share/glite-lb/xsd
+	install -m 644 lb-job-attrs2.xsd ${DESTDIR}${PREFIX}${prefix}/share/glite-lb/xsd
+	install -m 644 ${top_srcdir}/interface/lb-job-record.xsd ${DESTDIR}${PREFIX}${prefix}/share/glite-lb/xsd
 	install -m 644 ${top_srcdir}/interface/intjobstat.h ${DESTDIR}${PREFIX}${prefix}/include/glite/lb
 	install -m 644 ${top_srcdir}/interface/intjobstat_supp.h ${DESTDIR}${PREFIX}${prefix}/include/glite/lb
 	install -m 644 ${top_srcdir}/interface/process_event.h ${DESTDIR}${PREFIX}${prefix}/include/glite/lb

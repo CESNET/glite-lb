@@ -1,1 +1,1 @@
-glite-lb-state-machine is the gLite LB state machine (server core, processing LB events to produce job state presented to the user). This package contains the state machine static (linked by server) and dynamic library (LB plugin used by Job Provenance).
+glite-lb-state-machine is the gLite L&B job state machine -- server core processing L&B events to produce job state presented to the user. This package contains the state machine library (linked by server) and dynamic plugin (used by other tools and Job Provenance).

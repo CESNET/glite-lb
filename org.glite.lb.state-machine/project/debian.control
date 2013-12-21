@@ -30,7 +30,8 @@ Section: misc
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: L&B state machine plugins
- This package contains L&B state machine plugins for Job Provenance.
+ This package contains L&B state machine plugins for L&B tools and Job
+ Provenance.
 
 Package: libglite-lb-state-machine6-dbg
 Section: debug

@@ -51,7 +51,7 @@ Summary:        L&B state machine plugins
 Group:          System Environment/Libraries
 
 %description    plugins
-This package contains L&B state machine plugins for Job Provenance.
+This package contains L&B state machine plugins for L&B tools and Job Provenance.
 
 
 %prep
@@ -89,12 +89,10 @@ rm -rf $RPM_BUILD_ROOT
 
 %files devel
 %defattr(-,root,root)
-%dir %{_includedir}/glite/
-%dir %{_includedir}/glite/lb/
-%dir /usr/interface/
+%dir %{_datadir}/glite-lb/xsd/
 %{_libdir}/libglite_lb_statemachine.so
 %{_includedir}/glite/lb/*.h
-/usr/interface/*.xsd
+%{_datadir}/glite-lb/xsd/*.xsd
 
 %files plugins
 %defattr(-,root,root)
