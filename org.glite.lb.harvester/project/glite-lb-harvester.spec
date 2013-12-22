@@ -80,7 +80,7 @@ exit 0
 
 %post
 %if 0%{?fedora}
-systemd_post glite-lb-harvester.service
+%systemd_post glite-lb-harvester.service
 %else
 /sbin/chkconfig --add glite-lb-harvester
 if [ $1 -eq 1 ] ; then
@@ -98,7 +98,7 @@ fi
 
 %preun
 %if 0%{?fedora}
-systemd_preun glite-lb-harvester.service
+%systemd_preun glite-lb-harvester.service
 %else
 if [ $1 -eq 0 ] ; then
     /sbin/service glite-lb-harvester stop >/dev/null 2>&1
@@ -109,7 +109,7 @@ fi
 
 %postun
 %if 0%{?fedora}
-systemd_postun_with_restart glite-lb-harvester.service
+%systemd_postun_with_restart glite-lb-harvester.service
 %else
 if [ "$1" -ge "1" ] ; then
     /sbin/service glite-lb-harvester condrestart >/dev/null 2>&1 || :
