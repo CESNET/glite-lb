@@ -63,7 +63,7 @@ public class ContextIL extends Context {
 	this.prefix = prefix;
 	this.socket = socket;
 
-	if (lib != null) System.loadLibrary(lib);
+	if (lib != null) org.glite.lb.JNILoader.loadLibrary(lib);
     }
 
 	

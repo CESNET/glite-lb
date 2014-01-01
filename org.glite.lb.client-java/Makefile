@@ -13,10 +13,11 @@ docdir?=${prefix}/share/doc/${package}-${version}
 # broken 
 # SimpleLLTest.class ProducerTestLL.class ProducerTestIL.class
 
+LOADER_SOURCES:=JNIDefaultLoader.java
 FULL_EXAMPLES := $(addprefix ${top_srcdir}/examples/,SSLClient.java SSLServer.java QueryDemo.java NotificationExample.java CreamTest.java)
 SSL_EXAMPLES := $(addprefix ${top_srcdir}/examples/simple-ssl/,MyX509KeyManager.java MyX509TrustManager.java ExampleSSLSocketFactory.java LBClientSSL.java)
 TM_EXAMPLES := $(addprefix ${top_srcdir}/examples/simple-trustmanager/,LBClientTM.java)
-CORE_SOURCES:=Context.java ContextIL.java Escape.java Event.java ILFileWriter.java ILProto.java LBException.java Level.java Timeval.java Sources.java SeqCode.java
+CORE_SOURCES:=Context.java ContextIL.java Escape.java Event.java ILFileWriter.java ILProto.java JNIHelper.java LBException.java Level.java Timeval.java Sources.java SeqCode.java
 AXIS_SOURCES:=ContextDirect.java ContextLL.java EventConvertor.java Job.java LBCredentials.java NotifParser.java Notification.java SSL.java SSLSend.java ServerConnection.java
 
 CORE_CLASSES=$(CORE_SOURCES:.java=.class)
@@ -88,7 +89,7 @@ build/classes/axis: build/axis
 
 build/classes/core: compile-java-lb compile-java-gen
 
-compile-java-lb: $(CORE_SOURCES)
+compile-java-lb: $(CORE_SOURCES) build/JNILoader.java
 	-mkdir -p build/classes/core
 	${JAVAC} \
 		-classpath ${jobid_classpath} \
@@ -139,6 +140,10 @@ build/classes/examples: ${FULL_EXAMPLES} ${SSL_EXAMPLES} ${TM_EXAMPLES} build/cl
 glite-lb-client-java-examples.jar: build/classes/examples
 	cd build/classes/examples && ${jdk_prefix}/bin/jar cf ../../$@ src org $(addsuffix .class,$(basename $(notdir ${FULL_EXAMPLES})))
 	cd build && ${jdk_prefix}/bin/jar i $@
+
+build/JNILoader.java: $(LOADER_SOURCES)
+	-mkdir -p build
+	cp -p $+ $@
 
 build/gen:
 	-mkdir -p build/gen

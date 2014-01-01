@@ -11,10 +11,17 @@ DM-Upload-Allowed: yes
 
 Package: libglite-lb-client-java
 Section: java
-Architecture: any
-Depends: ${misc:Depends}, ${shlibs:Depends}, libglite-jobid-api-java, libcommons-lang-java
+Architecture: all
+Depends: ${misc:Depends}, ${shlibs:Depends}, libglite-jobid-api-java, libcommons-lang-java, libglite-lb-client-jni
 Description: @SUMMARY@
 @DEBIAN_DESCRIPTION@
+
+Package: libglite-lb-client-jni
+Section: java
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: JNI code for L&B java client
+ This package contains Java Native Interface code for L&B java client.
 
 Package: libglite-lb-client-axis-java
 Section: java

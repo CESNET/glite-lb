@@ -4,6 +4,7 @@
 -include /usr/share/dpkg/buildflags.mk
 
 p_base=glite-lb-client-java
+p_jni=libglite-lb-client-jni
 p_lib=libglite-lb-client-java
 p_axis=libglite-lb-client-axis-java
 p_doc=libglite-lb-client-java-doc
@@ -23,7 +24,7 @@ build-arch build-indep: build-stamp
 
 build-stamp: configure-stamp
 	dh_testdir
-	CFLAGS="$(CFLAGS) $(CPPFLAGS)" LDFLAGS="$(LDFLAGS)" $(MAKE)
+	CFLAGS="$(CFLAGS) $(CPPFLAGS)" LDFLAGS="$(LDFLAGS)" $(MAKE) LOADER_SOURCES=JNIDebianLoader.java
 	CFLAGS="$(CFLAGS) $(CPPFLAGS)" LDFLAGS="$(LDFLAGS)" $(MAKE) check
 	touch $@
 
@@ -41,6 +42,9 @@ install: build-stamp
 	dh_prep
 	dh_installdirs
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
+	# move JNI library
+	mkdir -p debian/$(p_jni)/usr/lib/jni
+	mv debian/tmp/usr/lib/libglite_lb_sendviasocket.so* debian/$(p_jni)/usr/lib/jni
 	mkdir -p debian/$(p_axis)/usr/share/doc
 	mkdir -p debian/$(p_doc)/usr/share/doc
 	mkdir -p debian/$(p_lib)/usr/share/doc

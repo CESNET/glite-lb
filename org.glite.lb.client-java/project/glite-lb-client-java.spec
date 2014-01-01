@@ -119,15 +119,22 @@ if [ "%with_trustmanager" == "0" ]; then
     echo "trustmanager_prefix=no" >> Makefile.inc
 fi
 # parallel build not supported
-CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make
+CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make LOADER_SOURCES=JNIFedoraLoader.java
 
 
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
+# move API docs
 mkdir -p $RPM_BUILD_ROOT%{_javadocdir}
 mv $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}/api $RPM_BUILD_ROOT%{_javadocdir}/%{name}
 rm -rf $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
+# move JNI
+mkdir -p $RPM_BUILD_ROOT%{_libdir}/%{name}
+mv $RPM_BUILD_ROOT%{_libdir}/libglite_lb_sendviasocket.so* $RPM_BUILD_ROOT%{_libdir}/%{name}
+# move JAR (using JNI)
+mkdir -p $RPM_BUILD_ROOT%{_jnidir}
+mv $RPM_BUILD_ROOT%{_javadir}/%{name}.jar $RPM_BUILD_ROOT%{_jnidir}
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
@@ -146,15 +153,13 @@ install -m 0644 JPP-%{name}.pom JPP-%{name}-axis.pom $RPM_BUILD_ROOT%{_mavenpomd
 rm -rf $RPM_BUILD_ROOT
 
 
-%post
-/sbin/ldconfig
 %if 0%{?rhel} || 0%{?fedora} < 18
+%post
 %update_maven_depmap
 %endif
 
-%postun
-/sbin/ldconfig
 %if 0%{?rhel} || 0%{?fedora} < 18
+%postun
 %update_maven_depmap
 %endif
 
@@ -162,10 +167,11 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root)
 %doc LICENSE project/ChangeLog
-%{_libdir}/libglite_lb_sendviasocket.so
-%{_libdir}/libglite_lb_sendviasocket.so.0
-%{_libdir}/libglite_lb_sendviasocket.so.0.0.0
-%{_javadir}/%{name}.jar
+%dir %{_libdir}/%{name}/
+%{_libdir}/%{name}/libglite_lb_sendviasocket.so
+%{_libdir}/%{name}/libglite_lb_sendviasocket.so.0
+%{_libdir}/%{name}/libglite_lb_sendviasocket.so.0.0.0
+%{_jnidir}/%{name}.jar
 %{_mavendepmapfragdir}/%{name}
 %{_mavenpomdir}/JPP-%{name}.pom
 
