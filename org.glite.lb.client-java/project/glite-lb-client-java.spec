@@ -113,7 +113,11 @@ L&B client.
 
 
 %build
-perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.client-java --with-axis=/usr/local/axis1.4
+%if ! 0%{?fedora}
+# axis from EMI third-party repository
+args="--with-axis=/usr/local/axis1.4"
+%endif
+perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.client-java $args
 if [ "%with_trustmanager" == "0" ]; then
     echo >> Makefile.inc
     echo "trustmanager_prefix=no" >> Makefile.inc
