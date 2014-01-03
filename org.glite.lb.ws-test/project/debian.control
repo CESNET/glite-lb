@@ -12,7 +12,7 @@ DM-Upload-Allowed: yes
 Package: glite-lb-ws-test
 Section: misc
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, glite-lb-ws-interface
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: @SUMMARY@
 @DEBIAN_DESCRIPTION@
 

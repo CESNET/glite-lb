@@ -703,7 +703,7 @@ for my $jar (keys %need_jars) {
 		lbjp-common.trio lbjp-common.maildir
 		lb.client lb.state-machine lb.types:B
 	/ ],
-	'lb.ws-test' => [ qw/lbjp-common.gsoap-plugin lb.ws-interface/ ],
+	'lb.ws-test' => [ qw/lbjp-common.gsoap-plugin lb.ws-interface:B/ ],
 	'lb.ws-interface' => [ qw/lb.types:B/ ],
 	'lb.types' => [ qw// ],
 	'lb.harvester' => [ qw/
