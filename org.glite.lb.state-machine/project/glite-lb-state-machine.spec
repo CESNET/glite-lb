@@ -11,7 +11,7 @@ Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.sta
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  chrpath
-%if 0%{?rhel}
+%if 0%{?rhel} <= 6
 BuildRequires:  classads-devel
 %else
 BuildRequires:  condor-classads-devel

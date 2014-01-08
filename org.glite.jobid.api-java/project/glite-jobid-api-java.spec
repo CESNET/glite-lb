@@ -21,7 +21,7 @@ BuildRequires:  jpackage-utils
 BuildRequires:  perl
 BuildRequires:  perl(Getopt::Long)
 BuildRequires:  perl(POSIX)
-%if 0%{?fedora} >= 18
+%if 0%{?rhel} >= 7 || 0%{?fedora}
 BuildRequires:  maven-local
 %else
 BuildRequires:  java-devel
@@ -29,7 +29,7 @@ BuildRequires:  java-devel
 Requires:       jakarta-commons-codec
 Requires:       java
 Requires:       jpackage-utils
-%if 0%{?rhel} || 0%{?fedora} < 18
+%if 0%{?rhel} <= 6
 Requires(post): jpackage-utils
 Requires(postun): jpackage-utils
 %endif
@@ -76,13 +76,13 @@ install -m 0644 JPP-%{name}.pom $RPM_BUILD_ROOT%{_mavenpomdir}
 rm -rf $RPM_BUILD_ROOT
 
 
-%if 0%{?rhel} || 0%{?fedora} < 18
+%if 0%{?rhel} <= 6
 %post
 %update_maven_depmap
 %endif
 
 
-%if 0%{?rhel} || 0%{?fedora} < 18
+%if 0%{?rhel} <= 6
 %postun
 %update_maven_depmap
 %endif

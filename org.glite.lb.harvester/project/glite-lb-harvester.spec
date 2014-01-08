@@ -28,7 +28,7 @@ BuildRequires:  perl
 BuildRequires:  perl(Getopt::Long)
 BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
-%if 0%{?fedora}
+%if 0%{?rhel} >= 7 || 0%{?fedora}
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
@@ -56,7 +56,7 @@ CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make %{?_smp_mflags}
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
 install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT%{_pkgdocdir}
-%if 0%{?fedora}
+%if 0%{?rhel} >= 7 || 0%{?fedora}
 # preserve directory in /var/run
 mkdir -p ${RPM_BUILD_ROOT}%{_tmpfilesdir}
 cat > ${RPM_BUILD_ROOT}%{_tmpfilesdir}/glite-lb-harvester.conf <<EOF
@@ -79,7 +79,7 @@ exit 0
 
 
 %post
-%if 0%{?fedora}
+%if 0%{?rhel} >= 7 || 0%{?fedora}
 %systemd_post glite-lb-harvester.service
 %else
 /sbin/chkconfig --add glite-lb-harvester
@@ -97,7 +97,7 @@ fi
 
 
 %preun
-%if 0%{?fedora}
+%if 0%{?rhel} >= 7 || 0%{?fedora}
 %systemd_preun glite-lb-harvester.service
 %else
 if [ $1 -eq 0 ] ; then
@@ -108,7 +108,7 @@ fi
 
 
 %postun
-%if 0%{?fedora}
+%if 0%{?rhel} >= 7 || 0%{?fedora}
 %systemd_postun_with_restart glite-lb-harvester.service
 %else
 if [ "$1" -ge "1" ] ; then
@@ -126,7 +126,7 @@ fi
 %dir %{_libdir}/glite-lb/
 %dir %{_libdir}/glite-lb/examples/
 %dir %{_datadir}/glite/
-%if 0%{?fedora}
+%if 0%{?rhel} >= 7 || 0%{?fedora}
 %{_tmpfilesdir}/glite-lb-harvester.conf
 %{_unitdir}/glite-lb-harvester.service
 %else

@@ -12,9 +12,12 @@ Vendor:         EMI
 Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.logger-msg/%{version}/src/%{name}-%{version}.tar.gz
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
-%if 0%{?fedora}
+# for EMI: using activemq-cpp-library (for EPEL <= 6)
+# for EPEL: always using activemq-cpp-devel (supported since EPEL 6)
+%if 0%{?rhel} >= 7 || 0%{?fedora}
 BuildRequires:  activemq-cpp-devel
 %else
+# only in EMI third-party repository
 BuildRequires:  activemq-cpp-library
 %endif
 BuildRequires:  cppunit-devel

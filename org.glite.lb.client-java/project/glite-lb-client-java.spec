@@ -16,13 +16,15 @@ Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.cli
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  ant
-%if 0%{?fedora}
+%if 0%{?rhel} >= 7 || 0%{?fedora}
 BuildRequires:  axis
 %else
+# only in EMI third-party repository
 BuildRequires:  axis1.4
 %endif
 BuildRequires:  chrpath
 %if %{with_trustmanager}
+# only in EMI third-party repository
 BuildRequires:  emi-trustmanager
 BuildRequires:  emi-trustmanager-axis
 %endif
@@ -36,7 +38,7 @@ BuildRequires:  log4j
 BuildRequires:  perl
 BuildRequires:  perl(Getopt::Long)
 BuildRequires:  perl(POSIX)
-%if 0%{?fedora} >= 18
+%if 0%{?rhel} >= 7 || 0%{?fedora}
 BuildRequires:  maven-local
 %else
 BuildRequires:  java-devel
@@ -45,7 +47,7 @@ Requires:       glite-jobid-api-java
 Requires:       jakarta-commons-lang
 Requires:       java
 Requires:       jpackage-utils
-%if 0%{?rhel} || 0%{?fedora} < 18
+%if 0%{?rhel} <= 6
 Requires(post): jpackage-utils
 Requires(postun): jpackage-utils
 %endif
@@ -113,7 +115,7 @@ L&B client.
 
 
 %build
-%if ! 0%{?fedora}
+%if 0%{?rhel} <= 6 && ! 0%{?fedora}
 # axis from EMI third-party repository
 args="--with-axis=/usr/local/axis1.4"
 %endif
@@ -157,12 +159,12 @@ install -m 0644 JPP-%{name}.pom JPP-%{name}-axis.pom $RPM_BUILD_ROOT%{_mavenpomd
 rm -rf $RPM_BUILD_ROOT
 
 
-%if 0%{?rhel} || 0%{?fedora} < 18
+%if 0%{?rhel} <= 6
 %post
 %update_maven_depmap
 %endif
 
-%if 0%{?rhel} || 0%{?fedora} < 18
+%if 0%{?rhel} <= 6
 %postun
 %update_maven_depmap
 %endif

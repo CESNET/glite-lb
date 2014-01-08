@@ -24,7 +24,7 @@ BuildRequires:  perl
 BuildRequires:  perl(Getopt::Long)
 BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
-%if 0%{?fedora}
+%if 0%{?rhel} >= 7 || 0%{?fedora}
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
@@ -63,7 +63,7 @@ CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make %{?_smp_mflags}
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
-%if 0%{?fedora}
+%if 0%{?rhel} >= 7 || 0%{?fedora}
 # preserve directory in /var/run
 mkdir -p ${RPM_BUILD_ROOT}%{_tmpfilesdir}
 cat > ${RPM_BUILD_ROOT}%{_tmpfilesdir}/glite-lb-logger.conf <<EOF
@@ -91,7 +91,7 @@ exit 0
 
 
 %post
-%if 0%{?fedora}
+%if 0%{?rhel} >= 7 || 0%{?fedora}
 %systemd_post glite-lb-logd.service glite-lb-interlogd.service glite-lb-notif-interlogd.service glite-lb-proxy-interlogd.service
 %else
 /sbin/chkconfig --add glite-lb-logd
@@ -123,7 +123,7 @@ done
 
 
 %preun
-%if 0%{?fedora}
+%if 0%{?rhel} >= 7 || 0%{?fedora}
 %systemd_preun glite-lb-logd.service glite-lb-interlogd.service glite-lb-notif-interlogd.service glite-lb-proxy-interlogd.service
 %else
 if [ $1 -eq 0 ] ; then
@@ -140,7 +140,7 @@ fi
 
 
 %postun
-%if 0%{?fedora}
+%if 0%{?rhel} >= 7 || 0%{?fedora}
 %systemd_postun_with_restart glite-lb-logd.service glite-lb-interlogd.service glite-lb-notif-interlogd.service glite-lb-proxy-interlogd.service
 %else
 if [ "$1" -ge "1" ] ; then
@@ -164,7 +164,7 @@ fi
 %ghost %{_localstatedir}/run/glite/glite-lb-interlogger.sock
 %ghost %{_localstatedir}/run/glite/glite-lb-notif.sock
 %ghost %{_localstatedir}/run/glite/glite-lb-proxy.sock
-%if 0%{?fedora}
+%if 0%{?rhel} >= 7 || 0%{?fedora}
 %{_tmpfilesdir}/glite-lb-logger.conf
 %{_unitdir}/glite-lb-logd.service
 %{_unitdir}/glite-lb-interlogd.service

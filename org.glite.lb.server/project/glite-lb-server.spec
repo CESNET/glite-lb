@@ -2,14 +2,15 @@
 
 %{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
 
-%if 0%{?fedora}
+%if 0%{?rhel} >= 7 || 0%{?fedora}
 %global mysqlconfdir %{_sysconfdir}/my.cnf.d
 %else
 %global mysqlconfdir %{_sysconfdir}/mysql/conf.d
 %endif
 
-# condor classads requires 2011 ISO C++ standard since Fedora 19
-%if 0%{?fedora} >= 19
+# condor classads requires 2011 ISO C++ standard since Fedora 19 (EPEL 7 based
+# on Fedora 19)
+%if 0%{?rhel} >= 7 || 0%{?fedora} >= 19
 %global classad_cxxflags -std=c++11
 %endif
 
@@ -50,7 +51,7 @@ BuildRequires:  c-ares-devel
 BuildRequires:  cppunit-devel
 BuildRequires:  flex
 BuildRequires:  voms-devel
-%if 0%{?rhel}
+%if 0%{?rhel} <= 6
 BuildRequires:  classads-devel
 %else
 BuildRequires:  condor-classads-devel
@@ -71,7 +72,7 @@ Requires:       mysql-server
 Requires:       glite-lbjp-common-server-bones%{?_isa} >= 2.2.0
 Requires:       glite-lb-client-progs
 Requires:       glite-lb-utils
-%if 0%{?fedora}
+%if 0%{?rhel} >= 7 || 0%{?fedora}
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
@@ -98,7 +99,7 @@ CFLAGS="%{?optflags}" CXXFLAGS="%{?optflags} %{?classad_cxxflags}" LDFLAGS="%{?_
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
-%if 0%{?fedora}
+%if 0%{?rhel} >= 7 || 0%{?fedora}
 # preserve directory in /var/run
 mkdir -p ${RPM_BUILD_ROOT}%{_tmpfilesdir}
 cat > ${RPM_BUILD_ROOT}%{_tmpfilesdir}/glite-lb-server.conf <<EOF
@@ -125,7 +126,7 @@ exit 0
 
 
 %post
-%if 0%{?fedora}
+%if 0%{?rhel} >= 7 || 0%{?fedora}
 %systemd_post glite-lb-bkserverd.service
 %else
 /sbin/chkconfig --add glite-lb-bkserverd
@@ -145,7 +146,7 @@ fi
 
 
 %preun
-%if 0%{?fedora}
+%if 0%{?rhel} >= 7 || 0%{?fedora}
 %systemd_preun glite-lb-bkserverd.service
 %else
 if [ $1 -eq 0 ] ; then
@@ -156,7 +157,7 @@ fi
 
 
 %postun
-%if 0%{?fedora}
+%if 0%{?rhel} >= 7 || 0%{?fedora}
 %systemd_postun_with_restart glite-lb-bkserverd.service
 %else
 if [ "$1" -ge "1" ] ; then
@@ -187,7 +188,7 @@ fi
 %{_pkgdocdir}/ChangeLog
 %{_pkgdocdir}/LICENSE
 %{_pkgdocdir}/glite-lb
-%if 0%{?fedora}
+%if 0%{?rhel} >= 7 || 0%{?fedora}
 %{_tmpfilesdir}/glite-lb-server.conf
 %{_unitdir}/glite-lb-bkserverd.service
 %else
