@@ -21,7 +21,7 @@ docdir?=${prefix}/share/doc/${package}-${version}
 VPATH=${top_srcdir}/src:${top_srcdir}/doc
 
 SOURCES=\
-	doc/*.1 doc/*.8 doc/README.* \
+	doc/*.1 doc/README.* \
 	examples/glite-lb-* \
 	src/*.c src/*.c.T src/*.sh \
 	Makefile
@@ -78,12 +78,10 @@ UTILS:=purge dump load
 ALLUTILS:=${UTILS} mon dump_exporter state_history statistics
 STATISTICS_OBJS:=statistics.o process_attrs.o process_attrs2.o
 
-MAN_GZ:=glite-lb-mon.1.gz
-MAN8_GZ:=glite-lb-dump.8.gz glite-lb-load.8.gz glite-lb-purge.8.gz
+MAN_GZ:=glite-lb-dump.1.gz glite-lb-load.1.gz glite-lb-purge.1.gz glite-lb-mon.1.gz
 MAN = $(MAN_GZ:.gz=)
-MAN8 = $(MAN8_GZ:.gz=)
 
-compile all: ${ALLUTILS} ${MAN_GZ} ${MAN8_GZ}
+compile all: ${ALLUTILS} ${MAN_GZ}
 
 ${UTILS}: %: %.o
 	${LINK} -o $@ $< ${COMMON_LIB} ${CLIENT_LIB} ${EXT_LIBS} -lglite_lbu_maildir
@@ -102,12 +100,9 @@ state_history: state_history.o
 
 check: compile 
 
-doc: ${MAN_GZ} ${MAN8_GZ}
+doc: ${MAN_GZ}
 
 %.1.gz: %.1
-	gzip -9 -f -c $< > $@
-
-%.8.gz: %.8
 	gzip -9 -f -c $< > $@
 
 stage: compile
@@ -117,10 +112,8 @@ install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/bin 
 	-mkdir -p ${DESTDIR}${PREFIX}${docdir}
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man1
-	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 	${INSTALL} -m 644 ${top_srcdir}/doc/README* ${DESTDIR}${PREFIX}${docdir}
 	${INSTALL} -m 644 ${MAN_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man1
-	${INSTALL} -m 644 ${MAN8_GZ} ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 	${INSTALL} -m 755 ${top_srcdir}/src/glite-lb-bkpurge-offline.sh ${DESTDIR}${PREFIX}${prefix}/bin/glite-lb-bkpurge-offline
 
 	for p in ${ALLUTILS} ; do \
@@ -128,7 +121,7 @@ install:
 	done
 
 clean:
-	rm -rfv ${ALLUTILS} ${MAN_GZ} ${MAN8_GZ} *.lo *.o .libs/
+	rm -rfv ${ALLUTILS} ${MAN_GZ} *.lo *.o .libs/
 	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
