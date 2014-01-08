@@ -12,7 +12,7 @@ BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  c-ares-devel
 BuildRequires:  chrpath
-%if 0%{?rhel} <= 6
+%if 0%{?rhel} <= 6 && ! 0%{?fedora}
 BuildRequires:  classads-devel
 %else
 BuildRequires:  condor-classads-devel

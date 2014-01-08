@@ -47,7 +47,7 @@ Requires:       glite-jobid-api-java
 Requires:       jakarta-commons-lang
 Requires:       java
 Requires:       jpackage-utils
-%if 0%{?rhel} <= 6
+%if 0%{?rhel} <= 6 && ! 0%{?fedora}
 Requires(post): jpackage-utils
 Requires(postun): jpackage-utils
 %endif
@@ -159,12 +159,12 @@ install -m 0644 JPP-%{name}.pom JPP-%{name}-axis.pom $RPM_BUILD_ROOT%{_mavenpomd
 rm -rf $RPM_BUILD_ROOT
 
 
-%if 0%{?rhel} <= 6
+%if 0%{?rhel} <= 6 && ! 0%{?fedora}
 %post
 %update_maven_depmap
 %endif
 
-%if 0%{?rhel} <= 6
+%if 0%{?rhel} <= 6 && ! 0%{?fedora}
 %postun
 %update_maven_depmap
 %endif

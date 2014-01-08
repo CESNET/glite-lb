@@ -51,7 +51,7 @@ BuildRequires:  c-ares-devel
 BuildRequires:  cppunit-devel
 BuildRequires:  flex
 BuildRequires:  voms-devel
-%if 0%{?rhel} <= 6
+%if 0%{?rhel} <= 6 && ! 0%{?fedora}
 BuildRequires:  classads-devel
 %else
 BuildRequires:  condor-classads-devel
