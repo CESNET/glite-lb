@@ -62,11 +62,16 @@ qq{	public enum $fnu \{
 		UNDEFINED,
 };
 				$init = " = ${fnu}.UNDEFINED";
+				my $count = 0;
+				my $n = $#{$f->{codes}};
+				my $sep = ",";
 				for (@{$f->{codes}}) {
 					my $cu = uc $_->{name};
+					if ($count >= $n) { $sep = ""; };
 					print E
-qq{		${cu},
+qq{		${cu}$sep
 };
+					$count++;
 				}
 
 				print E
