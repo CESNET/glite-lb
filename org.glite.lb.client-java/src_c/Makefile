@@ -23,10 +23,10 @@ VPATH=${topdir}/src_c
 all compile: ${LIB}
 
 ${LIB}: ${OBJ}
-	libtool --mode=link ${CC} -rpath ${PREFIX}${prefix}/${libdir} -o $@ ${OBJ} -lm
+	libtool --mode=link ${CC} -rpath ${PREFIX}${prefix}/${libdir} ${LDFLAGS} -o $@ ${OBJ} -lm
 
 %.lo: %.c
-	libtool --mode=compile ${CC} -I.. -I${PATH_TO_JAVA}/include ${JDK_CPPFLAGS} -c $<
+	libtool --mode=compile ${CC} -I.. -I${PATH_TO_JAVA}/include ${JDK_CPPFLAGS} ${CPPFLAGS} ${CFLAGS} -c $<
 
 install: compile
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}
