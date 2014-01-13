@@ -201,6 +201,7 @@ void edg_wll_FreeContext(edg_wll_Context ctx)
 			free(ctx->id_mapping.rules[i].b);
 		}
 		free(ctx->id_mapping.rules);
+		free(ctx->id_mapping.mapfile);
 		ctx->id_mapping.num = 0;
 	}
 	
