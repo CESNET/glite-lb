@@ -1132,6 +1132,7 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 		}
 		ctx->id_mapping.mapfile = id_mapping.mapfile;
 	}
+	else ctx->id_mapping.mapfile = NULL;
 
 	gettimeofday(&conn_start, 0);
 
