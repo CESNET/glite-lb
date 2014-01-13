@@ -1361,7 +1361,7 @@ parse_gridmap(edg_wll_Context ctx,
 
 	mapping->num++;
     }
-    mapping->mapfile = strdup(file);
+    //mapping->mapfile = strdup(file); //TODO: This will be used when mapfile is removed from context (next major version)
     ret = 0;
 
 end:

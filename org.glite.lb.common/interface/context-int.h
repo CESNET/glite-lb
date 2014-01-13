@@ -198,6 +198,8 @@ glite_lb_padded_struct(_edg_wll_Context,200,
 
 	char		*p_lbproxy_servername;
 	unsigned int	p_lbproxy_servername_port;
+
+	char		*mapfile;	//TODO: Switch back into id_mapping on next major release
 )
 
 /* to be used internally: set, update and and clear the error information in 

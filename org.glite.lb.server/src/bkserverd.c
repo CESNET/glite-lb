@@ -1130,9 +1130,11 @@ int bk_handle_connection(int conn, struct timeval *timeout, void *data)
 			ctx->id_mapping.rules[i].a = strdup(id_mapping.rules[i].a);
 			ctx->id_mapping.rules[i].b = strdup(id_mapping.rules[i].b);
 		}
-		ctx->id_mapping.mapfile = strdup(id_mapping.mapfile);
+		//ctx->id_mapping.mapfile = strdup(id_mapping.mapfile);
+		ctx->mapfile = strdup(gridmap);	//TODO: Switch back into id_mapping on next major release
 	}
-	else ctx->id_mapping.mapfile = NULL;
+	else //ctx->id_mapping.mapfile = NULL;
+		ctx->mapfile = NULL;	//TODO: Switch back into id_mapping on next major release
 
 	gettimeofday(&conn_start, 0);
 
