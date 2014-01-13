@@ -1361,6 +1361,7 @@ parse_gridmap(edg_wll_Context ctx,
 
 	mapping->num++;
     }
+    mapping->mapfile = strdup(file);
     ret = 0;
 
 end:

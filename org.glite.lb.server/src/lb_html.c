@@ -222,6 +222,7 @@ int edg_wll_ConfigurationToHTML(edg_wll_Context ctx, int admin, char **message, 
 		add_row(&out, "purge_prefix", "Purge file prefix", ctx->purgeStorage, NULL, text);
 		add_row(&out, "html_header", "HTML Header file", ctx->html_header_file, NULL, text);
 
+		add_row(&out, "id_mapping_file", "ID Mapping File", ctx->id_mapping.num ? ctx->id_mapping.mapfile : NULL, NULL, text);
 		a = NULL;
 		for (i = 0; i < ctx->id_mapping.num; i++ ) {
 			asprintf(&out_tmp, "%s%s\"%s\"%s\"%s\"%s%s",
