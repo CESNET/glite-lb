@@ -46,8 +46,8 @@ BuildRequires:  jpackage-utils
 Requires:       glite-jobid-api-java
 Requires:       jakarta-commons-lang
 Requires:       java
-Requires:       jpackage-utils
 %if 0%{?rhel} <= 6 && ! 0%{?fedora}
+Requires:       jpackage-utils
 Requires(post): jpackage-utils
 Requires(postun): jpackage-utils
 %endif
@@ -66,7 +66,9 @@ Requires:       emi-trustmanager
 %endif
 Requires:       glite-jobid-api-java
 Requires:       jakarta-commons-lang
+%if 0%{?rhel} <= 6 && ! 0%{?fedora}
 Requires:       jpackage-utils
+%endif
 %if 0%{?rhel} >= 6 || 0%{?fedora}
 BuildArch:      noarch
 %endif
@@ -84,7 +86,9 @@ Requires:       %{name}-axis
 Requires:       emi-trustmanager-axis
 Requires:       emi-trustmanager
 Requires:       glite-jobid-api-java
+%if 0%{?rhel} <= 6 && ! 0%{?fedora}
 Requires:       jpackage-utils
+%endif
 Requires:       log4j
 %if 0%{?rhel} >= 6 || 0%{?fedora}
 BuildArch:      noarch
@@ -200,6 +204,7 @@ rm -rf $RPM_BUILD_ROOT
 %files javadoc
 %defattr(-,root,root)
 %{_javadocdir}/%{name}
+
 
 %changelog
 * @SPEC_DATE@ @MAINTAINER@ - @MAJOR@.@MINOR@.@REVISION@-@AGE@

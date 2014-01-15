@@ -28,8 +28,8 @@ BuildRequires:  jpackage-utils
 %endif
 Requires:       jakarta-commons-codec
 Requires:       java
-Requires:       jpackage-utils
 %if 0%{?rhel} <= 6 && ! 0%{?fedora}
+Requires:       jpackage-utils
 Requires(post): jpackage-utils
 Requires(postun): jpackage-utils
 %endif
