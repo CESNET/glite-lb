@@ -160,6 +160,7 @@ fi
 %dir %attr(0775, glite, glite) %{_localstatedir}/spool/glite/lb-locallogger
 %dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-notif
 %dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-proxy
+%dir %{_datadir}/glite-lb-logger
 %doc LICENSE project/ChangeLog
 %ghost %{_localstatedir}/run/glite/glite-lb-interlogger.sock
 %ghost %{_localstatedir}/run/glite/glite-lb-notif.sock
