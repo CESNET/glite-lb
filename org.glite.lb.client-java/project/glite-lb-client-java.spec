@@ -32,7 +32,6 @@ BuildRequires:  glite-jobid-api-java
 BuildRequires:  glite-lb-types
 BuildRequires:  glite-lb-ws-interface
 BuildRequires:  jakarta-commons-lang
-BuildRequires:  jpackage-utils
 BuildRequires:  libtool
 BuildRequires:  log4j
 BuildRequires:  perl
@@ -42,6 +41,7 @@ BuildRequires:  perl(POSIX)
 BuildRequires:  maven-local
 %else
 BuildRequires:  java-devel
+BuildRequires:  jpackage-utils
 %endif
 Requires:       glite-jobid-api-java
 Requires:       jakarta-commons-lang
@@ -100,7 +100,9 @@ communication is used trustmanager or pure SSL.
 Summary:        Java API documentation for %{name}
 Group:          Documentation
 Requires:       %{name} = %{version}-%{release}
+%if 0%{?rhel} <= 6 && ! 0%{?fedora}
 Requires:       jpackage-utils
+%endif
 %if 0%{?rhel} >= 6 || 0%{?fedora}
 BuildArch:      noarch
 %endif

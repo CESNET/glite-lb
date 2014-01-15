@@ -17,7 +17,6 @@ BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildArch:      noarch
 BuildRequires:  ant
 BuildRequires:  jakarta-commons-codec
-BuildRequires:  jpackage-utils
 BuildRequires:  perl
 BuildRequires:  perl(Getopt::Long)
 BuildRequires:  perl(POSIX)
@@ -25,6 +24,7 @@ BuildRequires:  perl(POSIX)
 BuildRequires:  maven-local
 %else
 BuildRequires:  java-devel
+BuildRequires:  jpackage-utils
 %endif
 Requires:       jakarta-commons-codec
 Requires:       java
@@ -42,7 +42,9 @@ Requires(postun): jpackage-utils
 Summary:        Java API documentation for %{name}
 Group:          Documentation
 Requires:       %{name} = %{version}-%{release}
+%if 0%{?rhel} <= 6 && ! 0%{?fedora}
 Requires:       jpackage-utils
+%endif
 
 %description    javadoc
 This package contains java API documentation for java implementation of gLite
