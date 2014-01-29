@@ -20,7 +20,6 @@ BuildRequires:  perl(POSIX)
 %if 0%{?rhel} >= 6 || 0%{?fedora}
 BuildRequires:  tex(latex)
 %if 0%{?rhel} >= 7 || 0%{?fedora}
-BuildRequires:  tex(comment.sty)
 BuildRequires:  tex(lastpage.sty)
 BuildRequires:  tex(multirow.sty)
 %endif
