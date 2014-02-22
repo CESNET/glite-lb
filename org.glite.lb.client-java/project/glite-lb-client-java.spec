@@ -45,7 +45,11 @@ BuildRequires:  jpackage-utils
 %endif
 Requires:       glite-jobid-api-java
 Requires:       jakarta-commons-lang
+%if 0%{?rhel} >= 7 || 0%{?fedora} >= 20
+Requires:       java-headless
+%else
 Requires:       java
+%endif
 %if 0%{?rhel} <= 6 && ! 0%{?fedora}
 Requires:       jpackage-utils
 Requires(post): jpackage-utils
