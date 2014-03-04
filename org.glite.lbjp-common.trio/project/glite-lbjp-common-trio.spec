@@ -9,7 +9,7 @@ Group:          System Environment/Libraries
 # license (a variant identical to ISC): interface/trio.h, src/strio.c,
 # src/strio.h, src/trio.c, and src/triop.h.
 License:        ASL 2.0 and ISC
-Url:            @URL@
+URL:            @URL@
 Vendor:         EMI
 Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lbjp-common.trio/%{version}/src/%{name}-%{version}.tar.gz
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)

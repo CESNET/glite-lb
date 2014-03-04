@@ -7,7 +7,7 @@ Summary:        @SUMMARY@
 
 Group:          System Environment/Daemons
 License:        ASL 2.0
-Url:            @URL@
+URL:            @URL@
 Vendor:         EMI
 Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.logger-msg/%{version}/src/%{name}-%{version}.tar.gz
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)

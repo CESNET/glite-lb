@@ -5,7 +5,7 @@ Summary:        @SUMMARY@
 
 Group:          Development/Tools
 License:        ASL 2.0
-Url:            @URL@
+URL:            @URL@
 Vendor:         EMI
 Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/@MODULE@/%{version}/src/%{name}-%{version}.tar.gz
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
