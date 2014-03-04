@@ -277,6 +277,7 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 	my $short=$module;
 	$short=~s/^org\.glite\.//;
 	$short=~s/^emi.//;
+	$short=~s/canl-c$/canl\.c/;
 	printf(EXEC "#Update the \"configure\" script\ncp $GLITE_LB_LOCATION/configure $module/\nsed -i \"s/^\\(my \\\$module\\);/\\1=\'$short\';/\" $module/configure\n\n");
 
 	# **********************************
