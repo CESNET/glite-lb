@@ -36,7 +36,7 @@ common server-bones.
 
 
 %build
-perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lbjp-common.server-bones
+perl ./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make %{?_smp_mflags}
 
 

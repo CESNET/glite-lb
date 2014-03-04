@@ -92,7 +92,7 @@ Requires(preun): initscripts
 
 
 %build
-perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --docdir=%{_pkgdocdir} --mysqlconfdir=%{mysqlconfdir} --project=emi --module lb.server
+perl ./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --docdir=%{_pkgdocdir} --mysqlconfdir=%{mysqlconfdir} --project=emi
 CFLAGS="%{?optflags}" CXXFLAGS="%{?optflags} %{?classad_cxxflags}" LDFLAGS="%{?__global_ldflags}" make %{?_smp_mflags}
 
 

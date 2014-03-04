@@ -13,7 +13,7 @@ export DH_VERBOSE=1
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
-	/usr/bin/perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=/usr --libdir=lib --project=emi --module lbjp-common.gsoap-plugin
+	/usr/bin/perl ./configure --root=/ --prefix=/usr --libdir=lib --project=emi
 	touch $@
 
 build: build-arch build-indep

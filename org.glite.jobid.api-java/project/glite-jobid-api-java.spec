@@ -60,7 +60,7 @@ jobid.
 
 
 %build
-perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module jobid.api-java
+perl ./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi
 make %{?_smp_mflags}
 
 

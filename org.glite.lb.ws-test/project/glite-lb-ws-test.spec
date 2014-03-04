@@ -29,7 +29,7 @@ BuildRequires:  pkgconfig
 
 
 %build
-perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.ws-test
+perl ./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make %{?_smp_mflags}
 
 

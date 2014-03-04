@@ -27,7 +27,7 @@ BuildRequires:  tidy
 
 
 %build
-perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lb.ws-interface
+perl ./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi
 make %{?_smp_mflags}
 
 

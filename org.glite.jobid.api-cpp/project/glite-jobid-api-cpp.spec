@@ -36,7 +36,7 @@ Provides:       %{name} = %{version}-%{release}
 
 
 %build
-perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --project=emi --module jobid.api-cpp
+perl ./configure --root=/ --prefix=%{_prefix} --project=emi
 make %{?_smp_mflags}
 
 

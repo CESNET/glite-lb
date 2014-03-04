@@ -56,7 +56,7 @@ library.
 
 
 %build
-perl ./configure --thrflavour= --nothrflavour= --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi --module lbjp-common.gss
+perl ./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi
 if [ "%gssapi_provider_kerberos" == "1" ]; then
     echo "gssapi_provider=kerberos" >> Makefile.inc
     echo "GLOBUS_COMMON_CFLAGS=`pkg-config --cflags globus-common`" >> Makefile.inc
