@@ -16,7 +16,7 @@ classad_cxxflags=$(shell if dpkg --compare-versions $(classad_version) '>=' '8';
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
-	CXXFLAGS="$(CXXFLAGS) $(classad_cxxflags)" /usr/bin/perl ./configure --root=/ --prefix=/usr --libdir=lib --docdir=/usr/share/doc/$(p_base) --mysqlconfdir=/etc/mysql/conf.d --project=emi
+	/usr/bin/perl ./configure --root=/ --prefix=/usr --libdir=lib --docdir=/usr/share/doc/$(p_base) --mysqlconfdir=/etc/mysql/conf.d --project=emi
 	touch $@
 
 build: build-arch build-indep
@@ -25,8 +25,8 @@ build-arch build-indep: build-stamp
 
 build-stamp: configure-stamp
 	dh_testdir
-	CFLAGS="$(CFLAGS) $(CPPFLAGS)" LDFLAGS="$(LDFLAGS)" $(MAKE)
-	CFLAGS="$(CFLAGS) $(CPPFLAGS)" LDFLAGS="$(LDFLAGS)" $(MAKE) check
+	CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" CXXFLAGS="(CXXFLAGS) $(classad_cxxflags)" LDFLAGS="$(LDFLAGS)" $(MAKE)
+	CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" CXXFLAGS="(CXXFLAGS) $(classad_cxxflags)" LDFLAGS="$(LDFLAGS)" $(MAKE) check
 	touch $@
 
 clean: configure-stamp
