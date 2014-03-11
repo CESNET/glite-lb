@@ -25,8 +25,8 @@ build-arch build-indep: build-stamp
 
 build-stamp: configure-stamp
 	dh_testdir
-	CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" CXXFLAGS="(CXXFLAGS) $(classad_cxxflags)" LDFLAGS="$(LDFLAGS)" $(MAKE)
-	CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" CXXFLAGS="(CXXFLAGS) $(classad_cxxflags)" LDFLAGS="$(LDFLAGS)" $(MAKE) check
+	CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS) $(classad_cxxflags)" LDFLAGS="$(LDFLAGS)" $(MAKE)
+	CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS) $(classad_cxxflags)" LDFLAGS="$(LDFLAGS)" $(MAKE) check
 	touch $@
 
 clean: configure-stamp
