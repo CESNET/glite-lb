@@ -31,15 +31,16 @@ BuildRequires:  emi-trustmanager-axis
 BuildRequires:  glite-jobid-api-java
 BuildRequires:  glite-lb-types
 BuildRequires:  glite-lb-ws-interface
-BuildRequires:  jakarta-commons-lang
 BuildRequires:  libtool
 BuildRequires:  log4j
 BuildRequires:  perl
 BuildRequires:  perl(Getopt::Long)
 BuildRequires:  perl(POSIX)
 %if 0%{?rhel} >= 7 || 0%{?fedora}
+BuildRequires:  apache-commons-lang
 BuildRequires:  maven-local
 %else
+BuildRequires:  jakarta-commons-lang
 BuildRequires:  java-devel
 BuildRequires:  jpackage-utils
 %endif

@@ -16,13 +16,14 @@ BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildArch:      noarch
 BuildRequires:  ant
-BuildRequires:  jakarta-commons-codec
 BuildRequires:  perl
 BuildRequires:  perl(Getopt::Long)
 BuildRequires:  perl(POSIX)
 %if 0%{?rhel} >= 7 || 0%{?fedora}
+BuildRequires:  apache-commons-codec
 BuildRequires:  maven-local
 %else
+BuildRequires:  jakarta-commons-codec
 BuildRequires:  java-devel
 BuildRequires:  jpackage-utils
 %endif
