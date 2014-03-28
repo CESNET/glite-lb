@@ -31,6 +31,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#include <sys/time.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -154,8 +155,6 @@ int edg_wll_SetParamToDefault(
 	edg_wll_Context context,
 	edg_wll_ContextParam param
 );
-
-struct timeval; /* XXX: gcc, shut up! */
 
 /** Set a context parameter of type int.
  * \param[in,out] ctx           context to work with
