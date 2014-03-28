@@ -144,6 +144,17 @@ int edg_wll_SetParam(
 	...
 );
 
+/** Set a context parameter to default value.
+ * \param[in,out] context 	context to work with
+ * \param[in] param 		parameter to set
+ * \retval 0 success
+ * \retval EINVAL param is not a valid parameter, or invalid value
+ */
+int edg_wll_SetParamToDefault(
+	edg_wll_Context context,
+	edg_wll_ContextParam param
+);
+
 struct timeval; /* XXX: gcc, shut up! */
 
 /** Set a context parameter of type int.

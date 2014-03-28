@@ -388,6 +388,46 @@ int edg_wll_SetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 	}
 }
 
+int edg_wll_SetParamToDefault(edg_wll_Context ctx,edg_wll_ContextParam param)
+{
+	switch (param) {
+		case EDG_WLL_PARAM_LEVEL:
+		case EDG_WLL_PARAM_DESTINATION_PORT:
+		case EDG_WLL_PARAM_QUERY_SERVER_PORT:
+		case EDG_WLL_PARAM_NOTIF_SERVER_PORT:
+		case EDG_WLL_PARAM_QUERY_JOBS_LIMIT:
+		case EDG_WLL_PARAM_QUERY_EVENTS_LIMIT:
+		case EDG_WLL_PARAM_QUERY_RESULTS:
+		case EDG_WLL_PARAM_CONNPOOL_SIZE:
+		case EDG_WLL_PARAM_SOURCE:
+			return edg_wll_SetParamInt(ctx,param,0);
+		case EDG_WLL_PARAM_HOST:
+		case EDG_WLL_PARAM_INSTANCE:
+		case EDG_WLL_PARAM_DESTINATION:
+		case EDG_WLL_PARAM_QUERY_SERVER:
+		case EDG_WLL_PARAM_NOTIF_SERVER:
+		case EDG_WLL_PARAM_QUERY_SERVER_OVERRIDE:
+		case EDG_WLL_PARAM_X509_PROXY:
+		case EDG_WLL_PARAM_X509_KEY:
+		case EDG_WLL_PARAM_X509_CERT:
+		case EDG_WLL_PARAM_LBPROXY_STORE_SOCK:
+		case EDG_WLL_PARAM_LBPROXY_SERVE_SOCK:
+		case EDG_WLL_PARAM_LBPROXY_USER:
+		case EDG_WLL_PARAM_JPREG_TMPDIR:
+	        case EDG_WLL_PARAM_LOG_FILE_PREFIX:
+	        case EDG_WLL_PARAM_LOG_IL_SOCK:
+		case EDG_WLL_PARAM_LBPROXY_SERVERNAME:
+			return edg_wll_SetParamString(ctx,param,NULL);
+		case EDG_WLL_PARAM_LOG_TIMEOUT:
+		case EDG_WLL_PARAM_LOG_SYNC_TIMEOUT:
+		case EDG_WLL_PARAM_QUERY_TIMEOUT:
+		case EDG_WLL_PARAM_NOTIF_TIMEOUT:
+			return edg_wll_SetParamTime(ctx,param,NULL);
+		default:
+			return edg_wll_SetError(ctx,EINVAL,"unknown parameter");
+	}
+}
+
 int edg_wll_GetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 {
 	va_list	ap;

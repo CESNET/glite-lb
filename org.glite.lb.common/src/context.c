@@ -40,11 +40,6 @@ int edg_wll_InitContext(edg_wll_Context *ctx)
 {
 	int i, ret;
 	edg_wll_Context out	= (edg_wll_Context) malloc(sizeof(*out));
-	union {
-		int i;
-		char *s;
-		struct timeval *tv;
-	} null;
 
 	if (!out) return ENOMEM;
 	memset(out,0,sizeof(*out));
@@ -65,9 +60,8 @@ int edg_wll_InitContext(edg_wll_Context *ctx)
 //	out->connToUse = -1;
 	out->id_mapping.num = 0;
 
-	memset(&null, 0, sizeof null);
 	for (i=0; i<EDG_WLL_PARAM__LAST; i++) {
-		if ((ret = edg_wll_SetParam(out,i,null)) != 0) {
+		if ((ret = edg_wll_SetParamToDefault(out,i)) != 0) {
 			edg_wll_FreeContext(out);
 			return ret;
 		}
