@@ -31,7 +31,7 @@ LINK:=libtool --mode=link ${CC} ${LDFLAGS}
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
 
-SOURCES=interface/*.h src/*.c src/*.h project/.post* test/*.cpp Makefile gen-b64r.pl
+SOURCES=interface/*.h src/*.c project/.post* test/*.cpp Makefile gen-b64r.pl
 SOURCES_EXEC=gen-b64r.pl
 
 LIBOBJS:=cjobid.o strmd5.o 

@@ -21,7 +21,7 @@ CC=gcc
 VPATH:=${top_srcdir}/src:${top_srcdir}/test:${top_srcdir}/doc
 
 SOURCES=\
-	config/startup config/startup.* config/glite-lb-logger.* config/systemd.* \
+	config/startup config/startup.* config/systemd.* \
 	doc/*.8 \
 	interface/*.h \
 	project/.post* project/.pre* \
