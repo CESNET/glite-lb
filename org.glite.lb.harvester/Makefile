@@ -43,13 +43,9 @@ LIBS:=-L${stagedir}${prefix}/${libdir} \
 	-lpthread -lglite_security_gss_${thrflavour}
 endif
 
-ifeq ($(os_type),debian)
-sysdefaultdir=${sysconfdir}/default
-else
-sysdefaultdir=${sysconfdir}/sysconfig
-endif
+sysdefaultdir?=${sysconfdir}/default
 
-ifeq ($(os_type),fedora)
+ifeq ($(os_type),systemd)
 unitdir=`pkg-config systemd --variable=systemdsystemunitdir`
 endif
 
@@ -107,7 +103,7 @@ ifeq ($(os_type),redhat)
 	mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/rc.d/init.d
 	${INSTALL} -m 755 ${top_srcdir}/config/startup.redhat.harvester ${DESTDIR}${PREFIX}${sysconfdir}/rc.d/init.d/glite-lb-harvester
 endif
-ifeq ($(os_type),fedora)
+ifeq ($(os_type),systemd)
 	mkdir -p ${DESTDIR}${PREFIX}${unitdir}
 	${INSTALL} -m 644 ${top_srcdir}/config/systemd.harvester ${DESTDIR}${PREFIX}${unitdir}/glite-lb-harvester.service
 endif

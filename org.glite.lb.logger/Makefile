@@ -68,13 +68,9 @@ ifeq (${os},Linux)
        DL_LIBS=-ldl
 endif
 
-ifeq ($(os_type),debian)
-sysdefaultdir=${sysconfdir}/default
-else
-sysdefaultdir=${sysconfdir}/sysconfig
-endif
+sysdefaultdir?=${sysconfdir}/default
 
-ifeq ($(os_type),fedora)
+ifeq ($(os_type),systemd)
 unitdir=`pkg-config systemd --variable=systemdsystemunitdir`
 endif
 
@@ -250,7 +246,7 @@ ifeq ($(os_type),redhat)
 		${INSTALL} -m 755 ${top_srcdir}/config/startup.redhat.$$d ${DESTDIR}${PREFIX}${sysconfdir}/rc.d/init.d/glite-lb-$$d; \
 	done
 endif
-ifeq ($(os_type),fedora)
+ifeq ($(os_type),systemd)
 	mkdir -p ${DESTDIR}${PREFIX}${unitdir}
 	for d in logd interlogd notif-interlogd proxy-interlogd; do \
 		install -m 644 ${top_srcdir}/config/systemd.$$d ${DESTDIR}${PREFIX}${unitdir}/glite-lb-$$d.service ; \

@@ -16,7 +16,7 @@ classad_cxxflags=$(shell if dpkg --compare-versions $(classad_version) '>=' '8';
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
-	/usr/bin/perl ./configure --root=/ --prefix=/usr --libdir=lib --docdir=/usr/share/doc/$(p_base) --mysqlconfdir=/etc/mysql/conf.d --project=emi
+	/usr/bin/perl ./configure --root=/ --prefix=/usr --libdir=lib --docdir=/usr/share/doc/$(p_base) --mysqlconfdir=/etc/mysql/conf.d --sysdefaultdir=/etc/default --project=emi
 	touch $@
 
 build: build-arch build-indep

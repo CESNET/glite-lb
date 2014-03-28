@@ -28,7 +28,7 @@ Provides:       glite-yaim-lb = %{version}-%{release}
 
 
 %build
-perl ./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi
+perl ./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --sysdefaultdir=%{_sysconfdir}/sysconfig --project=emi
 make %{?_smp_mflags}
 
 

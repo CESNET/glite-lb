@@ -24,11 +24,7 @@ SOURCES=\
 	Makefile
 FILES=glite-lb.pre config_glite_lb COPYRIGHT node-version arch service update
 
-ifeq ($(os_type),debian)
-sysdefaultdir=${sysconfdir}/default
-else
-sysdefaultdir=${sysconfdir}/sysconfig
-endif
+sysdefaultdir?=${sysconfdir}/default
 
 all ${FILES}:
 	sed -e 's:@glite_prefix@:${sysroot}${prefix}:g' -e 's:@glite_etc@:${sysconfdir}:g' $(top_srcdir)/config/defaults/glite-lb.pre > glite-lb.pre; \

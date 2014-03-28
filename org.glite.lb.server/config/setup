@@ -126,10 +126,10 @@ setup_daemon() {
 @debian@	grep -v ^RUN_ @defaultdir@/glite-lb-$name > /tmp/glite-lb-$name.$$
 @debian@	mv /tmp/glite-lb-$name.$$ @defaultdir@/glite-lb-$name
 	if test x"$enabled" = x"true"; then
-@fedora@		systemctl enable glite-lb-$name.service
-@fedora@		systemctl stop glite-lb-$name.service >/dev/null 2>&1 || :
-@fedora@		killall -9 glite-lb-$name >/dev/null 2>&1 || :
-@fedora@		systemctl start glite-lb-$name.service || startup_error=1
+@systemd@		systemctl enable glite-lb-$name.service
+@systemd@		systemctl stop glite-lb-$name.service >/dev/null 2>&1 || :
+@systemd@		killall -9 glite-lb-$name >/dev/null 2>&1 || :
+@systemd@		systemctl start glite-lb-$name.service || startup_error=1
 @debian@		echo "RUN_$id=yes" >> @defaultdir@/glite-lb-$name
 @debian@		/etc/init.d/glite-lb-$name stop >/dev/null 2>&1 || :
 @debian@		killall -9 glite-lb-$name >/dev/null 2>&1 || :
@@ -139,9 +139,9 @@ setup_daemon() {
 @redhat@		killall -9 glite-lb-$name >/dev/null 2>&1 || :
 @redhat@		/sbin/service glite-lb-$name start || startup_error=1
 	else
-@fedora@		systemctl disable glite-lb-$name.service
-@fedora@		systemctl stop glite-lb-$name.service >/dev/null 2>&1 || :
-@fedora@		killall -9 glite-lb-$name >/dev/null 2>&1 || :
+@systemd@		systemctl disable glite-lb-$name.service
+@systemd@		systemctl stop glite-lb-$name.service >/dev/null 2>&1 || :
+@systemd@		killall -9 glite-lb-$name >/dev/null 2>&1 || :
 @debian@		/etc/init.d/glite-lb-$name stop >/dev/null 2>&1 || :
 @debian@		killall -9 glite-lb-$name >/dev/null 2>&1 || :
 @debian@		echo "RUN_$id=no" >> @defaultdir@/glite-lb-$name
@@ -320,7 +320,7 @@ if test "$setup_db" = 1; then
 	fi
 
 	# restart for the new options
-@fedora@	out="`systemctl restart mysqld.service 2>&1`"
+@systemd@	out="`systemctl restart mysqld.service 2>&1`"
 @redhat@	out="`/sbin/service mysqld restart 2>&1`"
 @debian@	out="`/etc/init.d/mysql restart 2>&1`"
 	if test $? -ne 0; then
@@ -477,7 +477,7 @@ fi
 
 if test "$setup_bdii" = "1"; then
 	export INFO_SERVICE_CONFIG='/etc/glite/info/service'
-@fedora@	if systemctl --all | grep bdii.service >/dev/null 2>&1; then
+@systemd@	if systemctl --all | grep bdii.service >/dev/null 2>&1; then
 @redhat@	if test -x /etc/init.d/bdii; then
 @debian@	if test -x /etc/init.d/bdii; then
 		if test -f  ${INFO_SERVICE_CONFIG}/glite-info-service-lbserver.conf.template -a -f  ${INFO_SERVICE_CONFIG}/glite-info-glue2-lbserver.conf.template; then
@@ -514,8 +514,8 @@ BDII_RAM_DISK=
 EOF
 		sed -i  "s#.*rootpw.*#rootpw	${BDII_PASSWD}#" /etc/bdii/bdii-slapd.conf
 
-@fedora@		systemctl enable bdii.service
-@fedora@		out="`systemctl restart bdii.service 2>&1`"
+@systemd@		systemctl enable bdii.service
+@systemd@		out="`systemctl restart bdii.service 2>&1`"
 @redhat@		/sbin/chkconfig bdii on
 @redhat@		out="`/sbin/service bdii restart 2>&1`"
 @debian@		out="`/etc/init.d/bdii restart 2>&1`"
@@ -637,8 +637,8 @@ EOF
 	fi
 
 	# start the beast
-@fedora@	systemctl enable ${emir_daemon}.service
-@fedora@	out="`systemctl restart ${emir_daemon}.service 2>&1`"
+@systemd@	systemctl enable ${emir_daemon}.service
+@systemd@	out="`systemctl restart ${emir_daemon}.service 2>&1`"
 @redhat@	/sbin/chkconfig $emir_daemon on 2>/dev/null
 @redhat@	out="`/sbin/service $emir_daemon restart 2>&1`"
 @debian@	out="`/etc/init.d/$emir_daemon restart 2>&1`"
@@ -715,11 +715,11 @@ if test "$setup_crl" = "1"; then
 @redhat@		/sbin/chkconfig fetch-crl-boot on
 @redhat@		/sbin/service fetch-crl-cron start
 @redhat@		/sbin/service fetch-crl-boot start
-@fedora@		systemctl enable fetch-crl-cron.service
-@fedora@		systemctl enable fetch-crl-boot.service
-@fedora@		systemctl start fetch-crl-cron.service
-@fedora@		qecho "Fetching CRL..."
-@fedora@		systemctl start fetch-crl-boot.service
+@systemd@		systemctl enable fetch-crl-cron.service
+@systemd@		systemctl enable fetch-crl-boot.service
+@systemd@		systemctl start fetch-crl-cron.service
+@systemd@		qecho "Fetching CRL..."
+@systemd@		systemctl start fetch-crl-boot.service
 	else
 		echo "glite-lb-setup: WARNING: fetch-crl not found, fetching won't be configured"
 	fi
@@ -808,34 +808,34 @@ if test "$setup_startup" = "1" -a "$startup_error" != "1"; then
 	[  -d $GLITE_HOME/purge ] || mkdir $GLITE_HOME/purge && chown $GLITE_USER:$GLITE_GROUP $GLITE_HOME/purge
 
 	startup_error=0
-@fedora@
-@fedora@	case "$GLITE_LB_TYPE" in
-@fedora@	proxy)
-@fedora@		GLITE_LB_SERVER_PROXY_OPTIONS="-P "
-@fedora@		;;
-@fedora@	both)
-@fedora@		GLITE_LB_SERVER_PROXY_OPTIONS="-B "
-@fedora@		;;
-@fedora@	*)
-@fedora@		GLITE_LB_SERVER_PROXY_OPTIONS=""
-@fedora@		;;
-@fedora@	esac
-@fedora@
-@fedora@	systemd_unitdir=`pkg-config systemd --variable=systemdsystemunitdir`
-@fedora@	systemd_confdir=`pkg-config systemd --variable=systemdsystemconfdir`
-@fedora@	for i in bkserverd logd interlogd notif-interlogd proxy-interlogd harvester; do
-@fedora@		sed -e "s|\(X509_USER_CERT\).*|\1=$GLITE_HOST_CERT|" \
-@fedora@		    -e "s|\(X509_USER_KEY\).*|\1=$GLITE_HOST_KEY|" \
-@fedora@		    -e "s|\(KRB5_KTNAME\).*|\1=FILE:$GLITE_HOME/krb5kt_lb|" \
-@fedora@		    -e "s|\(KRB5CCNAME\).*|\1=FILE:$GLITE_HOME/krb5cc_lb|" \
-@fedora@		    -e "s|\(--dump-prefix\)=[^ \t]*|\1=$GLITE_HOME/dump |" \
-@fedora@		    -e "s|\(--purge-prefix\)=[^ \t]*|\1=$GLITE_HOME/purge |" \
-@fedora@		    $systemd_unitdir/glite-lb-$i.service > $systemd_confdir/glite-lb-$i.service
-@fedora@	done
-@fedora@	sed -i -e "s|\$GLITE_LB_SERVER_PROXY_OPTIONS |$GLITE_LB_SERVER_PROXY_OPTIONS|" $systemd_confdir/glite-lb-bkserverd.service
-@fedora@	systemctl --system daemon-reload
-@fedora@
-@fedora@	systemctl enable mysqld.service
+@systemd@
+@systemd@	case "$GLITE_LB_TYPE" in
+@systemd@	proxy)
+@systemd@		GLITE_LB_SERVER_PROXY_OPTIONS="-P "
+@systemd@		;;
+@systemd@	both)
+@systemd@		GLITE_LB_SERVER_PROXY_OPTIONS="-B "
+@systemd@		;;
+@systemd@	*)
+@systemd@		GLITE_LB_SERVER_PROXY_OPTIONS=""
+@systemd@		;;
+@systemd@	esac
+@systemd@
+@systemd@	systemd_unitdir=`pkg-config systemd --variable=systemdsystemunitdir`
+@systemd@	systemd_confdir=`pkg-config systemd --variable=systemdsystemconfdir`
+@systemd@	for i in bkserverd logd interlogd notif-interlogd proxy-interlogd harvester; do
+@systemd@		sed -e "s|\(X509_USER_CERT\).*|\1=$GLITE_HOST_CERT|" \
+@systemd@		    -e "s|\(X509_USER_KEY\).*|\1=$GLITE_HOST_KEY|" \
+@systemd@		    -e "s|\(KRB5_KTNAME\).*|\1=FILE:$GLITE_HOME/krb5kt_lb|" \
+@systemd@		    -e "s|\(KRB5CCNAME\).*|\1=FILE:$GLITE_HOME/krb5cc_lb|" \
+@systemd@		    -e "s|\(--dump-prefix\)=[^ \t]*|\1=$GLITE_HOME/dump |" \
+@systemd@		    -e "s|\(--purge-prefix\)=[^ \t]*|\1=$GLITE_HOME/purge |" \
+@systemd@		    $systemd_unitdir/glite-lb-$i.service > $systemd_confdir/glite-lb-$i.service
+@systemd@	done
+@systemd@	sed -i -e "s|\$GLITE_LB_SERVER_PROXY_OPTIONS |$GLITE_LB_SERVER_PROXY_OPTIONS|" $systemd_confdir/glite-lb-bkserverd.service
+@systemd@	systemctl --system daemon-reload
+@systemd@
+@systemd@	systemctl enable mysqld.service
 @debian@	grep -v ^RUN_ @defaultdir@/glite-lb > /tmp/glite-lb.$$
 @debian@	mv /tmp/glite-lb.$$ @defaultdir@/glite-lb
 @debian@

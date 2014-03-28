@@ -61,18 +61,12 @@ else
 	WS_CFLAGS=
 endif
 
-ifeq ($(os_type),debian)
 sysdefaultdir?=${sysconfdir}/default
-else
-sysdefaultdir?=${sysconfdir}/sysconfig
-endif
 
-ifeq ($(os_type),fedora)
+ifeq ($(os_type),systemd)
 unitdir=`pkg-config systemd --variable=systemdsystemunitdir`
-mysqlconfdir?=${sysconfdir}/my.cnf.d
-else
-mysqlconfdir?=${sysconfdir}/mysql/conf.d
 endif
+mysqlconfdir?=${sysconfdir}/mysql/conf.d
 
 GSOAP_FILES_PREFIX:= bk_ws_
 
@@ -488,7 +482,7 @@ ifeq ($(os_type),redhat)
 	mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/rc.d/init.d
 	${INSTALL} -m 755 ${top_srcdir}/config/startup.redhat.bkserverd ${DESTDIR}${PREFIX}${sysconfdir}/rc.d/init.d/glite-lb-bkserverd
 endif
-ifeq ($(os_type),fedora)
+ifeq ($(os_type),systemd)
 	mkdir -p ${DESTDIR}${PREFIX}${unitdir}
 	install -m 644 ${top_srcdir}/config/systemd.bkserverd ${DESTDIR}${PREFIX}${unitdir}/glite-lb-bkserverd.service
 endif

@@ -9,7 +9,7 @@ export DH_VERBOSE=1
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
-	/usr/bin/perl ./configure --root=/ --prefix=/usr --libdir=lib --project=emi
+	/usr/bin/perl ./configure --root=/ --prefix=/usr --libdir=lib --sysdefaultdir=/etc/default --project=emi
 	touch $@
 
 build: build-indep

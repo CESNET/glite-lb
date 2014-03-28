@@ -42,7 +42,7 @@ Requires:       glite-lb-logger
 
 
 %build
-perl ./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --docdir=%{_pkgdocdir} --project=emi
+perl ./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --docdir=%{_pkgdocdir} --sysdefaultdir=%{_sysconfdir}/sysconfig --project=emi
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make %{?_smp_mflags}
 
 

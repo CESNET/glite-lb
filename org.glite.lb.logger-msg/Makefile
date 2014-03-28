@@ -91,11 +91,7 @@ else
 default_flavour=_${nothrflavour}
 endif
 
-ifeq ($(os_type),debian)
-sysdefaultdir=${sysconfdir}/default
-else
-sysdefaultdir=${sysconfdir}/sysconfig
-endif
+sysdefaultdir?=${sysconfdir}/default
 
 all compile: ${PLUGIN_LIB} ${EXAMPLES} ${SCRIPTS}
 
