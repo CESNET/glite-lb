@@ -18,11 +18,11 @@ and implements reliable handling in environment with possible communication
 failures.
 
 On startup (and then periodically during operation) interlogger checks the
-event files (created by glite-lb-logd, see also the -f option),
+event files (created by glite-lb-logd, see also the \-f option),
 spawns a thread for each target server, and populates the queues
 with events read from the files.
 Then it starts listening for further incoming events on the UNIX socket
-(see the -s option).
+(see the \-s option).
 
 The queue threads periodically attempt to contact the destination servers
 and to deliver the pending events.
@@ -36,7 +36,7 @@ locking the files appropriately.
 .TP
 .B "-b\fR,\fP --book 
 Send events only to bookkeeping server. This option has effect only if
-the logging server address is specified through the -l option. There is no
+the logging server address is specified through the \-l option. There is no
 implementation of logging server currently.
  
 .TP

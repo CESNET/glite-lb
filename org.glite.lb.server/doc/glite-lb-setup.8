@@ -22,8 +22,8 @@ Check database availability (check if setup has been already performed). In case
 \fB\-l\fR, \fP--list\fR
 List \fBACTIONS\fR to be executed and exit. This option can be used to view and/or select actions to be performed during setup. For example, the following pair of commands lists available actions and runs the setup omitting BDII:
 
- glite-lb-setup --list
- glite-lb-setup `glite-lb-setup --list | sed 's/bdii//'`
+ glite-lb-setup \-\-list
+ glite-lb-setup `glite-lb-setup \-\-list | sed 's/bdii//'`
 
 .TP
 \fB-h\fR, \fP--help\fR
@@ -155,10 +155,11 @@ Set up an L&B server running in the combined proxy and server ("BOTH") mode in S
  SITE_NAME=mysite
  SITE_EMAIL=email@example.com
  GLITE_LB_TYPE=both
- GLITE_LB_WMS_DN="/C=UG/L=Tropic/O=Utopia/OU=Relaxation/CN=wms.example.com"
+ GLITE_LB_WMS_DN=\\
+   "/C=UG/L=Tropic/O=Utopia/OU=Relaxation/CN=wms.example.com"
  EOF
 
- mysqladmin -u root password [Edited]
+ mysqladmin \-u root password [Edited]
  MYSQL_PASSWORD=[Edited] glite-lb-setup
 
 .SH "SEE ALSO"

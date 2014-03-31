@@ -36,14 +36,14 @@ and
 The user application is always executed from within a 
 .I JobWrapper
 script. The wrapper sets the appropriate JobId in the environment variable
-EDG_WL_JOBID. The user should pass this value to the -j option of
+EDG_WL_JOBID. The user should pass this value to the \-j option of
 .B glite-lb-logevent.
 
 Similarly, the wrapper sets an initial value of the event sequence code
 in the environment variable EDG_WL_SEQUENCE_CODE.
 If the user application calls 
 .B glite-lb-logevent
-just once, it is sufficient to pass this value to the -c option.
+just once, it is sufficient to pass this value to the \-c option.
 However, if there are more subsequent calls, the user is responsible for
 capturing an updated sequence code from the 
 .B stdout
@@ -67,10 +67,10 @@ as a part of the job status returned by L&B.
 for p in `seq 1 100`; do
 
 	# log the UserTag event
-	EDG_WL_SEQUENCE_CODE=`glite-lb-logevent -s Application
-		-e UserTag
-		-j $EDG_WL_JOBID -c $EDG_WL_SEQUENCE_CODE 
-		--name=phase --value=$p`
+	EDG_WL_SEQUENCE_CODE=`glite-lb-logevent \-s Application
+		\-e UserTag
+		\-j $EDG_WL_JOBID \-c $EDG_WL_SEQUENCE_CODE
+		\-\-name=phase \-\-value=$p`
 
 	# do the actual computation here
 done
@@ -80,7 +80,7 @@ done
 
 
 .SH OTHER OPTIONS
-See command line help (glite-lb-logevent -h) for extensive help on all options.
+See command line help (glite-lb-logevent \-h) for extensive help on all options.
 However, EDG users should should follow the usage shown in SYNOPSIS strictly.
 Logging other events may confuse the L&B service and cause wrong job status
 information to be reported.
