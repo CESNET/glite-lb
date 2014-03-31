@@ -26,6 +26,8 @@ Architecture: any
 Provides: glite-lbjp-common-gsoap-plugin, glite-security-gsoap-plugin
 Depends: libglite-lbjp-common-gsoap-plugin (= ${binary:Version}), libglite-lbjp-common-gss-dev, ${misc:Depends}
 Description: Development files for gLite gsoap-plugin
+@DEBIAN_DESCRIPTION@
+ .
  This package contains development libraries and header files for gLite
  gsoap-plugin.
 
@@ -34,4 +36,6 @@ Section: debug
 Architecture: any
 Depends: libglite-lbjp-common-gsoap-plugin (= ${binary:Version}), ${misc:Depends}
 Description: Debugging symbols for gLite gsoap-plugin library
+@DEBIAN_DESCRIPTION@
+ .
  This package contains debugging symbols for gLite gsoap-plugin library.

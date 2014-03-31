@@ -20,6 +20,8 @@ Architecture: any
 Provides: glite-lbjp-common-gss
 Depends: libglite-security-gss9 (= ${binary:Version}), ${misc:Depends}, libglobus-gssapi-gsi-dev, pkg-config
 Description: Development files for gLite L&B/JP common gss library
+@DEBIAN_DESCRIPTION@
+ .
  This package contains development libraries and header files for gLite gss
  library.
 
@@ -28,4 +30,6 @@ Section: debug
 Architecture: any
 Depends: libglite-security-gss9 (= ${binary:Version}), ${misc:Depends}
 Description: Debugging symbols for gLite gss library
+@DEBIAN_DESCRIPTION@
+ .
  This package contains debugging symbols for gLite gss library.

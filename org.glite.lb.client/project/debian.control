@@ -20,6 +20,8 @@ Architecture: any
 Provides: glite-lb-client
 Depends: libglite-lb-client14 (= ${binary:Version}), ${misc:Depends}, libglite-lb-common-dev, libglite-jobid-api-c-dev, libglite-jobid-api-cpp-dev
 Description: Development files for gLite L&B/JP common log module
+@DEBIAN_DESCRIPTION@
+ .
  This package contains development libraries and header files for gLite L&B
  client library.
 
@@ -28,6 +30,8 @@ Section: misc
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, ${perl:Depends}
 Description: gLite L&B client programs and examples
+@DEBIAN_DESCRIPTION@
+ .
  This package contains client programs and examples for gLite L&B.
 
 Package: libglite-lb-client14-dbg
@@ -35,6 +39,8 @@ Section: debug
 Architecture: any
 Depends: libglite-lb-client14 (= ${binary:Version}), ${misc:Depends}
 Description: Debugging symbols for gLite L&B client library
+@DEBIAN_DESCRIPTION@
+ .
  This package contains debugging symbols for gLite L&B client library.
 
 Package: glite-lb-client-progs-dbg
@@ -42,4 +48,6 @@ Section: debug
 Architecture: any
 Depends: glite-lb-client-progs (= ${binary:Version}), ${misc:Depends}
 Description: Debugging symbols for gLite L&B client tools
+@DEBIAN_DESCRIPTION@
+ .
  This package contains debugging symbols for gLite L&B client tools.

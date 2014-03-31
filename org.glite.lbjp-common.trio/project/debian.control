@@ -20,6 +20,8 @@ Architecture: any
 Provides: glite-lbjp-common-trio
 Depends: libglite-lbu-trio2 (= ${binary:Version}), ${misc:Depends}
 Description: Development files for gLite L&B/JP common trio library
+@DEBIAN_DESCRIPTION@
+ .
  This package contains development libraries and header files for gLite L&B/JP
  common trio library.
 
@@ -28,4 +30,6 @@ Section: debug
 Architecture: any
 Depends: libglite-lbu-trio2 (= ${binary:Version}), ${misc:Depends}
 Description: Debugging symbols for gLite L&B/JP common trio library
+@DEBIAN_DESCRIPTION@
+ .
  This package contains debugging symbols for gLite L&B/JP common trio library.

@@ -19,6 +19,8 @@ Section: libdevel
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, glite-lb-logger (= ${binary:Version}), libglite-lb-common-dev, libglite-lbjp-common-gss-dev, libglite-lbjp-common-log-dev
 Description: Development files for gLite L&B logger
+@DEBIAN_DESCRIPTION@
+ .
  This package contains header files for building plugins for gLite L&B logger.
 
 Package: glite-lb-logger-dbg
@@ -26,4 +28,6 @@ Section: debug
 Architecture: any
 Depends: glite-lb-logger (= ${binary:Version}), ${misc:Depends}
 Description: Debugging symbols for gLite L&B logger
+@DEBIAN_DESCRIPTION@
+ .
  This package contains debugging symbols for gLite L&B logger.

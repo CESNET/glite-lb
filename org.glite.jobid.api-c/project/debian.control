@@ -20,6 +20,8 @@ Architecture: any
 Provides: glite-jobid-api-c
 Depends: libglite-jobid2 (= ${binary:Version}), ${misc:Depends}
 Description: Development files for gLite jobid C library
+@DEBIAN_DESCRIPTION@
+ .
  This package contains development libraries and header files for gLite jobid
  C library.
 
@@ -28,4 +30,6 @@ Section: debug
 Architecture: any
 Depends: libglite-jobid2 (= ${binary:Version}), ${misc:Depends}
 Description: Debugging symbols for gLite jobid library
+@DEBIAN_DESCRIPTION@
+ .
  This package contains debugging symbols for gLite jobid library.

@@ -22,4 +22,6 @@ Architecture: all
 Depends: ${misc:Depends}
 Suggests: libglite-jobid-api-java, default-jdk-doc
 Description: Java API documentation for gLite jobid java library
+@DEBIAN_DESCRIPTION@
+ .
  This package contains java API documentation for gLite jobid java library.

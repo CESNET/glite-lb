@@ -18,12 +18,16 @@ Package: libglite-lb-client-jni
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: JNI code for L&B java client
+@DEBIAN_DESCRIPTION@
+ .
  This package contains Java Native Interface code for L&B java client.
 
 Package: libglite-lb-client-axis-java
 Architecture: all
 Depends: ${misc:Depends}, libglite-jobid-api-java, libcommons-lang-java, libglite-lb-client-java
 Description: Axis 1.4 flavor of Java L&B client
+@DEBIAN_DESCRIPTION@
+ .
  This package contains java L&B client library based on Axis 1.4.
 
 Package: libglite-lb-client-java-doc
@@ -32,4 +36,6 @@ Architecture: all
 Depends: ${misc:Depends}
 Suggests: libglite-lb-client-java, default-jdk-doc
 Description: Java API documentation for Java L&B client
+@DEBIAN_DESCRIPTION@
+ .
  This package contains java API documentation for Java L&B client.

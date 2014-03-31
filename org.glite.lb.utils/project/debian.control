@@ -19,4 +19,6 @@ Section: debug
 Architecture: any
 Depends: glite-lb-utils (= ${binary:Version}), ${misc:Depends}
 Description: Debugging symbols for gLite L&B utils
+@DEBIAN_DESCRIPTION@
+ .
  This package contains debugging symbols for gLite L&B utils.

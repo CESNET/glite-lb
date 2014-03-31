@@ -12,6 +12,8 @@ Package: glite-lbjp-common-log
 Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Common files for gLite L&B/JP common log module
+@DEBIAN_DESCRIPTION@
+ .
  This package provides log4c configuration file for gLite L&B/JP common log
  module.
 
@@ -27,6 +29,8 @@ Architecture: any
 Provides: glite-lbjp-common-log
 Depends: libglite-lbu-log1 (= ${binary:Version}), ${misc:Depends}
 Description: Development files for gLite L&B/JP common log module
+@DEBIAN_DESCRIPTION@
+ .
  This package contains development libraries and header files for gLite L&B/JP
  common log module.
 
@@ -35,4 +39,6 @@ Section: debug
 Architecture: any
 Depends: libglite-lbu-log1 (= ${binary:Version}), ${misc:Depends}
 Description: Debugging symbols for gLite L&B/JP common log module
+@DEBIAN_DESCRIPTION@
+ .
  This package contains debugging symbols for gLite L&B/JP common log module.

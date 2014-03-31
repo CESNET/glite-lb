@@ -20,6 +20,8 @@ Architecture: any
 Provides: glite-lb-common
 Depends: glite-lb-types, libglite-lb-common16 (= ${binary:Version}), ${misc:Depends}, libglite-jobid-api-c-dev, libglite-lbjp-common-gss-dev
 Description: Development files for gLite L&B common library
+@DEBIAN_DESCRIPTION@
+ .
  This package contains development libraries and header files for gLite L&B
  common library.
 
@@ -28,4 +30,6 @@ Section: debug
 Architecture: any
 Depends: libglite-lb-common16 (= ${binary:Version}), ${misc:Depends}
 Description: Debugging symbols for gLite L&B common library
+@DEBIAN_DESCRIPTION@
+ .
  This package contains debugging symbols for gLite L&B common library.

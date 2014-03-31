@@ -19,4 +19,6 @@ Section: debug
 Architecture: any
 Depends: glite-lb-logger-msg (= ${binary:Version}), ${misc:Depends}
 Description: Debugging symbols for gLite L&B logger MSG plugin
+@DEBIAN_DESCRIPTION@
+ .
  This package contains debugging symbols for gLite L&B logger MSG plugin.

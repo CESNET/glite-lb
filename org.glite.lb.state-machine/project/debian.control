@@ -20,6 +20,8 @@ Architecture: any
 Provides: glite-lb-state-machine
 Depends: libglite-lb-state-machine6 (= ${binary:Version}), ${misc:Depends}, libglite-lb-common-dev, libglite-lbjp-common-gss-dev
 Description: Development files for gLite L&B state machine
+@DEBIAN_DESCRIPTION@
+ .
  This package contains development libraries and header files for gLite L&B
  state machine.
 
@@ -28,6 +30,8 @@ Section: misc
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: L&B state machine plugins
+@DEBIAN_DESCRIPTION@
+ .
  This package contains L&B state machine plugins for L&B tools and Job
  Provenance.
 
@@ -36,6 +40,8 @@ Section: debug
 Architecture: any
 Depends: libglite-lb-state-machine6 (= ${binary:Version}), ${misc:Depends}, libglite-jobid-api-c-dev
 Description: Debugging symbols for gLite L&B state-machine
+@DEBIAN_DESCRIPTION@
+ .
  This package contains debugging symbols for gLite L&B state machine.
 
 Package: glite-lb-state-machine-plugins-dbg
@@ -43,4 +49,6 @@ Section: debug
 Architecture: any
 Depends: glite-lb-state-machine-plugins (= ${binary:Version}), ${misc:Depends}, libglite-jobid-api-c-dev
 Description: Debugging symbols for gLite L&B state-machine plugins
+@DEBIAN_DESCRIPTION@
+ .
  This package contains debugging symbols for gLite L&B state machine plugins.

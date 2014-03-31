@@ -20,6 +20,8 @@ Architecture: any
 Provides: glite-lbjp-common-db
 Depends: libglite-lbu-db3 (= ${binary:Version}), ${misc:Depends}
 Description: Development files for gLite L&B/JP common db module
+@DEBIAN_DESCRIPTION@
+ .
  This package contains development libraries and header files for gLite L&B/JP
  common db module.
 
@@ -28,4 +30,6 @@ Section: debug
 Architecture: any
 Depends: libglite-lbu-db3 (= ${binary:Version}), ${misc:Depends}
 Description: Debugging symbols for gLite L&B/JP common db module
+@DEBIAN_DESCRIPTION@
+ .
  This package contains debugging symbols for gLite L&B/JP common db module.
