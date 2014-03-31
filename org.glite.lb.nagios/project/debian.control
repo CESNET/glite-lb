@@ -10,7 +10,6 @@ DM-Upload-Allowed: yes
 @DEBIAN_VCS@
 
 Package: emi-lb-nagios-plugins
-Section: net
 Architecture: all
 Depends: ${misc:Depends}, nagios3-common, glite-lb-client-progs, glite-lb-utils, glite-lb-ws-test, globus-proxy-utils
 Provides: glite-lb-nagios-plugins

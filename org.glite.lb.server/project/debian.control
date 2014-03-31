@@ -16,7 +16,6 @@ DM-Upload-Allowed: yes
 @DEBIAN_VCS@
 
 Package: glite-lb-server
-Section: misc
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, mysql-server, glite-lb-client-progs, glite-lb-utils, glite-lbjp-common-log, adduser
 Description: @SUMMARY@
@@ -25,7 +24,6 @@ Description: @SUMMARY@
 Package: glite-lb-server-dbg
 Section: debug
 Architecture: any
-Priority: extra
 Depends: glite-lb-server (= ${binary:Version}), ${misc:Depends}
 Description: Debugging symbols for gLite L&B server
  This package contains debugging symbols for gLite L&B server.

@@ -10,7 +10,6 @@ DM-Upload-Allowed: yes
 @DEBIAN_VCS@
 
 Package: glite-lb-types
-Section: devel
 Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends}
 Description: @SUMMARY@

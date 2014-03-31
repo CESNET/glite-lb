@@ -10,7 +10,6 @@ DM-Upload-Allowed: yes
 @DEBIAN_VCS@
 
 Package: glite-lb-logger-msg
-Section: misc
 Architecture: any
 Depends: glite-lb-logger, libnet-ldap-perl, ${shlibs:Depends}, ${misc:Depends}
 Description: @SUMMARY@
@@ -19,7 +18,6 @@ Description: @SUMMARY@
 Package: glite-lb-logger-msg-dbg
 Section: debug
 Architecture: any
-Priority: extra
 Depends: glite-lb-logger-msg (= ${binary:Version}), ${misc:Depends}
 Description: Debugging symbols for gLite L&B logger MSG plugin
  This package contains debugging symbols for gLite L&B logger MSG plugin.

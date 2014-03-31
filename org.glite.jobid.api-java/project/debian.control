@@ -10,7 +10,6 @@ DM-Upload-Allowed: yes
 @DEBIAN_VCS@
 
 Package: libglite-jobid-api-java
-Section: java
 Architecture: all
 Depends: libcommons-codec-java, ${misc:Depends}
 Replaces: glite-jobid-api-java

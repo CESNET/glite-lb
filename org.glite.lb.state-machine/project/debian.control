@@ -10,7 +10,6 @@ DM-Upload-Allowed: yes
 @DEBIAN_VCS@
 
 Package: libglite-lb-state-machine6
-Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: @SUMMARY@
@@ -36,7 +35,6 @@ Description: L&B state machine plugins
 Package: libglite-lb-state-machine6-dbg
 Section: debug
 Architecture: any
-Priority: extra
 Depends: libglite-lb-state-machine6 (= ${binary:Version}), ${misc:Depends}, libglite-jobid-api-c-dev
 Description: Debugging symbols for gLite L&B state-machine
  This package contains debugging symbols for gLite L&B state machine.
@@ -44,7 +42,6 @@ Description: Debugging symbols for gLite L&B state-machine
 Package: glite-lb-state-machine-plugins-dbg
 Section: debug
 Architecture: any
-Priority: extra
 Depends: glite-lb-state-machine-plugins (= ${binary:Version}), ${misc:Depends}, libglite-jobid-api-c-dev
 Description: Debugging symbols for gLite L&B state-machine plugins
  This package contains debugging symbols for gLite L&B state machine plugins.

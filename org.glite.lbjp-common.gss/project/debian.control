@@ -10,7 +10,6 @@ DM-Upload-Allowed: yes
 @DEBIAN_VCS@
 
 Package: libglite-security-gss9
-Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: @SUMMARY@
@@ -28,7 +27,6 @@ Description: Development files for gLite L&B/JP common gss library
 Package: libglite-security-gss9-dbg
 Section: debug
 Architecture: any
-Priority: extra
 Depends: libglite-security-gss9 (= ${binary:Version}), ${misc:Depends}
 Description: Debugging symbols for gLite gss library
  This package contains debugging symbols for gLite gss library.

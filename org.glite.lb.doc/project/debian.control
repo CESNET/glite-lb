@@ -10,7 +10,6 @@ DM-Upload-Allowed: yes
 @DEBIAN_VCS@
 
 Package: glite-lb-doc
-Section: doc
 Architecture: all
 Depends: ${misc:Depends}
 Description: @SUMMARY@

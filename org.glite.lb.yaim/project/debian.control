@@ -10,7 +10,6 @@ DM-Upload-Allowed: yes
 @DEBIAN_VCS@
 
 Package: glite-lb-yaim
-Section: admin
 Architecture: all
 Depends: ${misc:Depends}, glite-yaim-bdii, glite-yaim-core
 Description: @SUMMARY@

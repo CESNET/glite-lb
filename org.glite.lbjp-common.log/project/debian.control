@@ -10,7 +10,6 @@ DM-Upload-Allowed: yes
 @DEBIAN_VCS@
 
 Package: glite-lbjp-common-log
-Section: libs
 Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Common files for gLite L&B/JP common log module
@@ -18,7 +17,6 @@ Description: Common files for gLite L&B/JP common log module
  module.
 
 Package: libglite-lbu-log1
-Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: @SUMMARY@
@@ -36,7 +34,6 @@ Description: Development files for gLite L&B/JP common log module
 Package: libglite-lbu-log1-dbg
 Section: debug
 Architecture: any
-Priority: extra
 Depends: libglite-lbu-log1 (= ${binary:Version}), ${misc:Depends}
 Description: Debugging symbols for gLite L&B/JP common log module
  This package contains debugging symbols for gLite L&B/JP common log module.

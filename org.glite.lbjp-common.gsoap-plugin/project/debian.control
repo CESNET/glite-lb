@@ -16,7 +16,6 @@ DM-Upload-Allowed: yes
 @DEBIAN_VCS@
 
 Package: libglite-lbjp-common-gsoap-plugin
-Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: @SUMMARY@
@@ -34,7 +33,6 @@ Description: Development files for gLite gsoap-plugin
 Package: libglite-lbjp-common-gsoap-plugin-dbg
 Section: debug
 Architecture: any
-Priority: extra
 Depends: libglite-lbjp-common-gsoap-plugin (= ${binary:Version}), ${misc:Depends}
 Description: Debugging symbols for gLite gsoap-plugin library
  This package contains debugging symbols for gLite gsoap-plugin library.

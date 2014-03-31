@@ -10,7 +10,6 @@ DM-Upload-Allowed: yes
 @DEBIAN_VCS@
 
 Package: glite-lb-utils
-Section: misc
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, glite-lb-state-machine-plugins
 Description: @SUMMARY@
@@ -19,7 +18,6 @@ Description: @SUMMARY@
 Package: glite-lb-utils-dbg
 Section: debug
 Architecture: any
-Priority: extra
 Depends: glite-lb-utils (= ${binary:Version}), ${misc:Depends}
 Description: Debugging symbols for gLite L&B utils
  This package contains debugging symbols for gLite L&B utils.

@@ -10,7 +10,6 @@ DM-Upload-Allowed: yes
 @DEBIAN_VCS@
 
 Package: glite-lb-logger
-Section: misc
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, glite-lbjp-common-log, lsb-base (>= 3.2-14), adduser
 Description: @SUMMARY@
@@ -26,7 +25,6 @@ Description: Development files for gLite L&B logger
 Package: glite-lb-logger-dbg
 Section: debug
 Architecture: any
-Priority: extra
 Depends: glite-lb-logger (= ${binary:Version}), ${misc:Depends}
 Description: Debugging symbols for gLite L&B logger
  This package contains debugging symbols for gLite L&B logger.

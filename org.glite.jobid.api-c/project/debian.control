@@ -10,7 +10,6 @@ DM-Upload-Allowed: yes
 @DEBIAN_VCS@
 
 Package: libglite-jobid2
-Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: @SUMMARY@
@@ -28,7 +27,6 @@ Description: Development files for gLite jobid C library
 Package: libglite-jobid2-dbg
 Section: debug
 Architecture: any
-Priority: extra
 Depends: libglite-jobid2 (= ${binary:Version}), ${misc:Depends}
 Description: Debugging symbols for gLite jobid library
  This package contains debugging symbols for gLite jobid library.
