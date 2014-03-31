@@ -4,5 +4,5 @@ Abstract: JAVA implementation of the L&B service client supports producing (logg
 Section: Network/Monitoring
 
 Format: HTML
-Index: /usr/share/doc/libglite-lb-client-java/api/index.html
-Files: /usr/share/doc/libglite-lb-client-java/api/*
+Index: /usr/share/doc/libglite-lb-client-jni/api/index.html
+Files: /usr/share/doc/libglite-lb-client-jni/api/*

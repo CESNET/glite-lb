@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
-# -*- makefile -*-
 
+DPKG_EXPORT_BUILDFLAGS = 1
 -include /usr/share/dpkg/buildflags.mk
 
 p_base=glite-lb-client-java
@@ -12,68 +12,39 @@ p_doc=libglite-lb-client-java-doc
 # Uncomment this to turn on verbose mode.
 export DH_VERBOSE=1
 
-configure: configure-stamp
-configure-stamp:
-	dh_testdir
-	/usr/bin/perl ./configure --root=/ --prefix=/usr --libdir=lib --docdir=/usr/share/doc/$(p_base) --project=emi --with-trustmanager=no
-	touch $@
+%:
+	dh $@ --parallel --fail-missing
 
-build: build-indep
+override_dh_auto_configure:
+	perl ./configure --root=/ --prefix=/usr --libdir=lib --docdir=/usr/share/doc/$(p_base) --project=emi --with-trustmanager=no
 
-build-arch build-indep: build-stamp
+override_dh_auto_build:
+	dh_auto_build -- LOADER_SOURCES=JNIDebianLoader.java
 
-build-stamp: configure-stamp
-	dh_testdir
-	CFLAGS="$(CFLAGS) $(CPPFLAGS)" LDFLAGS="$(LDFLAGS)" $(MAKE) LOADER_SOURCES=JNIDebianLoader.java
-	CFLAGS="$(CFLAGS) $(CPPFLAGS)" LDFLAGS="$(LDFLAGS)" $(MAKE) check
-	touch $@
+override_dh_auto_clean:
+	make clean
 
-clean: configure-stamp
-	dh_testdir
-	dh_testroot
-	rm -f configure-stamp build-stamp
-	$(MAKE) clean
-	rm -f Makefile.inc config.status *.spec
+override_dh_clean:
 	dh_clean
+	rm -vf Makefile.inc config.status *.spec
 
-install: build-stamp
-	dh_testdir
-	dh_testroot
-	dh_prep
-	dh_installdirs
-	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
+override_dh_strip:
+	dh_strip --dbg-package=$(p_dbg)
+
+override_dh_auto_install:
+	dh_auto_install
 	# move JNI library
 	mkdir -p debian/$(p_jni)/usr/lib/jni
 	mv debian/tmp/usr/lib/libglite_lb_sendviasocket.so* debian/$(p_jni)/usr/lib/jni
-	mkdir -p debian/$(p_axis)/usr/share/doc
+	# documentation
 	mkdir -p debian/$(p_doc)/usr/share/doc
-	mkdir -p debian/$(p_lib)/usr/share/doc
-	mv debian/tmp/usr/share/doc/$(p_base) debian/$(p_doc)/usr/share/doc/$(p_lib)
-	ln -s $(p_lib) debian/$(p_axis)/usr/share/doc/$(p_axis)
-	rm -vf debian/tmp/usr/lib/*.la
+	mv debian/tmp/usr/share/doc/$(p_base) debian/$(p_doc)/usr/share/doc/$(p_jni)
+	# keep only dynamic module
 	rm -vf debian/tmp/usr/lib/*.a
+	rm -vf debian/tmp/usr/lib/*.la
 
-binary-indep:
+override_dh_installdocs:
+	dh_installdocs --link-doc=$(p_jni)
 
-binary-arch: install
-	dh_testdir
-	dh_testroot
+override_dh_installchangelogs:
 	dh_installchangelogs project/ChangeLog
-	dh_installdocs
-	dh_installexamples
-	dh_installman
-	dh_installlogrotate
-	dh_installcron
-	dh_install --fail-missing
-	dh_link
-	dh_strip
-	dh_compress
-	dh_fixperms
-	dh_makeshlibs
-	dh_installdeb
-	dh_shlibdeps
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
-
-binary: binary-arch binary-indep

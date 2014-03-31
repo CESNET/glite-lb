@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
-# -*- makefile -*-
 
+DPKG_EXPORT_BUILDFLAGS = 1
 -include /usr/share/dpkg/buildflags.mk
 
 p_base=glite-lb-doc
@@ -8,57 +8,19 @@ p_base=glite-lb-doc
 # Uncomment this to turn on verbose mode.
 export DH_VERBOSE=1
 
-configure: configure-stamp
-configure-stamp:
-	dh_testdir
-	/usr/bin/perl ./configure --root=/ --prefix=/usr --libdir=lib --docdir=/usr/share/doc/$(p_base) --project=emi
-	touch $@
+%:
+	# parallel build not supported (problems with pdflatex)
+	dh $@ --fail-missing
 
-build: build-indep
+override_dh_auto_configure:
+	perl ./configure --root=/ --prefix=/usr --libdir=lib --docdir=/usr/share/doc/$(p_base) --project=emi
 
-build-indep: build-stamp
+override_dh_auto_clean:
+	make clean
 
-build-stamp: configure-stamp
-	dh_testdir
-	CFLAGS="$(CFLAGS) $(CPPFLAGS)" LDFLAGS="$(LDFLAGS)" $(MAKE)
-	CFLAGS="$(CFLAGS) $(CPPFLAGS)" LDFLAGS="$(LDFLAGS)" $(MAKE) check
-	touch $@
-
-clean: configure-stamp
-	dh_testdir
-	dh_testroot
-	rm -f configure-stamp build-stamp
-	$(MAKE) clean
-	rm -f Makefile.inc config.status *.spec
+override_dh_clean:
 	dh_clean
+	rm -vf Makefile.inc config.status *.spec
 
-install: build-stamp
-	dh_testdir
-	dh_testroot
-	dh_prep
-	dh_installdirs
-	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
-	mkdir -p debian/$(p_base)/usr/share/doc
-	mv debian/tmp/usr/share/doc/$(p_base) debian/$(p_base)/usr/share/doc/$(p_base)
-
-binary-indep: install
-	dh_testdir
-	dh_testroot
+override_dh_installchangelogs:
 	dh_installchangelogs project/ChangeLog
-	dh_installdocs
-	dh_installexamples
-	dh_installman
-	dh_installlogrotate
-	dh_installcron
-	dh_install --fail-missing
-	dh_link
-	dh_compress
-	dh_fixperms
-	dh_makeshlibs
-	dh_installdeb
-	dh_shlibdeps
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
-
-binary: binary-indep
