@@ -2,7 +2,7 @@ Source: glite-lbjp-common-jp-interface
 Priority: extra
 Maintainer: @MAINTAINER@
 Uploaders: @UPLOADERS@
-Build-Depends: debhelper (>= 7.0.50~), chrpath, libcppunit-dev, libglite-jobid-api-c-dev, libglite-lbjp-common-db-dev, libglite-lbjp-common-trio-dev, libtool, pkg-config
+Build-Depends: debhelper (>= 7.0.50~), libcppunit-dev, libglite-jobid-api-c-dev, libglite-lbjp-common-db-dev, libglite-lbjp-common-trio-dev, libtool, pkg-config
 Standards-Version: 3.9.1
 Section: libs
 Homepage: @URL@

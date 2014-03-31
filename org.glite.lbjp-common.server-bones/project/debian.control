@@ -2,7 +2,7 @@ Source: glite-lbjp-common-server-bones
 Priority: extra
 Maintainer: @MAINTAINER@
 Uploaders: @UPLOADERS@
-Build-Depends: debhelper (>= 7.0.50~), chrpath, libglite-lbjp-common-log-dev, libtool
+Build-Depends: debhelper (>= 7.0.50~), libglite-lbjp-common-log-dev, libtool
 Standards-Version: 3.9.1
 Section: libs
 Homepage: @URL@

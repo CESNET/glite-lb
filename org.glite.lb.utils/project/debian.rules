@@ -39,7 +39,6 @@ install: build-stamp
 	dh_prep
 	dh_installdirs
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
-	find debian/tmp -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
 	mkdir -p debian/$(p_base)/usr/share/doc
 	mkdir -p debian/$(p_dbg)/usr/share/doc
 	mv debian/tmp/usr/share/doc/$(p_base) debian/$(p_base)/usr/share/doc/$(p_base)
