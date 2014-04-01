@@ -852,7 +852,7 @@ int main(int argc, char *argv[])
 
 	if ( !debug ) {
 		if (daemon(1,0) == -1) {
-			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "deamon()");
+			glite_common_log(LOG_CATEGORY_CONTROL, LOG_PRIORITY_FATAL, "daemon()");
 			exit(1);
 		}
 #ifdef LB_PERF

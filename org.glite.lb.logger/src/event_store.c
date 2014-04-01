@@ -1041,7 +1041,7 @@ event_store_clean(struct event_store *es)
 	  abort();
   }
 
-  /* the file can only be removed when all the events were succesfully sent
+  /* the file can only be removed when all the events were successfully sent
      (ie. committed both by LS and BS */
   /* That also implies that the event queues are 'empty' at the moment. */
   ef = fopen(es->event_file_name, "r+");

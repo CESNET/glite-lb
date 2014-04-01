@@ -129,7 +129,7 @@ static int send_answer_back(edg_wll_GssConnection *con, int answer, struct timev
 		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_INFO,"Error sending answer \"%d\" back to client.\n",answer);
 		return handle_gss_failures(err,&gss_stat,"Error sending answer");
 	} else {
-		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,"Answer \"%d\" succesfully sent back to client.\n",answer);
+		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_DEBUG,"Answer \"%d\" successfully sent back to client.\n",answer);
 		return 0;
 	}
 }

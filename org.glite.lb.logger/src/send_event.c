@@ -371,7 +371,7 @@ event_queue_send(struct event_queue *eq, struct queue_thread *me)
 	    }
 	
     case LB_OK:
-      /* event 'succesfully' delivered */
+      /* event 'successfully' delivered */
       
     case LB_PERM:
     default: /* LB_PROTO */

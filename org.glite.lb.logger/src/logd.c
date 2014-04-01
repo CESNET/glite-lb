@@ -542,7 +542,7 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 	struct timeval tv;
 
 
-	glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_INFO,"Accepting incomming connections...\n");
+	glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_INFO,"Accepting incoming connections...\n");
 	client_fd = 0;
 	while(0 == client_fd) {
 		FD_ZERO(&fds);
@@ -563,7 +563,7 @@ This is LocalLogger, part of Workload Management System in EU DataGrid & EGEE.\n
 	if (client_fd < 0) {
 		if (my_errno == EINTR) continue;
 		close(listener_fd);
-		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_FATAL,"Failed to accept incomming connections\n");
+		glite_common_log(LOG_CATEGORY_ACCESS,LOG_PRIORITY_FATAL,"Failed to accept incoming connections\n");
 		glite_common_log_SYS_ERROR("accept");
 		edg_wll_gss_release_cred(&cred, NULL);
 		exit(-1);

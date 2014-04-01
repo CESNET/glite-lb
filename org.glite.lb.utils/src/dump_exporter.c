@@ -209,7 +209,7 @@ int main(int argc, char **argv)
 			}
 
 			if ( !(st = dump_storage_add(&dstorage, jobid, fname, fd)) ) {
-				perror("Can't record dump informations");
+				perror("Can't record dump information");
 				cleanup(1);
 			}
 		}
