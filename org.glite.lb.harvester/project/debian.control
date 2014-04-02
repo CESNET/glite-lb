@@ -6,7 +6,6 @@ Build-Depends: debhelper (>= 7.0.50~), docbook-utils, libglite-jobid-api-c-dev, 
 Standards-Version: 3.9.1
 Section: misc
 Homepage: @URL@
-DM-Upload-Allowed: yes
 @DEBIAN_VCS@
 
 Package: glite-lb-harvester

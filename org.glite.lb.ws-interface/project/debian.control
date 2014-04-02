@@ -6,7 +6,6 @@ Build-Depends: debhelper (>= 7.0.50~), glite-lb-types, tidy, xsltproc
 Standards-Version: 3.9.1
 Section: libs
 Homepage: @URL@
-DM-Upload-Allowed: yes
 @DEBIAN_VCS@
 
 Package: glite-lb-ws-interface

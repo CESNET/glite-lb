@@ -6,7 +6,6 @@ Build-Depends: debhelper (>= 7.0.50~)
 Standards-Version: 3.9.1
 Section: admin
 Homepage: @URL@
-DM-Upload-Allowed: yes
 @DEBIAN_VCS@
 
 Package: glite-lb-yaim

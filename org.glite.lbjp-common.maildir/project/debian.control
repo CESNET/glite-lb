@@ -6,7 +6,6 @@ Build-Depends: debhelper (>= 7.0.50~), libtool
 Standards-Version: 3.9.1
 Section: libs
 Homepage: @URL@
-DM-Upload-Allowed: yes
 @DEBIAN_VCS@
 
 Package: libglite-lbu-maildir2

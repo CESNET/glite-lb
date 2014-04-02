@@ -12,7 +12,6 @@ Build-Depends: debhelper (>= 7.0.50~), libc-ares-dev, libcppunit-dev, libglite-l
 Standards-Version: 3.9.1
 Section: libs
 Homepage: @URL@
-DM-Upload-Allowed: yes
 @DEBIAN_VCS@
 
 Package: libglite-lbjp-common-gsoap-plugin

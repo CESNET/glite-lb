@@ -6,7 +6,6 @@ Build-Depends: debhelper (>= 7.0.50~), texlive-latex-extra, texlive-latex-recomm
 Standards-Version: 3.9.1
 Section: doc
 Homepage: @URL@
-DM-Upload-Allowed: yes
 @DEBIAN_VCS@
 
 Package: glite-lb-doc
