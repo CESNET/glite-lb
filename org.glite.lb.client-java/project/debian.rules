@@ -15,13 +15,14 @@ export DH_VERBOSE=1
 %:
 	dh $@ --parallel --fail-missing
 
-override_dh_auto_configure:
+override_dh_auto_configure: config.status
+config.status:
 	perl ./configure --root=/ --prefix=/usr --libdir=lib --docdir=/usr/share/doc/$(p_base) --project=emi --with-trustmanager=no
 
 override_dh_auto_build:
 	dh_auto_build -- LOADER_SOURCES=JNIDebianLoader.java
 
-override_dh_auto_clean:
+override_dh_auto_clean: config.status
 	make clean
 
 override_dh_clean:

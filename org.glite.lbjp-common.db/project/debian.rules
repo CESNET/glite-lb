@@ -13,11 +13,12 @@ export DH_VERBOSE=1
 %:
 	dh $@ --parallel --fail-missing
 
-override_dh_auto_configure:
+override_dh_auto_configure: config.status
+config.status:
 	perl ./configure --root=/ --prefix=/usr --libdir=lib --project=emi
 	# heimdal: sed -i.orig -e 's/postgresql_prefix.*/postgresql_prefix = no/' Makefile.inc
 
-override_dh_auto_clean:
+override_dh_auto_clean: config.status
 	make clean
 
 override_dh_clean:

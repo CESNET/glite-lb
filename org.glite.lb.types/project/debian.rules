@@ -9,10 +9,11 @@ export DH_VERBOSE=1
 %:
 	dh $@ --parallel --fail-missing
 
-override_dh_auto_configure:
+override_dh_auto_configure: config.status
+config.status:
 	perl ./configure --root=/ --prefix=/usr --libdir=lib --project=emi
 
-override_dh_auto_clean:
+override_dh_auto_clean: config.status
 	make clean
 
 override_dh_clean:

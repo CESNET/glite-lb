@@ -13,7 +13,8 @@ export DH_VERBOSE=1
 %:
 	dh $@ --parallel --fail-missing
 
-override_dh_auto_configure:
+override_dh_auto_configure: config.status
+config.status:
 	perl ./configure --root=/ --prefix=/usr --libdir=lib --project=emi
 	# krb: echo "gssapi_provider=kerberos" >> Makefile.inc
 	# krb: echo "GLOBUS_COMMON_CFLAGS=`pkg-config --cflags globus-common`" >> Makefile.inc
@@ -21,7 +22,7 @@ override_dh_auto_configure:
 	# krb: echo "KERBEROS_GSSAPI_LIBS=`krb5-config --libs gssapi`" >> Makefile.inc
 	# krb: echo "KERBEROS_GSSAPI_CFLAGS=`krb5-config --cflags gssapi`" >> Makefile.inc
 
-override_dh_auto_clean:
+override_dh_auto_clean: config.status
 	make clean
 
 override_dh_clean:
