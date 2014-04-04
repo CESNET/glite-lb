@@ -8,8 +8,8 @@ p_base=glite-lb-doc
 # Uncomment this to turn on verbose mode.
 export DH_VERBOSE=1
 
+# parallel build not supported (problems with pdflatex)
 %:
-	# parallel build not supported (problems with pdflatex)
 	dh $@ --fail-missing
 
 override_dh_auto_configure: config.status
