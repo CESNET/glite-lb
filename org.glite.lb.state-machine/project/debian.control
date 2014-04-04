@@ -6,7 +6,6 @@ Build-Depends: debhelper (>= 7.0.50~), glite-lb-types, libclassad0-dev | libclas
 Standards-Version: 3.9.1
 Section: libs
 Homepage: @URL@
-@DEBIAN_VCS@
 
 Package: libglite-lb-state-machine6
 Architecture: any

@@ -6,7 +6,6 @@ Build-Depends: debhelper (>= 7.0.50~), glite-lb-types, libcppunit-dev, libglite-
 Standards-Version: 3.9.1
 Section: misc
 Homepage: @URL@
-@DEBIAN_VCS@
 
 Package: glite-lb-utils
 Architecture: any

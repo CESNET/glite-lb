@@ -12,7 +12,6 @@ Build-Depends: debhelper (>= 7.0.50~), bison, flex, glite-lb-types, glite-lb-ws-
 Standards-Version: 3.9.1
 Section: misc
 Homepage: @URL@
-@DEBIAN_VCS@
 
 Package: glite-lb-server
 Architecture: any

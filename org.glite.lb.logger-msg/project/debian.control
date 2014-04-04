@@ -6,7 +6,6 @@ Build-Depends: debhelper (>= 7.0.50~), activemq-cpp-dev, glite-lb-logger-dev, li
 Standards-Version: 3.9.1
 Section: misc
 Homepage: @URL@
-@DEBIAN_VCS@
 
 Package: glite-lb-logger-msg
 Architecture: any

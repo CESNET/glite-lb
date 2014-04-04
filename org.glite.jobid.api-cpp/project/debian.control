@@ -6,7 +6,6 @@ Build-Depends: debhelper (>= 7.0.50~)
 Standards-Version: 3.9.1
 Section: libs
 Homepage: @URL@
-@DEBIAN_VCS@
 
 Package: libglite-jobid-api-cpp-dev
 Section: libdevel

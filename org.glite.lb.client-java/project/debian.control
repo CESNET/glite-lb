@@ -6,7 +6,6 @@ Build-Depends: debhelper (>= 7.0.50~), ant, default-jdk, libglite-jobid-api-java
 Standards-Version: 3.9.1
 Section: java
 Homepage: @URL@
-@DEBIAN_VCS@
 
 Package: libglite-lb-client-java
 Architecture: all

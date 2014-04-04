@@ -70,8 +70,6 @@ my %package = (
 	'maintainer' => 'CESNET Product Teams <emi-lb@metacentrum.cz>',
 	'uploaders' => 'František Dvořák <valtri@civ.zcu.cz>',
 	'url' => 'http://glite.cern.ch',
-	'debian_vcs' => 'Vcs-Cvs: :pserver:anonymous@jra1mw.cvs.cern.ch:/cvs/jra1mw
-Vcs-Browser: http://jra1mw.cvs.cern.ch/cgi-bin/jra1mw.cgi',
 );
 
 # key:      internal package name (arguments, ...)
@@ -1332,7 +1330,6 @@ deb: ${package}-${version}.tar.gz
 				if (/\@AGE\@/) { s/\@AGE\@/$age/g; }
 				if (/\@MAINTAINER\@/) { s/\@MAINTAINER\@/$package{maintainer}/g; }
 				if (/\@UPLOADERS\@/) { s/\@UPLOADERS\@/$package{uploaders}/g; }
-				if (/\@DEBIAN_VCS\@/) { s/\@DEBIAN_VCS\@/$package{debian_vcs}/g; }
 				if (/\@DEBIAN_DATE\@/) { s/\@DEBIAN_DATE\@/$debdate/g; }
 				if (/\@SPEC_DATE\@/) { s/\@SPEC_DATE\@/$specdate/g; }
 				if (/^\s*.+\/configure\s/ and $force_version) {

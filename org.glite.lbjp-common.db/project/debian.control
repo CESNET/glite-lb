@@ -6,7 +6,6 @@ Build-Depends: debhelper (>= 7.0.50~), libcppunit-dev, liblog4c-dev, libglite-lb
 Standards-Version: 3.9.1
 Section: libs
 Homepage: @URL@
-@DEBIAN_VCS@
 
 Package: libglite-lbu-db3
 Architecture: any
