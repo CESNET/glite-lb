@@ -51,7 +51,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files devel
 %defattr(-,root,root)
-%doc LICENSE project/ChangeLog
+%doc ChangeLog LICENSE
 %{_includedir}/glite/jobid/JobId.h
 
 

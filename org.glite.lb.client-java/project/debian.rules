@@ -46,6 +46,3 @@ override_dh_auto_install:
 
 override_dh_installdocs:
 	dh_installdocs --link-doc=$(p_jni)
-
-override_dh_installchangelogs:
-	dh_installchangelogs project/ChangeLog

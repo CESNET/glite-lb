@@ -53,7 +53,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%doc LICENSE project/ChangeLog doc/README.LB-monitoring doc/README.LB-statistics
+%doc ChangeLog LICENSE doc/README.LB-monitoring doc/README.LB-statistics
 %{_bindir}/glite-lb-bkpurge-offline
 %{_bindir}/glite-lb-dump
 %{_bindir}/glite-lb-dump_exporter

@@ -22,9 +22,6 @@ override_dh_clean:
 	dh_clean
 	rm -vf Makefile.inc config.status *.spec
 
-override_dh_installchangelogs:
-	dh_installchangelogs project/ChangeLog
-
 override_dh_fixperms:
 	dh_fixperms
 	chmod 0755 debian/$(p_base)/usr/libexec/grid-monitoring/probes/emi.lb

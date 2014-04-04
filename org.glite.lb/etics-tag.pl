@@ -225,12 +225,12 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 	# Update the ChangeLog
 	# **********************************
 
-	if (-r "$module/project/ChangeLog") { # ChangeLog exists (where expected). Proceed.
+	if (-r "$module/ChangeLog") { # ChangeLog exists (where expected). Proceed.
 
 		$tmpChangeLog="$TMPDIR/$module.ChangeLog.$$";
 		if ( $project eq "emi" ) { $tmpChangeLog=~s/org\.glite/emi/; }
 
-		system("cp $module/project/ChangeLog $tmpChangeLog");
+		system("cp $module/ChangeLog $tmpChangeLog");
 
 
 		unless ($increment eq "n") {system("echo $major.$minor.$revision-$age >> $tmpChangeLog");
@@ -245,7 +245,7 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
 		}
 		printf("Modified ChangeLog ready, ret code: $ChangeLogRet\n");
 
-		printf(EXEC "#Update the ChangeLog\ncp $tmpChangeLog $module/project/ChangeLog\n\n");
+		printf(EXEC "#Update the ChangeLog\ncp $tmpChangeLog $module/ChangeLog\n\n");
 	}	
 
 	unless ($increment eq "n") {
@@ -288,7 +288,7 @@ usage: $0 [-i maj|min|rev|age|none|<sigle_word_age>] [-g] [-c <current configura
         else {$commit_message="Updating version, ChangeLog and copying the most recent configure from $GLITE_LB_LOCATION for v. $major.$minor.$revision-$age";}
 
 	
-	printf(EXEC "#Commit changes\ngit commit -m \"$commit_message\" $module/project/ChangeLog $module/project/version.properties $module/configure\n\n");
+	printf(EXEC "#Commit changes\ngit commit -m \"$commit_message\" $module/ChangeLog $module/project/version.properties $module/configure\n\n");
 
 
 	# **********************************

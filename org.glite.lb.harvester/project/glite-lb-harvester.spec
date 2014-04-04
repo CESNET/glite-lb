@@ -55,7 +55,7 @@ CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make %{?_smp_mflags}
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
-install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT%{_pkgdocdir}
+install -m 0644 ChangeLog LICENSE $RPM_BUILD_ROOT%{_pkgdocdir}
 %if 0%{?rhel} >= 7 || 0%{?fedora}
 # preserve directory in /var/run
 mkdir -p ${RPM_BUILD_ROOT}%{_tmpfilesdir}

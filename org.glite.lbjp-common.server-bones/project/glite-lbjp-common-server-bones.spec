@@ -64,7 +64,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%doc LICENSE project/ChangeLog
+%doc ChangeLog LICENSE
 %{_libdir}/libglite_lbu_server_bones.so.2
 %{_libdir}/libglite_lbu_server_bones.so.2.*
 

@@ -85,7 +85,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%doc project/ChangeLog LICENSE
+%doc ChangeLog LICENSE
 %{_libdir}/libglite_security_gss.so.9
 %{_libdir}/libglite_security_gss.so.9.*
 

@@ -49,7 +49,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%doc LICENSE project/ChangeLog
+%doc ChangeLog LICENSE
 %dir %{_libdir}/glite-lb/
 %dir %{_libdir}/glite-lb/examples/
 %{_libdir}/glite-lb/examples/glite-lb-ws_getversion

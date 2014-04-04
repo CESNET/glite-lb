@@ -108,7 +108,7 @@ usage: $0 [-h] subsystem.name [subsystem.name] [...]
 						printf(STDERR "\nERROR: Tag $subsystem_tag does not exist in module $module!\n"); 
 					}
 
-					unless (-e "$module/project/ChangeLog") {
+					unless (-e "$module/ChangeLog") {
 						printf(STDERR "\nERROR: The ChangeLog file for module $module does not exist!\n");
 					}
 				}

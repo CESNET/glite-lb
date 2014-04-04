@@ -183,7 +183,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%doc LICENSE project/ChangeLog
+%doc ChangeLog LICENSE
 %dir %{_libdir}/%{name}/
 %{_libdir}/%{name}/libglite_lb_sendviasocket.so
 %{_libdir}/%{name}/libglite_lb_sendviasocket.so.0

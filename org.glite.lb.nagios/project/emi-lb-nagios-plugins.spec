@@ -45,7 +45,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%doc LICENSE project/ChangeLog
+%doc ChangeLog LICENSE
 %dir %{_libexecdir}/grid-monitoring/
 %dir %{_libexecdir}/grid-monitoring/probes/
 %dir %{_libexecdir}/grid-monitoring/probes/emi.lb/

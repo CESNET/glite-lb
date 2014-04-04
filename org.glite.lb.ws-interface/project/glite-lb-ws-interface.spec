@@ -42,7 +42,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%doc LICENSE project/ChangeLog
+%doc ChangeLog LICENSE
 %dir %{_includedir}/glite/
 %dir %{_includedir}/glite/lb/
 %dir %{_datadir}/wsdl/

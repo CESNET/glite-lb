@@ -60,7 +60,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%doc LICENSE project/ChangeLog config/msg.conf.example
+%doc ChangeLog LICENSE config/msg.conf.example
 %dir %{_sysconfdir}/glite-lb/
 %dir %{_libdir}/glite-lb/
 %dir %{_libdir}/glite-lb/examples/

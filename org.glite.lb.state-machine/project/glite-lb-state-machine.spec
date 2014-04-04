@@ -83,7 +83,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%doc LICENSE project/ChangeLog
+%doc ChangeLog LICENSE
 %{_libdir}/libglite_lb_statemachine.so.6
 %{_libdir}/libglite_lb_statemachine.so.6.*
 

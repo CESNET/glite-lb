@@ -48,7 +48,7 @@ CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make check
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
-install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT%{_pkgdocdir}
+install -m 0644 ChangeLog LICENSE $RPM_BUILD_ROOT%{_pkgdocdir}
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 

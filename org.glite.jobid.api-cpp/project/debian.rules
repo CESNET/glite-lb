@@ -19,6 +19,3 @@ override_dh_auto_clean: config.status
 override_dh_clean:
 	dh_clean
 	rm -vf Makefile.inc config.status *.spec
-
-override_dh_installchangelogs:
-	dh_installchangelogs project/ChangeLog

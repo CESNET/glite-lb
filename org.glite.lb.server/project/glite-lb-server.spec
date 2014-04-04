@@ -106,7 +106,7 @@ cat > ${RPM_BUILD_ROOT}%{_tmpfilesdir}/glite-lb-server.conf <<EOF
 d %{_localstatedir}/run/glite 0755 glite glite -
 EOF
 %endif
-install -m 0644 LICENSE project/ChangeLog $RPM_BUILD_ROOT%{_pkgdocdir}
+install -m 0644 ChangeLog LICENSE $RPM_BUILD_ROOT%{_pkgdocdir}
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
 find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
 mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/lib/glite/dump

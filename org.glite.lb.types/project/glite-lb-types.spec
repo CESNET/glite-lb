@@ -40,7 +40,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%doc LICENSE project/ChangeLog
+%doc ChangeLog LICENSE
 %dir %{_datadir}/glite-lb/
 %dir %{_datadir}/glite-lb/at3/
 %dir %{perl_vendorlib}/

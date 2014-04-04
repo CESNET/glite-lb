@@ -1256,7 +1256,7 @@ version=${module.version}
 
 ${package}-${version}.tar.gz:
 	rm -rf dist
-	for dist in ${SOURCES} ${SOURCES_EXEC} configure project/ChangeLog project/debian.* project/*.spec project/package.* project/version.properties LICENSE; do \
+	for dist in ${SOURCES} ${SOURCES_EXEC} configure ChangeLog project/debian.* project/*.spec project/package.* project/version.properties LICENSE; do \
 		dir=${package}-${version}/`dirname $$dist`; \
 		mkdir -p dist/$$dir || :; \
 		install -m 0644 ${top_srcdir}/$$dist dist/$$dir; \
