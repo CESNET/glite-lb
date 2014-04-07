@@ -344,6 +344,7 @@ link:
 	-ln -s ${top_srcdir}/src/EventAttrNames.pl .
 	-ln -s ${top_srcdir}/src/StatusAttrNames.pl .
 	-ln -s ${top_srcdir}/src/uiwrap.T .
+	touch $@
 
 Event.h Event.cpp: link
 
@@ -402,8 +403,9 @@ clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.cpp *.h *.dox *.pc producer_test notify C/ CPP/
 	rm -rvf ${lib_LTLIBRARIES} ${TOOLS} logevent  register_sandbox ${MAN_GZ}
 	rm -rvf ${EXAMPLES} ${EXAMPLES_CL} ${EXAMPLES_CL_THR} ${sh_PROGS}
-	rm -f EventAttrNames.pl StatusAttrNames.pl uiwrap.T
+	rm -vf EventAttrNames.pl StatusAttrNames.pl uiwrap.T
 	rm -rvf dist ${package}-*.tar.gz
+	rm -fv link
 
 distclean:
 	rm -rvf project/changelog Makefile.inc *.spec debian/
@@ -440,4 +442,4 @@ ServerConnection.h: JobStatus.h
 logevent.c: producer.h
 perftest_jobreg.c: producer.h
 
-.PHONY: default all compile examples check stage install clean distclean check_version link post-install post-install-rpath dist distcheck
+.PHONY: default all compile examples check stage install clean distclean check_version post-install post-install-rpath dist distcheck
