@@ -58,7 +58,7 @@ Publish L&B service info to EMIR - complete setup. Provides service info for L&B
 
 .TP
 \fBdb\fR
-Checks MySQL, enables MySQL configuration for L&B, sets up the database and creates indices. Migrates DB from L&B version 3.x if necessary. MySQL server startup is handled in \fBstartup\fR, if enabled.
+Checks MySQL, enables MySQL configuration for L&B, sets up the database with grants if it doesn't exist and creates indices. Migrates DB from L&B version 3.x if necessary. MySQL server startup is handled in \fBstartup\fR, if enabled.
 
 .TP
 \fBcerts\fR
