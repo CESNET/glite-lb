@@ -265,14 +265,14 @@ Where \texttt{site-info.def} file contains configuration parameters.
 
 Edit \texttt{/etc/sysconfig/glite-lb} or \texttt{/etc/default/glite-lb} (according to the distribution).
 
-Note, MySQL password is not set by \texttt{glite-lb-setup} script. If there is password already set, it can be provided by environment variable MYSQL\_PASSWORD (see \ref{inst:parameters}).
+Note, MySQL password is not set by \texttt{glite-lb-setup} script. If there is password already set, it should be provided by environment variable MYSQL\_PASSWORD (see \ref{inst:parameters}).
 
 Then launch:
 \begin{quote}
 \texttt{glite-lb-setup}
 \end{quote}
 
-\LB setup script can be instruted to perform only specific setup actions, if needed. See manual page of \texttt{glite-lb-setup} for details.
+\LB setup script can be instructed to perform only specific setup actions, if needed. See manual page of \texttt{glite-lb-setup} for details.
 
 \subsubsection{Configuration parameters}
 \label{inst:parameters}
@@ -281,7 +281,8 @@ Available parameters specific to LB server are (mandatory parameters are \textbf
 
 %variable&meaning&default value &further details\\
 \begin{itemize}
-\item \textbf{MYSQL\_PASSWORD} -- root password of MySQL server (mandatory for YAIM)
+\item \textbf{MYSQL\_PASSWORD} -- root password of MySQL server (mandatory for YAIM, otherwise may be empty if not set)
+\item \texttt{MYSQL\_USER} -- admin user of MySQL server (default: root)
 \item \texttt{GLITE\_LB\_EXPORT\_PURGE\_ARGS} -- purge timeouts (default: \texttt{--cleared 2d --aborted 15d --cancelled 15d --other 60d})
 
 According to local retention policy you may want to use different purge timeouts (for example WLCG would need \texttt{--cleared 90d --aborted 90d --cancelled 90d --other 90d}).
