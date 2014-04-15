@@ -152,6 +152,9 @@ function config_glite_lb() {
   lcas_plugin="$GLITE_LOCATION/$lcas_libarch/modules/lcas_lb.mod"
   echo "pluginname=\"$lcas_plugin\"" > ${GLITE_LOCATION_ETC}/glite-lb/lcas.db
 
+  # set mysql password
+  set_mysql_passwd || return 1 # the function uses $MYSQL_PASSWORD
+
   # main L&B setup
   . ${GLITE_LOCATION}/sbin/glite-lb-setup yaim
   if [ $? != 0 ]; then
@@ -179,9 +182,6 @@ function config_glite_lb() {
   if [ x"$GLITE_LB_RTM_ENABLED" = x"true" ]; then
     echo "${GLITE_LOCATION_ETC}/init.d/glite-lb-harvester" >> @glite_etc@/gLiteservices
   fi
-
-  # set mysql password
-  set_mysql_passwd || return 1 # the function uses $MYSQL_PASSWORD
 
   return 0
 }
