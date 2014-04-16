@@ -58,6 +58,8 @@ GLITE_LB_EXPORT_PURGE_ARGS='--cleared 2d --aborted 15d --cancelled 15d --other 6
 #GLITE_LB_RTM_ENABLED='false'
 # start-up L&B notifications harvester
 #GLITE_LB_HARVESTER_ENABLED='false'
+# database connection string: USER/PASSWORD@HOST:DBNAME
+#LBDB='lbserver/@localhost:lbserver20'
 
 #
 # L&B authorizations (items in list separated by comma)

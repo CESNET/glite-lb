@@ -19,6 +19,9 @@ EOF
 
 }
 
+MYSQL_ARGS=${MYSQL_ARGS:-'-u lbserver'}
+MYSQL_PASSWORD=${MYSQL_PASSWORD:-''}
+
 while getopts "d:h" OPTION 
 do
     case "$OPTION" in
@@ -39,7 +42,7 @@ fi
 
 
 # job connections table
-mysql -u lbserver $DB_NAME -e "\
+mysql $MYSQL_ARGS --password="$MYSQL_PASSWORD" $DB_NAME -e "\
 create table job_connections (\
         jobid_from      char(32)        binary not null,\
         jobid_to        char(32)        binary not null,\

@@ -59,6 +59,7 @@ function config_glite_lb_setenv(){
   yaimgridenv_set GLITE_LB_MSG_BROKER "${GLITE_LB_MSG_BROKER}"
   yaimgridenv_set GLITE_LB_MSG_NETWORK "${GLITE_LB_MSG_NETWORK}"
   yaimgridenv_set LCG_GFAL_INFOSYS "${LCG_GFAL_INFOSYS}"
+  yaimgridenv_set LBDB "${LBDB}"
 
   #
   # default L&B mode (proxy/server/both) according to the node list,

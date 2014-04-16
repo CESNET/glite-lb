@@ -1,6 +1,7 @@
 #!/bin/sh
 
 [ -f /etc/profile.d/grid-env.sh ] && . /etc/profile.d/grid-env.sh
+[ -f /etc/glite.conf ] && . /etc/glite.conf
 [ -f @defaultdir@/glite-lb ] && . @defaultdir@/glite-lb
 
 GLITE_LOCATION=${GLITE_LOCATION:-'@glite_prefix@'}
@@ -35,10 +36,12 @@ qecho() {
 
 check_mysql_connection() {
 	# check the mysql connection
-	MYSQL_ARGS="-u $MYSQL_USER"
-	if ! echo | mysql $MYSQL_ARGS >/tmp/glite-setup.$$ 2>&1; then
-		if test -n "$MYSQL_PASSWORD" && echo | mysql $MYSQL_ARGS -p$MYSQL_PASSWORD 2>/tmp/glite-setup.$$ 2>&1; then
-			MYSQL_ARGS="$MYSQL_ARGS -p$MYSQL_PASSWORD"
+	if echo | mysql $MYSQL_ROOT_ARGS >/tmp/glite-setup.$$ 2>&1; then
+		MYSQL_ROOT_PASSWORD=''
+	else
+		if test -n "$MYSQL_PASSWORD" && echo | mysql $MYSQL_ROOT_ARGS --password="$MYSQL_PASSWORD" 2>/tmp/glite-setup.$$ 2>&1; then
+			# DB connection OK
+			MYSQL_ROOT_PASSWORD="$MYSQL_PASSWORD"
 		else
 			return 1
 		fi
@@ -50,7 +53,7 @@ check_mysql_connection() {
 check_mysql_table() {
 	local db=$1
 	local table=$2
-	mysqlshow $MYSQL_ARGS $db 2>/dev/null | tail -n +5 | grep "\<$table\>" > /dev/null 2>&1
+	mysqlshow $MYSQL_ROOT_ARGS --password="$MYSQL_ROOT_PASSWORD" $db 2>/dev/null | tail -n +5 | grep "\<$table\>" > /dev/null 2>&1
 }
 
 
@@ -270,11 +273,77 @@ if test "$setup" != "1" -a "$setup_check" != "1"; then
 	setup_all
 fi
 
+
+# check database connection string
+if test -n "$GLITE_LB_SERVER_OPTIONS"; then
+	parsed_LBDB=`echo "$GLITE_LB_SERVER_OPTIONS" | sed -e 's/.*\(--mysql\|-m\)\s\+\(\S\+\).*/\2/'`
+	if test "$GLITE_LB_SERVER_OPTIONS" != "$parsed_LBDB"; then
+		if test -n "$LBDB"; then
+			echo "glite-lb-setup: WARNING: both LBDB variable and --mysql server option specified, using --mysql option"
+		fi
+		export LBDB="$parsed_LBDB"
+	fi
+fi
+if test -z "$LBDB"; then
+	LBDB="/@:"
+fi
+MYSQL_LB_USER="`echo \"$LBDB\" | sed -e 's,^\\([^/]*\\)/\\([^@]*\\)@\\([^:]*\\):\\(.*\\),\1,'`"
+MYSQL_LB_PASSWORD="`echo \"$LBDB\" | sed -e 's,^\\([^/]*\\)/\\([^@]*\\)@\\([^:]*\\):\\(.*\\),\2,'`"
+MYSQL_LB_HOST="`echo \"$LBDB\" | sed -e 's,^\\([^/]*\\)/\\([^@]*\\)@\\([^:]*\\):\\(.*\\),\3,'`"
+MYSQL_LB_DB="`echo \"$LBDB\" | sed -e 's,^\\([^/]*\\)/\\([^@]*\\)@\\([^:]*\\):\\(.*\\),\4,'`"
+if test "$MYSQL_LB_USER" = "$LBDB" -o "$MYSQL_LB_PASSWORD" = "$LBDB" -o "$MYSQL_LB_HOST" = "$LBDB" -o "$MYSQL_LB_DB" = "$LBDB"; then
+	echo "glite-lb-setup: ERROR: error parsing DB connection string"
+	echo "glite-lb-setup: ERROR: format required: USER/PWD@HOST:DBNAME"
+	exit 1
+fi
+@debian@# L&B database password can't contain space, apostrophe or quote because of startup scripts
+@debian@if echo "$LBDB" | egrep "( |'|\")" >/dev/null; then
+@debian@	echo "glite-lb-setup: ERROR: database connection string can't contain space, apostrophe or quote characters"
+@debian@	exit 1
+@debian@fi
+@redhat@# L&B database password can't contain apostrophe or quote because of startup scripts
+@redhat@if echo "$LBDB" | egrep "('|\")" >/dev/null; then
+@redhat@	echo "glite-lb-setup: ERROR: database connection string can't contain apostrophe or quote characters"
+@redhat@	exit 1
+@redhat@fi
+# check other variables
+# can't contain spaces because of grouping in MYSQL_LB_ARGS and MYSQL_ROOT_ARGS
+for name in MYSQL_USER MYSQL_LB_USER MYSQL_LB_HOST MYSQL_LB_DB; do
+	eval value="\$$name"
+	if echo "$value" | egrep " " >/dev/null; then
+		echo "glite-lb-setup: ERROR: $name can't contain spaces"
+		exit 1
+	fi
+done
+
+if test -z "$MYSQL_LB_USER"; then
+	MYSQL_LB_USER="lbserver"
+fi
+if test -z "$MYSQL_LB_DB"; then
+	MYSQL_LB_DB="lbserver20"
+fi
+
+MYSQL_ROOT_ARGS="-u $MYSQL_USER"
+MYSQL_LB_ARGS="-u $MYSQL_LB_USER"
+if test -n "$MYSQL_LB_PASSWORD"; then
+	# escape for using in SQL commands
+	MYSQL_LB_SQL_PASSWORD=`echo "$MYSQL_LB_PASSWORD" | sed \
+		-e "s/\\\\\\\\/\\\\\\\\\\\\\\\\/g" \
+		-e "s/'/\\\\\\\\'/g" \
+	`
+fi
+if test -n "$MYSQL_LB_HOST"; then
+	MYSQL_ROOT_ARGS="$MYSQL_ROOT_ARGS -h $MYSQL_LB_HOST"
+	MYSQL_LB_ARGS="$MYSQL_LB_ARGS -h $MYSQL_LB_HOST"
+fi
+
+
 if test "$setup_check" = "1"; then
 	if check_mysql_connection && \
-	   mysqlshow $MYSQL_ARGS 2>/dev/null | grep "\<lbserver20\>" > /dev/null 2>&1 && \
-	   check_mysql_table lbserver20 job_connections; then
-		qecho "database lbserver20 already exists."
+	   mysqlshow $MYSQL_ROOT_ARGS --password="$MYSQL_ROOT_PASSWORD" 2>/dev/null | grep "\<$MYSQL_LB_DB\>" > /dev/null 2>&1 && \
+	   check_mysql_table "$MYSQL_LB_DB" job_connections; then
+		rm -f /tmp/glite-setup.$$
+		qecho "database '$MYSQL_LB_DB' already exists."
 		exit 0
 	fi
 	rm -f /tmp/glite-setup.$$
@@ -328,12 +397,18 @@ if test "$setup_db" = 1; then
 		echo "glite-lb-setup: ERROR: starting MySQL failed"
 		exit 1
 	fi
+	# we always setup local database,
+	# but show a message, if there is possibility the database is on
+	# a remote server
+	if test -n "$MYSQL_LB_HOST" -a "$MYSQL_LB_HOST" != "localhost"; then
+		echo "glite-lb-setup: NOTE: MySQL/MariaDB server at possibly remote location '$MYSQL_LB_HOST'"
+		echo "glite-lb-setup: NOTE: you may need to disable local database services again, if desired"
+	fi
 
 	if ! check_mysql_connection; then
 		cat /tmp/glite-setup.$$
 		rm -f /tmp/glite-setup.$$
 		echo "glite-lb-setup: ERROR: Can't access MySQL database. You may need to set MYSQL_USER and MYSQL_PASSWORD variables."
-		rm -f /tmp/glite-setup.$$
 		error="$error db"
 		exit 1
 	fi
@@ -346,22 +421,26 @@ if test "$setup_db" = 1; then
 	fi
 
 	# check if database exist and setup if necessary
-	if ! mysqlshow $MYSQL_ARGS 2>/dev/null | grep "\<lbserver20\>" > /dev/null 2>&1 || \
-	   ! check_mysql_table lbserver20 jobs; then
-		mysql $MYSQL_ARGS -e "CREATE DATABASE lbserver20"
-		mysql $MYSQL_ARGS -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver IDENTIFIED BY '' WITH GRANT OPTION;"
-		mysql $MYSQL_ARGS -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver@'$HOSTNAME' IDENTIFIED BY '' WITH GRANT OPTION;"
-		mysql $MYSQL_ARGS -e "GRANT ALL PRIVILEGES on lbserver20.* to lbserver@localhost IDENTIFIED BY '' WITH GRANT OPTION;"
+	if ! mysqlshow $MYSQL_ROOT_ARGS --password="$MYSQL_ROOT_PASSWORD" 2>/dev/null | grep "\<$MYSQL_LB_DB\>" > /dev/null 2>&1 || \
+	   ! check_mysql_table "$MYSQL_LB_DB" jobs; then
+		mysql $MYSQL_ROOT_ARGS --password="$MYSQL_ROOT_PASSWORD" -e "CREATE DATABASE $MYSQL_LB_DB"
+		mysql $MYSQL_ROOT_ARGS --password="$MYSQL_ROOT_PASSWORD" -e "GRANT ALL PRIVILEGES on $MYSQL_LB_DB.* to '$MYSQL_LB_USER' IDENTIFIED BY '$MYSQL_LB_SQL_PASSWORD' WITH GRANT OPTION;"
+		if test -z "$MYSQL_LB_HOST" -o "$MYSQL_LB_HOST" = "localhost"; then
+			mysql $MYSQL_ROOT_ARGS --password="$MYSQL_ROOT_PASSWORD" -e "GRANT ALL PRIVILEGES on $MYSQL_LB_DB.* to '$MYSQL_LB_USER'@'$HOSTNAME' IDENTIFIED BY '$MYSQL_LB_SQL_PASSWORD' WITH GRANT OPTION;"
+			mysql $MYSQL_ROOT_ARGS --password="$MYSQL_ROOT_PASSWORD" -e "GRANT ALL PRIVILEGES on $MYSQL_LB_DB.* to '$MYSQL_LB_USER'@localhost IDENTIFIED BY '$MYSQL_LB_SQL_PASSWORD' WITH GRANT OPTION;"
+		else
+			mysql $MYSQL_ROOT_ARGS --password="$MYSQL_ROOT_PASSWORD" -e "GRANT ALL PRIVILEGES on $MYSQL_LB_DB.* to '$MYSQL_LB_USER'@'$MYSQL_LB_HOST' IDENTIFIED BY '$MYSQL_LB_SQL_PASSWORD' WITH GRANT OPTION;"
+		fi
 
-		mysql -u lbserver lbserver20 < $GLITE_LOCATION/share/glite/glite-lb-dbsetup.sql
-		mysql -u lbserver -e "ALTER TABLE short_fields MAX_ROWS=1000000000;" lbserver20
-		mysql -u lbserver -e "ALTER TABLE long_fields MAX_ROWS=55000000;" lbserver20
-		mysql -u lbserver -e "ALTER TABLE states MAX_ROWS=9500000;" lbserver20
-		mysql -u lbserver -e "ALTER TABLE events MAX_ROWS=175000000;" lbserver20
+		mysql $MYSQL_LB_ARGS --password="$MYSQL_LB_PASSWORD" $MYSQL_LB_DB < $GLITE_LOCATION/share/glite/glite-lb-dbsetup.sql
+		mysql $MYSQL_LB_ARGS --password="$MYSQL_LB_PASSWORD" -e "ALTER TABLE short_fields MAX_ROWS=1000000000;" $MYSQL_LB_DB
+		mysql $MYSQL_LB_ARGS --password="$MYSQL_LB_PASSWORD" -e "ALTER TABLE long_fields MAX_ROWS=55000000;" $MYSQL_LB_DB
+		mysql $MYSQL_LB_ARGS --password="$MYSQL_LB_PASSWORD" -e "ALTER TABLE states MAX_ROWS=9500000;" $MYSQL_LB_DB
+		mysql $MYSQL_LB_ARGS --password="$MYSQL_LB_PASSWORD" -e "ALTER TABLE events MAX_ROWS=175000000;" $MYSQL_LB_DB
 
-		qecho "Database lbserver20 created."
+		qecho "Database '$MYSQL_LB_DB' created."
 	else
-		qecho "Database lbserver20 exists."
+		qecho "Database '$MYSQL_LB_DB' exists."
 	fi
 
 	# adjust indexes
@@ -394,8 +473,8 @@ EOF
 
 	# migrate L&B 3.x to L&B 4.0
 	if test -f $GLITE_LOCATION/sbin/glite-lb-migrate_db2version40; then
-		if ! check_mysql_table lbserver20 job_connections; then
-			sh $GLITE_LOCATION/sbin/glite-lb-migrate_db2version40
+		if ! check_mysql_table $MYSQL_LB_DB job_connections; then
+			MYSQL_ARGS="$MYSQL_LB_ARGS" MYSQL_PASSWORD="$MYSQL_LB_PASSWORD" sh $GLITE_LOCATION/sbin/glite-lb-migrate_db2version40 -d "$MYSQL_LB_DB"
 			if test $? -eq 0; then
 				qecho "Database migrated to L&B 4.x"
 			else

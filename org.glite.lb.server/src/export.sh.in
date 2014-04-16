@@ -29,6 +29,7 @@ KRB5_KTNAME="FILE:$GLITE_HOME/krb5kt_lb"
 KRB5CCNAME="FILE:$GLITE_HOME/krb5cc_lb"
 
 [ -f /etc/profile.d/grid-env.sh ] && . /etc/profile.d/grid-env.sh
+[ -f /etc/glite.conf ] && . /etc/glite.conf
 [ -f @defaultdir@/glite-lb ] && . @defaultdir@/glite-lb
 
 #autodetect the prefix
