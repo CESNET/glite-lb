@@ -441,6 +441,10 @@ if test "$setup_db" = 1; then
 		qecho "Database '$MYSQL_LB_DB' created."
 	else
 		qecho "Database '$MYSQL_LB_DB' exists."
+		if ! mysql $MYSQL_LB_ARGS --password="$MYSQL_LB_PASSWORD" -e 'DESC events;' $MYSQL_LB_DB >/dev/null; then
+			echo "glite-lb-setup: ERROR: L&B database not accessible"
+			exit 1
+		fi
 	fi
 
 	# adjust indexes
