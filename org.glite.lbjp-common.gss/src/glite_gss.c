@@ -382,9 +382,13 @@ send_token(int sock, void *token, size_t token_length, struct timeval *to)
 	 case 0: ret = EDG_WLL_GSS_ERROR_TIMEOUT;
 		 goto end;
 		 break;
-	 case -1: ret = EDG_WLL_GSS_ERROR_ERRNO;
-		  goto end;
-		  break;
+	 case -1:
+		if (errno == EINTR) continue;
+		else {
+			ret = EDG_WLL_GSS_ERROR_ERRNO;
+			goto end;
+		}
+		break;
       }
 
       count = write(sock, ((char *)token) + num_written,
@@ -434,7 +438,7 @@ send_gss_token(int sock, gss_OID mech, void *token, size_t token_length, struct 
 static int
 recv_token(int sock, void *token, size_t token_length, struct timeval *to)
 {
-   ssize_t count;
+   ssize_t count = -1;
    fd_set fds;
    struct timeval timeout,before,after;
    int ret;
@@ -453,8 +457,11 @@ recv_token(int sock, void *token, size_t token_length, struct timeval *to)
 	    goto end;
 	    break;
 	 case -1:
-	    ret = EDG_WLL_GSS_ERROR_ERRNO;
-	    goto end;
+	    if (errno == EINTR) continue;
+	    else {
+		ret = EDG_WLL_GSS_ERROR_ERRNO;
+		goto end;
+	    }
 	    break;
       }
       
