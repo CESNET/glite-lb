@@ -137,6 +137,7 @@ default_gss=${GSS_NOTHRLTLIB}
 endif
 
 PKG_CONFIG_FILES=gss.pc
+TESTS=test_gss test_signals
 
 ifeq ($(thrflavour),)
 ${GSS_STATICLIB}: ${GSS_THROBJS}
@@ -162,9 +163,9 @@ ${GSS_THRLTLIB}: ${GSS_THROBJS}
 endif
 
 
-all compile: $(lib_LTLIBRARIES) ${lib_LIBRARIES} examples ${PKG_CONFIG_FILES}
+all compile: $(lib_LTLIBRARIES) ${lib_LIBRARIES} examples ${PKG_CONFIG_FILES} ${TESTS}
 
-check: compile check.gss
+check: compile
 
 check.gss: test_gss
 	# ./test_gss out.xml
@@ -172,6 +173,9 @@ check.gss: test_gss
 
 test_gss: test_gss.o
 	${LINKXX} -o $@ test_gss.o ${default_gss} ${CPPUNIT_LIBS} ${LIBCARES_LIBS}
+
+test_signals: testcore.o test_signals.o
+	${LINK} -o $@ $+ ${default_gss}
 
 test_coverage:
 	-mkdir coverage
@@ -202,7 +206,7 @@ install:
 	${INSTALL} -m 644 gss.pc ${DESTDIR}${PREFIX}${prefix}/${libdir}/pkgconfig/glite-security-gss.pc
 
 clean:
-	rm -rf *.o *.lo *.a *.la .libs test_gss gss_server gss_client *.pc
+	rm -rf *.o *.lo *.a *.la .libs ${TESTS}  test_coverage gss_server gss_client *.pc
 	rm -rvf dist ${package}-*.tar.gz
 
 distclean:
