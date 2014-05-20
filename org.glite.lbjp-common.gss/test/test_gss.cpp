@@ -19,6 +19,7 @@ limitations under the License.
 #include <iostream>
 #include <fstream>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <assert.h>
 #include <sys/socket.h>
@@ -55,6 +56,7 @@ public:
 
 private:
 	test_ctx_t ctx;
+	pid_t pid;
 	void replier();
 };
 
@@ -86,8 +88,6 @@ void GSSTest::replier() {
 
 
 void GSSTest::setUp(void) {
-	pid_t pid;
-
 	CPPUNIT_ASSERT_MESSAGE("GSSTest setup", test_setup(&ctx, "main") == 0);
 
 	if ( !(pid = fork()) ) replier();
@@ -100,6 +100,10 @@ void GSSTest::setUp(void) {
 
 
 void GSSTest::tearDown(void) {
+	if (pid) {
+		if (kill(pid, SIGTERM) != -1)
+			waitpid(pid, NULL, 0);
+	}
 	test_cleanup(&ctx);
 }
 
@@ -190,7 +194,6 @@ int main (int ac, char * const av[])
 
 	runner.addTest(suite);
 	runner.run(controller);
-
 
 	CppUnit::XmlOutputter xout( &result, xml );
 	CppUnit::CompilerOutputter tout( &result, std::cout);
