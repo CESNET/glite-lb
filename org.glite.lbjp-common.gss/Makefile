@@ -44,7 +44,7 @@ SOURCES=\
 	project/.post* project/*.pc.in \
 	project/doc/*.cls project/doc/*.pdf project/doc/*.tex project/doc/Makefile \
 	src/*.c \
-	test/*.cpp \
+	test/*.c test/*.cpp test/*.h \
 	Makefile
 
 DEBUG:=-g -O0 -W -Wall -Wno-unused-parameter
