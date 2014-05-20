@@ -616,6 +616,7 @@ recv_gss_token(int sock, gss_OID mech, void **token, size_t *token_length, struc
     return 0;
 }
 
+#ifndef NO_GLOBUS_GSSAPI
 static int
 create_proxy(const char *cert_file, const char *key_file, char **proxy_file)
 {
@@ -688,6 +689,7 @@ end:
 
    return ret;
 }
+#endif
 
 static int
 destroy_proxy(char *proxy_file)
@@ -1577,7 +1579,9 @@ int
 edg_wll_gss_initialize(void)
 {
    int ret = 0;
+#ifndef NO_GLOBUS_GSSAPI
    int index;
+#endif
 
 #ifdef GLITE_LBU_THREADED
    pthread_mutex_lock(&init_lock);
