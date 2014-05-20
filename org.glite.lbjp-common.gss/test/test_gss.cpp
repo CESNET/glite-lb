@@ -33,6 +33,7 @@ limitations under the License.
 #include <cppunit/TestResult.h>
 #include <cppunit/TestResultCollector.h>
 
+#include "testcore.h"
 #include "glite_gss.h"
 
 class GSSTest: public  CppUnit::TestFixture
@@ -53,10 +54,7 @@ public:
 	void tearDown();
 
 private:
-	edg_wll_GssCred	my_cred;
-	int		sock, port;
-	struct timeval	timeout;
-	
+	test_ctx_t ctx;
 	void replier();
 };
 
@@ -68,18 +66,20 @@ void GSSTest::replier() {
 	socklen_t		alen = sizeof(a);
 	int                     s, len;
 	char 			buf[8*BUFSIZ];
-	
-	std::cerr << "replier " << getpid() << std::endl;
-	
-	if ( (s = accept(sock, (struct sockaddr *) &a, &alen)) < 0 ) exit(1);
-	
-	if ( edg_wll_gss_accept(my_cred, s, &timeout, &conn, &stat) ) exit(1);
 
-	while ( (len = edg_wll_gss_read(&conn, buf, sizeof(buf), &timeout, &stat)) >= 0 ) {
-		if ( edg_wll_gss_write(&conn, buf, len, &timeout, &stat) ) exit(1);
+	ctx.test_name = "replier";
+	tprintf(&ctx, "pid %d\n", getpid());
+	
+	if ( (s = accept(ctx.sock, (struct sockaddr *) &a, &alen)) < 0 ) exit(1);
+	
+	if ( edg_wll_gss_accept(ctx.server_cred, s, &ctx.timeout, &conn, &stat) ) exit(1);
+
+	while ( (len = edg_wll_gss_read(&conn, buf, sizeof(buf), &ctx.timeout, &stat)) >= 0 ) {
+		if ( edg_wll_gss_write(&conn, buf, len, &ctx.timeout, &stat) ) exit(1);
 	}	
 
-	edg_wll_gss_close(&conn, &timeout);
+	edg_wll_gss_close(&conn, &ctx.timeout);
+	test_cleanup(&ctx);
 
 	exit(0);
 }
@@ -87,59 +87,20 @@ void GSSTest::replier() {
 
 void GSSTest::setUp(void) {
 	pid_t pid;
-	edg_wll_GssStatus stat;
-	struct sockaddr_storage a;
-	socklen_t 		alen = sizeof(a);
-	char *			cred_file = NULL;
-	char *			key_file = NULL;
-	char * 			to = getenv("GSS_TEST_TIMEOUT");
-	struct addrinfo	*ai;
-	struct addrinfo	hints;
-	char		servname[16];
-	int		ret;
 
-
-	timeout.tv_sec = to ? atoi(to) : 10 ;
-	timeout.tv_usec = 0;
-	my_cred = NULL;
-	
-	key_file = cred_file = getenv("X509_USER_PROXY");
-	CPPUNIT_ASSERT_MESSAGE("credential file", cred_file);
-	
-	if (edg_wll_gss_acquire_cred_gsi(cred_file, key_file, &my_cred, &stat))
-		CPPUNIT_ASSERT_MESSAGE("gss_acquire_cred", 0);
-	
-	memset (&hints, '\0', sizeof (hints));
-	hints.ai_flags = AI_NUMERICSERV | AI_PASSIVE | AI_ADDRCONFIG;
-	hints.ai_socktype = SOCK_STREAM;
-
-	snprintf(servname, sizeof servname, "%d", port);
-	ret = getaddrinfo (NULL, servname, &hints, &ai);
-	CPPUNIT_ASSERT_MESSAGE("getaddrinfo()", ret == 0 && ai != NULL);
-
-	sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
-	CPPUNIT_ASSERT_MESSAGE("socket()", sock >= 0);
-
-	ret = bind(sock, ai->ai_addr, ai->ai_addrlen);
-	CPPUNIT_ASSERT_MESSAGE("bind()", ret == 0);
-
-	ret = listen(sock, 1);
-	CPPUNIT_ASSERT_MESSAGE("listen()", ret == 0);
-
-	getsockname(sock,(struct sockaddr *) &a,&alen);
-	ret = getnameinfo ((struct sockaddr *) &a, alen,
-                NULL, 0, servname, sizeof(servname), NI_NUMERICSERV);
-        CPPUNIT_ASSERT_MESSAGE("getnameinfo()", ret == 0);
-
-	port = atoi(servname);
+	CPPUNIT_ASSERT_MESSAGE("GSSTest setup", test_setup(&ctx, "main") == 0);
 
 	if ( !(pid = fork()) ) replier();
-	else close(sock);
+	else {
+		ctx.test_name = "main";
+		close(ctx.sock);
+		ctx.sock = -1;
+	}
 }
 
 
 void GSSTest::tearDown(void) {
-	edg_wll_gss_release_cred(&my_cred, NULL);
+	test_cleanup(&ctx);
 }
 
 
@@ -152,21 +113,22 @@ void GSSTest::echo()
 	char 			buf[] = "f843fejwfanczn nc4*&686%$$&^(*)*#$@WSH";	
 	char			buf2[100];	
 
-	std::cerr << "echo " << getpid() << std::endl;
+	ctx.test_name = "echo";
+	tprintf(&ctx, "pid %d\n", getpid());
 
-	err = edg_wll_gss_connect(my_cred, "localhost", port, &timeout, &conn, &stat);
+	err = edg_wll_gss_connect(ctx.user_cred, hostname, ctx.port, &ctx.timeout, &conn, &stat);
+	check_gss(&ctx, err, &stat, "GSS connect failed");
 	CPPUNIT_ASSERT_MESSAGE("edg_wll_gss_connect()", !err);
 	
-	err = edg_wll_gss_write(&conn, buf, strlen(buf)+1, &timeout, &stat);
+	err = edg_wll_gss_write(&conn, buf, strlen(buf)+1, &ctx.timeout, &stat);
 	CPPUNIT_ASSERT_MESSAGE("edg_wll_gss_write()", !err);
 	
-	err = edg_wll_gss_read_full(&conn, buf2, strlen(buf)+1, &timeout, &total, &stat);
+	err = edg_wll_gss_read_full(&conn, buf2, strlen(buf)+1, &ctx.timeout, &total, &stat);
 	CPPUNIT_ASSERT_MESSAGE("edg_wll_gss_read_full()", !err);
 
 	CPPUNIT_ASSERT(strlen(buf)+1 == total && !strcmp(buf,buf2) );
 
-	edg_wll_gss_close(&conn, &timeout);
-		
+	edg_wll_gss_close(&conn, &ctx.timeout);
 }
 
 void GSSTest::bigecho()
@@ -178,21 +140,21 @@ void GSSTest::bigecho()
 	char 			buf[7*BUFSIZ];
 	char			buf2[7*BUFSIZ];	
 
-	std::cerr << "bigecho " << getpid() << std::endl;
+	ctx.test_name = "bigecho";
+	tprintf(&ctx, "pid %d\n", getpid());
 
-	err = edg_wll_gss_connect(my_cred, "localhost", port, &timeout, &conn, &stat);
+	err = edg_wll_gss_connect(ctx.user_cred, hostname, ctx.port, &ctx.timeout, &conn, &stat);
 	CPPUNIT_ASSERT_MESSAGE("edg_wll_gss_connect()", !err);
 	
-	err = edg_wll_gss_write(&conn, buf, sizeof buf, &timeout, &stat);
+	err = edg_wll_gss_write(&conn, buf, sizeof buf, &ctx.timeout, &stat);
 	CPPUNIT_ASSERT_MESSAGE("edg_wll_gss_write()", !err);
 	
-	err = edg_wll_gss_read_full(&conn, buf2, sizeof buf2, &timeout, &total, &stat);
+	err = edg_wll_gss_read_full(&conn, buf2, sizeof buf2, &ctx.timeout, &total, &stat);
 	CPPUNIT_ASSERT_MESSAGE("edg_wll_gss_read_full()", !err);
 
 	CPPUNIT_ASSERT(sizeof buf == total && !memcmp(buf,buf2,sizeof buf) );
 
-	edg_wll_gss_close(&conn, &timeout);
-		
+	edg_wll_gss_close(&conn, &ctx.timeout);
 }
 
 
@@ -203,8 +165,8 @@ void GSSTest::errorTest()
 	int			err;
 	char *			msg = NULL;
 
-
-	err = edg_wll_gss_connect(my_cred, "xxx.example.net", port, &timeout, &conn, &stat);
+	ctx.test_name = "errtest";
+	err = edg_wll_gss_connect(ctx.user_cred, "xxx.example.net", ctx.port, &ctx.timeout, &conn, &stat);
 	if (err) edg_wll_gss_get_error(&stat, "gss_connect()", &msg);
 	CPPUNIT_ASSERT_MESSAGE("edg_wll_gss_get_error()", msg);
 }
@@ -212,10 +174,12 @@ void GSSTest::errorTest()
 
 CPPUNIT_TEST_SUITE_REGISTRATION( GSSTest );
 
-int main (int ac,const char *av[])
+int main (int ac, char * const av[])
 {
-	assert(ac == 2);
-	std::ofstream	xml(av[1]);
+	int ret;
+
+	if ((ret = parse_opts(ac, av)) != 0) return ret;
+	std::ofstream	xml("out.xml");
 
 	CppUnit::Test *suite = CppUnit::TestFactoryRegistry::getRegistry().makeTest();
 	CppUnit::TestRunner runner;
