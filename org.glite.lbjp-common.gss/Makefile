@@ -171,11 +171,11 @@ check.gss: test_gss
 	# ./test_gss out.xml
 	echo test_gss not run automatically util we have got some credentials in X509_USER_PROXY
 
-test_gss: testcore.o test_gss.o
-	${LINKXX} -o $@ $+ ${default_gss} ${CPPUNIT_LIBS} ${LIBCARES_LIBS}
+test_gss: testcore.o test_gss.o ${default_gss}
+	${LINKXX} -o $@ $+ ${CPPUNIT_LIBS} ${LIBCARES_LIBS}
 
-test_signals: testcore.o test_signals.o
-	${LINK} -o $@ $+ ${default_gss}
+test_signals: testcore.o test_signals.o ${default_gss}
+	${LINK} -o $@ $+
 
 test_coverage:
 	-mkdir coverage
