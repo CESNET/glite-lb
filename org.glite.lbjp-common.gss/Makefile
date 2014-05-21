@@ -59,6 +59,7 @@ CFLAGS:= ${DEBUG} \
 LDFLAGS:=${LDFLAGS} ${COVERAGE_FLAGS}
 
 COMPILE:=libtool --mode=compile ${CC} ${CFLAGS}
+COMPILEXX:=libtool --mode=compile ${CXX} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} ${LDFLAGS}
 SOLINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
 LINKXX:=libtool --mode=link  ${CXX} ${LDFLAGS}
@@ -171,10 +172,10 @@ check.gss: test_gss
 	# ./test_gss out.xml
 	echo test_gss not run automatically util we have got some credentials in X509_USER_PROXY
 
-test_gss: testcore.o test_gss.o ${default_gss}
+test_gss: testcore.thr.o test_gss.thr.o ${default_gss}
 	${LINKXX} -o $@ $+ ${CPPUNIT_LIBS} ${LIBCARES_LIBS}
 
-test_signals: testcore.o test_signals.o ${default_gss}
+test_signals: testcore.thr.o test_signals.thr.o ${default_gss}
 	${LINK} -o $@ $+
 
 test_coverage:
@@ -182,10 +183,10 @@ test_coverage:
 	cd coverage && $(MAKE) -f ../Makefile top_srcdir=../../ COVERAGE_FLAGS="-fprofile-arcs -ftest-coverage" check
 	cd coverage && for i in ${OBJS}; do gcov -o .libs/ $$i ; done
 
-gss_server: gss_server.o example_common.o
+gss_server: gss_server.thr.o example_common.thr.o
 	${LINK} -o $@ ${default_gss} $^ 
 
-gss_client: gss_client.o example_common.o
+gss_client: gss_client.thr.o example_common.thr.o
 	${LINK} -o $@ ${default_gss} $^
 
 examples:
@@ -218,10 +219,10 @@ distclean:
 %.thr.o: %.c
 	${COMPILE} -D_REENTRANT -DGLITE_LBU_THREADED ${GSSAPI_THR_INC} ${LIBCARES_CFLAGS} -o $@ -c $<
 
+%.thr.o: %.cpp
+	${COMPILEXX} -D_REENTRANT -DGLITE_LBU_THREADED ${GSSAPI_THR_INC} ${LIBCARES_CFLAGS} -o $@ -c $<
+
 %.pc: %.pc.in
 	sed -e "s,@PREFIX@,${PREFIX}${prefix}," -e "s/@VERSION@/${version}/" -e "s/@LIBDIR@/${libdir}/" -e "s/@GSSAPI_PROVIDER@/${GSSAPI_PROVIDER_PKG}/" $< > $@
-
-test_gss.o: %.o: %.cpp
-	${CXX} -c ${CFLAGS} ${GLOBUS_GSSAPI_GSI_CFLAGS} ${CPPUNIT_CFLAGS} -Wno-error $<
 
 .PHONY: default all compile check check.gss test_coverage examples doc stage install clean distclean dist distcheck
