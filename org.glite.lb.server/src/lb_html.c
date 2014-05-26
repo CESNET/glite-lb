@@ -127,9 +127,8 @@ int relationship_cmp (const void *a, const void *b) {
 }
 
 int edg_wll_ConfigurationToHTML(edg_wll_Context ctx, int admin, char **message, int text){
-        char *a = NULL, *b, *header, *out, *out_tmp;
+        char *a = NULL, *header, *out, *out_tmp;
         int i = 0;
-        b = strdup("");
 
         header = get_html_header(ctx, text);
         if (!text) asprintf(&out, "<HTML>\n<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n<TITLE>Server Configuration</TITLE>\n<HEAD>%s\n</HEAD>\n<BODY>\n"

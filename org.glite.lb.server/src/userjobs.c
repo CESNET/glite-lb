@@ -116,6 +116,7 @@ int edg_wll_UserJobsServer(
 		if (ret < 0) goto err;
 		if (strncmp(res, srv_name, name_len)){
 			njobs--;
+			free(res);
 			continue;
 		}
 		if ((ret = edg_wlc_JobIdParse(res,out+idx))) {
