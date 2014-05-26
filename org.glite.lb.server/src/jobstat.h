@@ -33,7 +33,7 @@ limitations under the License.
 #define HISTORY_SEPARATOR ",\n"
 #define HISTORY_SEPARATOR_SIZE 2
 
-
+int edg_wll_AreThereZombies(edg_wll_Context ctx, const edg_wll_QueryRec **conditions);
 int edg_wll_JobStatusServer(edg_wll_Context, glite_jobid_const_t, int, edg_wll_JobStat *);
 
 
