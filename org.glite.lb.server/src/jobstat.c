@@ -288,6 +288,26 @@ int edg_wll_AreThereZombies(edg_wll_Context ctx, const edg_wll_QueryRec **condit
 	return(j);
 }
 
+int edg_wll_IsJobZombie(edg_wll_Context ctx, glite_jobid_const_t job) {
+	int ret;
+        edg_wll_QueryRec        zqr[2];
+        edg_wll_QueryRec        **zqra;
+
+        zqr[0].attr = EDG_WLL_QUERY_ATTR_JOBID;
+        zqr[0].op = EDG_WLL_QUERY_OP_EQUAL;
+        zqr[0].value.j = (glite_jobid_t)job;
+        zqr[1].attr = EDG_WLL_QUERY_ATTR_UNDEF;
+
+        zqra = (edg_wll_QueryRec **) malloc (2 * sizeof(edg_wll_QueryRec **));
+        zqra[0] = zqr;
+        zqra[1] = NULL;
+
+	ret = edg_wll_AreThereZombies(ctx, zqra);
+	free(zqra);
+
+	return(ret);
+}
+
 int edg_wll_JobStatusServer(
 	edg_wll_Context	ctx,
 	glite_jobid_const_t		job,
@@ -326,8 +346,10 @@ int edg_wll_JobStatusServer(
 		whole_cycle = 0;
 
 		if (edg_wll_Transaction(ctx)) goto rollback;
-		if (edg_wll_LockJobRowInShareMode(ctx, md5_jobid)) goto rollback;
-
+		if (edg_wll_LockJobRowInShareMode(ctx, md5_jobid)) {
+			if (edg_wll_IsJobZombie(ctx, job)) edg_wll_SetError(ctx, EIDRM, "matching job already purged");
+			goto rollback; 
+		}
 
 		if (!edg_wll_LoadIntState(ctx, job, DONT_LOCK, -1 /*all events*/, &ijsp)) {
 			memcpy(stat, intJobStat_to_JobStat(ijsp), sizeof(*stat));
