@@ -153,3 +153,15 @@
 - New version of machine readable Debian copyright file
 - Improve packaging based on Fedora review
 
+2.0.6-1
+- Parallel build of L&B java client disabled
+- Update java dependencies due to EPEL 7
+- Switching to java-headless for Fedora >= 20 and EPEL >= 7
+- Several jpackage-utils (Build) Required only for EPEL <= 6
+- More pedantic syntax for fragile javadoc from GCJ (fixes build on SL6/PPC64)
+- Support for EPEL 7 (based on Fedora 19)
+- Support build of java client on Fedora (use axis1.4 prefix from EMI 3rd party repository only for EPEL)
+- JNI library files have different locations on Fedora/EPEL and Debian:
+  - support different locations without patching the upstream code
+  - update packaging according to the guidelines (http://fedoraproject.org/wiki/Packaging:Java#Packaging_JAR_files_that_use_JNI, http://www.debian.org/doc/packaging-manuals/java-policy/x104.html), new Debian subpackage libglite-lb-client-jni
+  - ldconfig command not needed anymore
