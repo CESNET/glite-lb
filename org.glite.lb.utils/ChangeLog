@@ -173,3 +173,9 @@
 - Arch-specific build dependencies in all rpm packages
 - Improve packaging based on Fedora review
 
+2.3.10-1
+- Changing man pages section of purge, dump, and load from 8 to 1
+- Manpages specified using glob * in specfiles, rpm can compress it if needed
+- ChangeLogs moved from project subdirectory to module root directory
+- Simplified Debian packaging (dh 7)
+
