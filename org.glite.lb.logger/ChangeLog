@@ -348,3 +348,12 @@ gLite L&B setup script:
 - Fix propagation of log4c and Kerberos environment variables, spaces in paths not supported
 - Workaround the problem with AFS in Heimdal Kerberos, use it only for Heimdal
 
+2.4.22-1
+- Deployment updates due to EPEL 7 and Debian 9/sid
+- Support for EPEL 7 (based on Fedora 19)
+- Moving daemons from bin to sbin
+- Updated package descriptions tuning
+- Manpages specified using glob * in specfiles, rpm can compress it if needed
+- ChangeLogs moved from project subdirectory to module root directory
+- Simplified Debian packaging (dh 7)
+
