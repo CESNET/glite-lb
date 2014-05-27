@@ -214,3 +214,10 @@
 - Arch-specific build dependencies in all rpm packages
 - Improve packaging based on Fedora review
 
+2.0.8-1
+- Support for EPEL 7 (based on Fedora 19)
+- Adding copyright texts as recommended in Fedora Review #1046513
+- Packaging cleanups: moving xsd files from /usr/interface to /usr/share/glite-lb/xsd, tuning descriptions, removing directories already in required packages
+- ChangeLogs moved from project subdirectory to module root directory
+- Simplified Debian packaging (dh 7)
+
