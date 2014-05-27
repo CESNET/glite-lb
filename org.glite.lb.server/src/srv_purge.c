@@ -313,7 +313,8 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 
 				memset(&stat,0,sizeof stat);
 				if (edg_wll_JobStatusServer(ctx,job,EDG_WLL_STAT_CHILDSTAT | EDG_WLL_STAT_CHILDREN,&stat)) {
-					if (edg_wll_Error(ctx, NULL, NULL) == ENOENT) {
+					if ((edg_wll_Error(ctx, NULL, NULL) == ENOENT) ||
+					    (edg_wll_Error(ctx, NULL, NULL) == EIDRM)) {
 						/* job purged meanwhile, ignore */
 						edg_wll_ResetError(ctx);
 						glite_jobid_free(job);
@@ -382,7 +383,8 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 
 				memset(&stat,0,sizeof stat);
 				if (edg_wll_JobStatusServer(ctx,job,EDG_WLL_STAT_CHILDSTAT | EDG_WLL_STAT_CHILDREN,&stat)) {
-					if (edg_wll_Error(ctx, NULL, NULL) == ENOENT) {
+					if ((edg_wll_Error(ctx, NULL, NULL) == ENOENT) ||
+					    (edg_wll_Error(ctx, NULL, NULL) == EIDRM)) {
 						/* job purged meanwhile, ignore */
 						edg_wll_ResetError(ctx);
 						glite_jobid_free(job);
@@ -397,7 +399,8 @@ int edg_wll_PurgeServer(edg_wll_Context ctx,const edg_wll_PurgeRequest *request,
 				if (purge_check(ctx, &stat, start, timeout)) {
 					if (purge_one_with_subjobs(ctx, &prg, &stat, request, result)) {
 						edg_wll_FreeStatus(&stat);
-						if (edg_wll_Error(ctx, NULL, NULL) == ENOENT) {
+						if ((edg_wll_Error(ctx, NULL, NULL) == ENOENT) ||
+						    (edg_wll_Error(ctx, NULL, NULL) == EIDRM)) {
 							/* job purged meanwhile, ignore */
 							edg_wll_ResetError(ctx);
 							glite_jobid_free(job);
