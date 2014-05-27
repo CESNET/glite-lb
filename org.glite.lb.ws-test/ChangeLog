@@ -170,3 +170,8 @@
 - Arch-specific build dependencies in all rpm packages
 - Improve packaging based on Fedora review
 
+1.4.10-1
+- Updated packaging (description, removing ws-interface runtime dependency)
+- ChangeLogs moved from project subdirectory to module root directory
+- Simplified Debian packaging (dh 7)
+
