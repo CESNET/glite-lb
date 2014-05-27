@@ -120,3 +120,7 @@
 - Updates in Fedora Packaging Guidelines 
 - New version of machine readable Debian copyright file
 
+1.3.9-1
+- ChangeLogs moved from project subdirectory to module root directory
+- Simplified Debian packaging (dh 7)
+
