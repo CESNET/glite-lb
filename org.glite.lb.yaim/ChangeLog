@@ -192,3 +192,12 @@
 - Unify copyright texts (without other changes or updates)
 - Improve packaging based on Fedora review
 
+4.5.14-1
+- Removing the older options from environment, just keeping compatibility in site-info.def
+- Don't setup LBDB variable if it's empty. Fixes default YAIM deployment.
+- Support different MySQL/MariaDB database in deployment (fixes issue #22)
+- Setting database root password first before setting up L&B (L&B setup script tries w/o password first anyway, but this is the better way)
+- Deployment updates due to EPEL 7 and Debian 9/sid
+- ChangeLogs moved from project subdirectory to module root directory
+- Simplified Debian packaging (dh 7)
+
