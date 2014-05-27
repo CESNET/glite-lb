@@ -272,3 +272,13 @@
 - Unify copyright texts (without other changes or updates)
 - Improve packaging based on Fedora review
 
+1.4.16-1
+- Explanations of
+  - Support different MySQL/MariaDB database in deployment
+  - spaces in password in all platforms except Debian
+- Typo fixes and polishing
+- Disabling 'comment' LaTeX package (not available in RHEL 7)
+- Support for EPEL 7 (based on Fedora 19)
+- ChangeLogs moved from project subdirectory to module root directory
+- Simplified Debian packaging (dh 7)
+
