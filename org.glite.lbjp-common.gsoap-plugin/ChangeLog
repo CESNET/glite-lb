@@ -179,3 +179,9 @@
 - Arch-specific build dependencies in all rpm packages
 - Improve packaging based on Fedora review
 
+3.2.11-1
+- Example sources added to glite-lbjp-common-gsoap-plugin-devel package
+- Hardcoded prefix removed from pkg-config files
+- ChangeLogs moved from project subdirectory to module root directory
+- Simplified Debian packaging (dh 7)
+
