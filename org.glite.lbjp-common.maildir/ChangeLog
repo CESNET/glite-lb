@@ -137,3 +137,8 @@ Clean of legacy build files
 - New version of machine readable Debian copyright file
 - Improve packaging based on Fedora review
 
+2.3.10-1
+- Package description updated
+- ChangeLogs moved from project subdirectory to module root directory
+- Simplified Debian packaging (dh 7)
+
