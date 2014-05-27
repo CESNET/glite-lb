@@ -96,6 +96,10 @@ perl ./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --docdir=%{_pkgdo
 CFLAGS="%{?optflags}" CXXFLAGS="%{?optflags} %{?classad_cxxflags}" LDFLAGS="%{?__global_ldflags}" make %{?_smp_mflags}
 
 
+%check
+CFLAGS="%{?optflags}" CXXFLAGS="%{?optflags} %{?classad_cxxflags}" LDFLAGS="%{?__global_ldflags}" make check
+
+
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
