@@ -14,3 +14,7 @@
 1.0.3-1
 - glite-lb-yaim dependency removed from Debian (not supported and glite-yaim-bdii not available on Debian). Fixes issue #13.
 
+1.0.3-2
+- Module rebuilt
+- Simplified Debian packaging (dh 7)
+
