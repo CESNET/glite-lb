@@ -103,3 +103,12 @@
 - Don't fail clean in Debian package when there are missing build dependencies (ant). This fixes build problem with dpkg-buildpackage and pbuilder on Debian 7.
 - Improve packaging based on Fedora review
 
+1.3.8-1
+- JAVA dependencies updated due to EPEL 7
+- Switching to java-headless for Fedora >= 20 and EPEL >= 7
+- Several jpackage-utils (Build) Requires only for EPEL <= 6
+- Fixing package build on Fedora after adding EPEL 7 support
+- Support for EPEL 7 (based on Fedora 19)
+- ChangeLogs moved from project subdirectory to module root directory
+- Simplified Debian packaging (dh 7)
+
