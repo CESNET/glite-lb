@@ -89,3 +89,7 @@
 - New version of machine readable Debian copyright file
 - Improve packaging based on Fedora review
 
+1.2.14-1
+- ChangeLogs moved from project subdirectory to module root directory
+- Simplified Debian packaging (dh 7)
+
