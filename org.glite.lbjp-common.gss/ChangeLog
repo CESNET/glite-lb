@@ -220,3 +220,8 @@
 - Arch-specific build dependencies
 - Giving precedence to CFLAGS from package system
 
+3.2.15-1
+- Hardcoded prefix removed from pkg-config files
+- ChangeLogs moved from project subdirectory to module root directory
+- Simplified Debian packaging (dh 7)
+
