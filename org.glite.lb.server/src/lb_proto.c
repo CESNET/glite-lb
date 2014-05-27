@@ -669,6 +669,7 @@ edg_wll_ErrorCode edg_wll_ProtoV21(edg_wll_Context ctx,
 						else      ret = HTTP_OK; 
 						break;
 					case ENOENT: ret = HTTP_NOTFOUND; break;
+					case EIDRM: ret = HTTP_GONE; break;
 					case EPERM : ret = HTTP_UNAUTH; break;
 					case EDG_WLL_ERROR_NOINDEX: ret = HTTP_UNAUTH; break;
 					case ENOMEM: fatal = 1; ret = HTTP_INTERNAL; break;
@@ -1145,6 +1146,7 @@ edg_wll_ErrorCode edg_wll_Proto(edg_wll_Context ctx,
 						else      ret = HTTP_OK; 
 						break;
 					case ENOENT: ret = HTTP_NOTFOUND; break;
+					case EIDRM: ret = HTTP_GONE; break;
 					case EPERM : ret = HTTP_UNAUTH; break;
 					case E2BIG: ret = HTTP_UNAUTH; break;
 					case EINVAL: ret = HTTP_UNAUTH; break;

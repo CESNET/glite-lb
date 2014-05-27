@@ -302,7 +302,7 @@ int edg_wll_IsJobZombie(edg_wll_Context ctx, glite_jobid_const_t job) {
         zqra[0] = zqr;
         zqra[1] = NULL;
 
-	ret = edg_wll_AreThereZombies(ctx, zqra);
+	ret = edg_wll_AreThereZombies(ctx, (const edg_wll_QueryRec**) zqra);
 	free(zqra);
 
 	return(ret);
@@ -700,7 +700,8 @@ int edg_wll_intJobStatus(
 	jqra[1] = NULL;
 
 	if (edg_wll_QueryEventsServer(ctx,1, (const edg_wll_QueryRec **)jqra, NULL, &events)) {
-		if (edg_wll_Error(ctx, NULL, NULL) == ENOENT) {
+		if ((edg_wll_Error(ctx, NULL, NULL) == ENOENT) ||
+		    (edg_wll_Error(ctx, NULL, NULL) == EIDRM)) {
 			if (edg_wll_RestoreSubjobState(ctx, job, intstat)) {
 				if (edg_wll_Error(ctx, NULL, NULL) != ENOENT) {
 					destroy_intJobStat(intstat);

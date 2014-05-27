@@ -621,6 +621,7 @@ static int check_dup(edg_wll_Context ctx,edg_wll_Event *e)
 		case 0: /* continue normally */
 			break;
 		case ENOENT:
+		case EIDRM:
 			free(jca);
 			free(eca);
 			return edg_wll_ResetError(ctx);
