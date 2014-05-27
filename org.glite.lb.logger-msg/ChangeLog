@@ -154,3 +154,9 @@ Fixed dependency of msg-plugin for Debian
 - New version of machine readable Debian copyright file
 - Improve packaging based on Fedora review of glite-lb-types (perl build dependencies), https://bugzilla.redhat.com/show_bug.cgi?id=892597
 
+1.2.12-1
+- Deployment updates due to EPEL 7 and Debian 9/sid
+- Updated package description
+- ChangeLogs moved from project subdirectory to module root directory
+- Simplified Debian packaging (dh 7)
+
