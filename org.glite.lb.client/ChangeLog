@@ -351,3 +351,11 @@
 - Arch-specific build dependencies in all rpm packages
 - Improve packaging based on Fedora review
 
+6.0.9-1
+- Fixes for parallel make
+- Support for EPEL 7 (based on Fedora 19)
+- Specify manpages using glob * in specfiles, rpm can compress it if needed (Fedora Review #1003960)
+- Hardcoded prefix removed from pkg-config files
+- ChangeLogs moved from project subdirectory to module root directory
+- Simplified Debian packaging (dh 7)
+
