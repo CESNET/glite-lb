@@ -708,3 +708,23 @@
 - Fix propagation of log4c and Kerberos environment variables, spaces in paths not supported
 - Update setup of Kerberos for L&B server - only checks are performed now
 
+3.0.17-1
+- Fixed reporting of zombies through HTTP interface
+- Enabled unittests in lb.server rpm
+- Checking access to L&B database on start, producing proper error message instead of hanging (for System V) or failed startup (for systemd).
+- Supporting different MySQL/MariaDB database in deployment (fixes issue #22)
+- Supporting spaces in password in all platforms except Debian
+- glite-lb-setup manpage polishing
+- Deployment updates due to EPEL 7 and Debian 9/sid
+- Simplified configure script launch
+- The id_mapping structure is included inside the context. Expanding it would cause binary incpomatibility.
+- Remember and display gridmap file location
+- Fixing package build on Fedora after adding EPEL 7 support
+- Support for EPEL 7 (based on Fedora 19)
+- Changing man pages section of purge, dump, and load from 8 to 1
+- Proper syntax in daemon rpm scripts
+- Moving daemons from bin to sbin
+- Manpages specified using glob * in specfiles, rpm can compress it if needed
+- ChangeLogs moved from project subdirectory to module root directory
+- Simplified Debian packaging (dh 7)
+
