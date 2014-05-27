@@ -221,3 +221,10 @@ gLite L&B setup script:
 - Improve packaging based on Fedora review
 - Fix propagation of log4c and Kerberos environment variables, spaces in paths not supported
 
+1.3.14-1
+- Deployment updates due to EPEL 7 and Debian 9/sid
+- Proper syntax in daemon rpm scripts
+- Drop Fedora 17 support. This will simplify packaging of daemons on Fedora
+- Moving daemons from bin to sbin
+- Manpages specified using glob * in specfiles, rpm can compress it if needed
+
