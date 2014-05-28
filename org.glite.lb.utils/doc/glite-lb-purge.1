@@ -12,8 +12,8 @@ glite-lb-purge - utility for removing inactive jobs from the L&B database
 
 
 .SH DESCRIPTION
-.B glite-lb-purge 
-is utility for removing inactive jobs from the L&B database. By default, it removes jobs that reached CLEARED, ABORTED and CANCELLED state and also OTHER jobs that are in another state and are inactive for specific (rather long) time.  It is a command line frontend to server internal purge. It is used by administrators of bkserver and it is not supposed to be used at the user level.
+.B glite-lb-purge
+is utility for removing inactive jobs from the L&B database. By default, it removes jobs that reached CLEARED, ABORTED and CANCELLED state and also OTHER and DONE jobs that are inactive for specific (rather long) time. It is a command line frontend to server internal purge. It is used by administrators of bkserver and it is not supposed to be used at the user level.
 
 .B glite-lb-purge 
 may be run periodically in order to avoid database overflow, however the periodic purges are done by server itself, so check the configuration of the server first.
