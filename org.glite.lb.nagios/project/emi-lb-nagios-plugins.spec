@@ -19,7 +19,7 @@ Requires:       glite-lb-client-progs
 Requires:       glite-lb-utils
 Requires:       glite-lb-ws-test
 Requires:       globus-proxy-utils
-Provides:       glite-lb-nagios-plugins = %{name}-%{version}-%{release}
+Provides:       glite-lb-nagios-plugins = %{version}-%{release}
 
 %description
 @DESCRIPTION@
