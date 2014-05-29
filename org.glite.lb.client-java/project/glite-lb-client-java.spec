@@ -45,7 +45,11 @@ BuildRequires:  java-devel
 BuildRequires:  jpackage-utils
 %endif
 Requires:       glite-jobid-api-java
+%if 0%{?rhel} >= 7 || 0%{?fedora}
+Requires:       apache-commons-lang
+%else
 Requires:       jakarta-commons-lang
+%endif
 %if 0%{?rhel} >= 7 || 0%{?fedora} >= 20
 Requires:       java-headless
 %else
