@@ -283,9 +283,9 @@ Available parameters specific to LB server are (mandatory parameters are \textbf
 \begin{itemize}
 \item \textbf{MYSQL\_PASSWORD} -- root password of MySQL server (mandatory for YAIM, otherwise may be empty if not set)
 \item \texttt{MYSQL\_USER} -- admin user of MySQL server (default: root)
-\item \texttt{GLITE\_LB\_EXPORT\_PURGE\_ARGS} -- purge timeouts (default: \texttt{--cleared 2d --aborted 15d --cancelled 15d --other 60d})
+\item \texttt{GLITE\_LB\_EXPORT\_PURGE\_ARGS} -- purge timeouts (default: \texttt{--cleared 2d --aborted 15d --cancelled 15d --done 60d --other 60d})
 
-According to local retention policy you may want to use different purge timeouts (for example WLCG would need \texttt{--cleared 90d --aborted 90d --cancelled 90d --other 90d}).
+According to local retention policy you may want to use different purge timeouts (for example WLCG would need \texttt{--cleared 90d --aborted 90d --cancelled 90d --done 90d --other 90d}).
 \item \texttt{GLITE\_LB\_EXPORT\_ENABLED} -- set to \texttt{true} for export to JP, installed glite-lb-client and glite-jp-client are needed (default: \texttt{false})
 \item \texttt{GLITE\_LB\_EXPORT\_JPPS} -- Job Provenance Primary Storage where to export purged jobs, required if export to JP is enabled
 \item \texttt{GLITE\_LB\_RTM\_ENABLED} -- enable settings for Real Time Monitor - indexes and additional access (default: false)

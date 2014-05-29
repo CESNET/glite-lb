@@ -36,7 +36,7 @@ function config_glite_lb_setenv(){
   yaimgridenv_set X509_VOMS_DIR "${X509_VOMS_DIR:-/etc/grid-security/vomsdir}"
 
   yaimgridenv_set GLITE_LB_EXPORT_ENABLED ${GLITE_LB_EXPORT_ENABLED:-false}
-  yaimgridenv_set GLITE_LB_EXPORT_PURGE_ARGS "${GLITE_LB_EXPORT_PURGE_ARGS:---cleared 2d --aborted 15d --cancelled 15d --other 60d}"
+  yaimgridenv_set GLITE_LB_EXPORT_PURGE_ARGS "${GLITE_LB_EXPORT_PURGE_ARGS:---cleared 2d --aborted 15d --cancelled 15d --done 60d --other 60d}"
   yaimgridenv_set GLITE_LB_EXPORT_JPPS ${GLITE_LB_EXPORT_JPPS:-}
 
   yaimgridenv_set GLITE_LOCATION "${GLITE_LOCATION:-@glite_prefix@}"

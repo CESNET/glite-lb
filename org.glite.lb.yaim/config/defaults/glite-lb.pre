@@ -19,7 +19,7 @@
 #
 
 # purge timeouts
-#GLITE_LB_EXPORT_PURGE_ARGS='--cleared 2d --aborted 15d --cancelled 15d --other 60d'
+#GLITE_LB_EXPORT_PURGE_ARGS='--cleared 2d --aborted 15d --cancelled 15d --done 60d --other 60d'
 # enable export of the purged jobs to the Job Provenance
 #GLITE_LB_EXPORT_ENABLED='false'
 # Job Provenance server
