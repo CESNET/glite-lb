@@ -505,15 +505,13 @@ distclean:
 	${AT3} $< >$@ || ( rm -f $@; false )
 	chmod -w $@ >/dev/null
 
-%.o: %.y
+%.c %.h: %.y
 	-mkdir $*
 	(cd $*; \
 	 ${YACC} -d ${YFLAGS} ../$<; \
 	 mv y.tab.c ../$*.c; \
 	 mv y.tab.h ../$*.h)
 	rm -r $*
-	${CC} -c ${CFLAGS} $*.c
-	rm $*.c
 
 %.cpp: %.cpp.T
 	rm -f $@
