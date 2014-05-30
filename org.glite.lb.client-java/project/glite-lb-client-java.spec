@@ -74,8 +74,10 @@ Requires:       emi-trustmanager-axis
 Requires:       emi-trustmanager
 %endif
 Requires:       glite-jobid-api-java
+%if 0%{?rhel} >= 7 || 0%{?fedora}
+Requires:       apache-commons-lang
+%else
 Requires:       jakarta-commons-lang
-%if 0%{?rhel} <= 6 && ! 0%{?fedora}
 Requires:       jpackage-utils
 %endif
 %if 0%{?rhel} >= 6 || 0%{?fedora}
