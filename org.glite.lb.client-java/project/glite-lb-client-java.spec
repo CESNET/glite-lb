@@ -169,6 +169,7 @@ install -m 0644 JPP-%{name}.pom JPP-%{name}-axis.pom $RPM_BUILD_ROOT%{_mavenpomd
 %else
 %add_to_maven_depmap %{groupId} %{artifactId} %{version} JPP %{name}
 %add_to_maven_depmap %{groupId} %{artifactId}-axis %{version} JPP %{name}-axis
+touch .mfiles .mfiles-axis
 %endif
 
 
@@ -187,24 +188,25 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 
-%files
+%files -f .mfiles
 %defattr(-,root,root)
 %doc ChangeLog LICENSE
 %dir %{_libdir}/%{name}/
 %{_libdir}/%{name}/libglite_lb_sendviasocket.so
 %{_libdir}/%{name}/libglite_lb_sendviasocket.so.0
 %{_libdir}/%{name}/libglite_lb_sendviasocket.so.0.0.0
+%if ! 0%{?add_maven_depmap:1}
 %{_jnidir}/%{name}.jar
 %{_mavendepmapfragdir}/%{name}
 %{_mavenpomdir}/JPP-%{name}.pom
-
-%files axis
-%defattr(-,root,root)
-%{_javadir}/%{name}-axis.jar
-%if 0%{?add_maven_depmap:1}
-%{_mavendepmapfragdir}/%{name}-axis
 %endif
+
+%files axis -f .mfiles-axis
+%defattr(-,root,root)
+%if ! 0%{?add_maven_depmap:1}
+%{_javadir}/%{name}-axis.jar
 %{_mavenpomdir}/JPP-%{name}-axis.pom
+%endif
 
 %if %{with_trustmanager}
 %files examples

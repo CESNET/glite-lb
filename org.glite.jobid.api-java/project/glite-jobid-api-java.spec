@@ -76,6 +76,7 @@ install -m 0644 JPP-%{name}.pom $RPM_BUILD_ROOT%{_mavenpomdir}
 %add_maven_depmap JPP-%{name}.pom %{name}.jar
 %else
 %add_to_maven_depmap %{groupId} %{artifactId} %{version} JPP %{name}
+touch .mfiles
 %endif
 
 
@@ -95,12 +96,14 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 
-%files
+%files -f .mfiles
 %defattr(-,root,root)
 %doc ChangeLog LICENSE
+%if ! 0%{?add_maven_depmap:1}
 %{_javadir}/%{name}.jar
 %{_mavendepmapfragdir}/%{name}
 %{_mavenpomdir}/JPP-%{name}.pom
+%endif
 
 %files javadoc
 %defattr(-,root,root)
