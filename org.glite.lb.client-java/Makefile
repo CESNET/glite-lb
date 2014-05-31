@@ -150,7 +150,7 @@ build/gen:
 	${GEN} build/gen
 
 build/axis:
-	${JAVA} -classpath ${axis_classpath} org.apache.axis.wsdl.WSDL2Java -o build/axis ${stagedir}${prefix}/share/wsdl/glite-lb/LB.wsdl
+	${JAVA} -classpath ${axis_classpath} org.apache.axis.wsdl.WSDL2Java --output build/axis --timeout 600 ${stagedir}${prefix}/share/wsdl/glite-lb/LB.wsdl
 
 build/javadoc: build/gen
 	${JAVADOC} -d build/javadoc -classpath build/classes/axis:build/classes/core:build/classes/security:${jobid_classpath}:${axis_classpath}:${trustmanager_classpath} $(addprefix ${top_srcdir}/src/org/glite/lb/,$(DOC_SOURCES)) build/gen/*.java
