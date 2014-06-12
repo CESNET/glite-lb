@@ -362,6 +362,7 @@ int edg_wll_SetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 		case EDG_WLL_PARAM_CONNPOOL_SIZE:
 		case EDG_WLL_PARAM_SOURCE:           
 			ret = edg_wll_SetParamInt(ctx,param,va_arg(ap,int));
+			break;
 		case EDG_WLL_PARAM_HOST:             
 		case EDG_WLL_PARAM_INSTANCE:         
 		case EDG_WLL_PARAM_DESTINATION:      
@@ -379,13 +380,16 @@ int edg_wll_SetParam(edg_wll_Context ctx,edg_wll_ContextParam param,...)
 	        case EDG_WLL_PARAM_LOG_IL_SOCK:
 		case EDG_WLL_PARAM_LBPROXY_SERVERNAME:
 			ret = edg_wll_SetParamString(ctx,param,va_arg(ap,char *));
+			break;
 		case EDG_WLL_PARAM_LOG_TIMEOUT:      
 		case EDG_WLL_PARAM_LOG_SYNC_TIMEOUT: 
 		case EDG_WLL_PARAM_QUERY_TIMEOUT:    
 		case EDG_WLL_PARAM_NOTIF_TIMEOUT:    
 			ret = edg_wll_SetParamTime(ctx,param,va_arg(ap,struct timeval *));
+			break;
 		default: 
 			ret = edg_wll_SetError(ctx,EINVAL,"unknown parameter");
+			break;
 	}
 	va_end(ap);
 
