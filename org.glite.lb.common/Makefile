@@ -90,6 +90,7 @@ ifdef LB_PROF
 endif
 
 COMPILE:=libtool --mode=compile ${CC}
+COMPILEXX:=libtool --mode=compile ${CXX}
 LINK:=libtool --mode=link ${CC} ${LDFLAGS}
 SOLINK:=libtool --mode=link ${CC} -rpath ${stagedir}${prefix}/${libdir} ${LDFLAGS}
 LINKXX:=libtool --mode=link  ${CXX} ${LDFLAGS}
@@ -198,7 +199,7 @@ endif
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} DOSTAGE=yes
 
-check: compile mkreports check.parse check.il check.query_rec
+check: compile mkreports check.parse check.il check.query_rec check.context
 
 mkreports:
 	-mkdir -p ${REPORTS}
@@ -220,6 +221,12 @@ check.query_rec: test_query_rec
 
 test_query_rec: test_query_rec.o
 	${LINK} $< -o $@ ${JOBID_LIB}
+
+test_context: context_test.o test_main.cpp
+	${LINK} $< -o $@ ${default_commonlib} ${CPPUNIT_LIBS}
+
+check.context: test_context
+	./test_context ${REPORTS}/context.xml
 
 test_coverage:
 	-mkdir coverage
@@ -264,7 +271,7 @@ install:
 
 clean:
 	rm -rvf *.o *.lo .libs lib* *.c *.h *.dox C/ CPP/ *.pc
-	rm -fv test_parse il_test parse.cpp events.tex status.tex test_query_rec padding
+	rm -fv test_parse il_test parse.cpp events.tex status.tex test_query_rec padding test_context
 	rm -rvf ${REPORTS}
 	rm -rvf dist ${package}-*.tar.gz
 
@@ -277,8 +284,8 @@ test_query_rec.o: query_rec.c
 %.o: %.c ${GEN_HDRS}
 	${COMPILE} ${CFLAGS} -c $<
 
-il_int_test.o il_string_test.o il_test.o il_msg_test.o parse.o: %.o: %.cpp test_main.cpp
-	${CXX} -c ${CFLAGS} ${CPPUNIT_CFLAGS} $<
+il_int_test.o il_string_test.o il_test.o il_msg_test.o parse.o context_test.o: %.o: %.cpp test_main.cpp
+	${COMPILEXX} -c ${CFLAGS} ${CPPUNIT_CFLAGS} $<
 
 %.thr.o: %.c ${GEN_HDRS}
 	${COMPILE} ${CFLAGS} -D_REENTRANT -DGLITE_LB_THREADED -o $@ -c $<
@@ -306,4 +313,4 @@ il_int_test.o il_string_test.o il_test.o il_msg_test.o parse.o: %.o: %.cpp test_
 %.pc: %.pc.in
 	sed -e "s,@PREFIX@,${PREFIX}${prefix}," -e "s/@VERSION@/${version}/" -e "s/@LIBDIR@/${libdir}/" $< > $@
 
-.PHONY: default all generate compile stage check mkreports check.parse check.il testcoverage doc olddoc install clean distclean dist distcheck
+.PHONY: default all generate compile stage check mkreports check.parse check.il check.context testcoverage doc olddoc install clean distclean dist distcheck
