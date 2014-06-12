@@ -223,7 +223,7 @@ test_query_rec: test_query_rec.o
 	${LINK} $< -o $@ ${JOBID_LIB}
 
 test_context: context_test.o test_main.cpp
-	${LINK} $< -o $@ ${default_commonlib} ${CPPUNIT_LIBS}
+	${LINKXX} $< -o $@ ${default_commonlib} ${CPPUNIT_LIBS}
 
 check.context: test_context
 	./test_context ${REPORTS}/context.xml
