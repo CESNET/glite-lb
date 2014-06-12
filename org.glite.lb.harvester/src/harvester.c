@@ -134,6 +134,7 @@ limitations under the License.
 #define WLCG_CONFIG "/etc/msg-publish/msg-publish.conf"
 #define WLCG_TOPIC "org.wlcg.usage.jobStatus"
 
+#define RTM_PIDFILE "/var/run/glite/glite-lb-harvester.pid"
 
 #ifdef WITH_OLD_LB
 #define glite_jobid_t edg_wlc_JobId
@@ -2259,7 +2260,7 @@ int config_preload(int argn, char *argv[]) {
 			config.daemonize = 1;
 			break;
 		case 'i':
-			config.pidfile = strdup(optarg);
+			if (optarg[0]) config.pidfile = strdup(optarg);
 			break;
 		case 's':
 			intval = strtol(optarg, &err, 10);
@@ -2342,6 +2343,7 @@ int config_preload(int argn, char *argv[]) {
 		}
 	}
 	if (!config.notif_file) config.notif_file = strdup(RTM_FILE_NOTIFS);
+	if (!config.pidfile) config.pidfile = strdup(RTM_PIDFILE);
 	if (config.wlcg) {
 		if (!config.wlcg_binary) config.wlcg_binary = strdup(WLCG_BINARY);
 		if (!config.wlcg_config) config.wlcg_config = strdup(WLCG_CONFIG);

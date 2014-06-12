@@ -199,7 +199,7 @@ Daemonize and detach from console. Error messages are directed to syslog.
 			<varlistentry>
 			<term><option>-i</option>|<option>--pidfile</option></term>
 			<listitem><para>
-The file with process ID. Automatically removed on shutdown.
+The file with process ID. Automatically removed on shutdown. Default is <filename>/var/run/glite/glite-lb-harvester.pid</filename>.
 			</para></listitem>
 			</varlistentry>
 
@@ -421,7 +421,7 @@ Use <command>glite-lb-harvester --help</command> for the whole summary.
 For example:
 				<variablelist>
 					<varlistentry>
-						<term><option>--daemonize --pidfile /var/run/glite-lb-harvester.pid</option></term>
+						<term><option>--daemonize</option></term>
 						<listitem><para>
 Daemonizing and using syslog.
 						</para></listitem>
@@ -445,7 +445,7 @@ In non-daemon mode CTRL-C can be used.
 		</para><para>
 Use the pidfile in daemon mode (pidfile will vanish after exit):
 		</para><para>
-<command>kill `cat /var/run/glite-lb-harvester.pid`</command>
+<command>kill `cat /var/run/glite/glite-lb-harvester.pid`</command>
 		</para><para>
 All notifications are preserved on LB servers, and will expire later. You can
 purge them at once, if they won't be needed:
