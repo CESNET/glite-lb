@@ -290,7 +290,7 @@ WSCALC_CLT_OBJS = wscalc_clt_ex.o ${GSOAP_FPREFIX}C.o ${GSOAP_FPREFIX}Client.o
 WSCALC_SRV_OBJS = wscalc_srv_ex.o ${GSOAP_FPREFIX}C.o ${GSOAP_FPREFIX}Server.o
 WSCALC_SRV2_OBJS = wscalc_srv_ex2.o ${GSOAP_FPREFIX}C.o ${GSOAP_FPREFIX}Server.o
 
-wscalc_clt_ex.o wscalc_srv_ex.o wscalc_srv_ex2.o: ${GSOAP_FPREFIX}H.h
+wscalc_clt_ex.o wscalc_srv_ex.o wscalc_srv_ex2.o: ${GSOAP_FPREFIX}H.h gsoap.stamp
 
 wscalc_clt_ex: ${WSCALC_CLT_OBJS} ${default_ltlib_s}
 	${LINK_lang} -o $@ ${WSCALC_CLT_OBJS} ${default_ltlib_s} ${GSOAP_DEFAULT_LIBS} ${default_libs}
@@ -309,8 +309,11 @@ soapcpp:=${shell if [ -x ${gsoap_prefix}/bin/soapcpp2 ]; then \
 	else echo ${gsoap_prefix}/soapcpp2; \
 	fi}
 
-${GSOAP_FPREFIX}H.h ${GSOAP_FPREFIX}C.c ${GSOAP_FPREFIX}Server.c ${GSOAP_FPREFIX}Client.c ${GSOAP_FPREFIX}ServerLib.c ${GSOAP_FPREFIX}ClientLib.c: calc.h.S
+${GSOAP_FPREFIX}H.h ${GSOAP_FPREFIX}C.c ${GSOAP_FPREFIX}Server.c ${GSOAP_FPREFIX}Client.c ${GSOAP_FPREFIX}ServerLib.c ${GSOAP_FPREFIX}ClientLib.c: gsoap.stamp
+
+gsoap.stamp: calc.h.S
 	${soapcpp} -c -p ${GSOAP_FPREFIX} ${top_srcdir2}/examples/calc.h.S
+	touch $@
 
 wscalc_clt_ex.o: wscalc_clt_ex.c
 	${CC} -c ${CFLAGS} -o $@ $<
@@ -357,6 +360,7 @@ clean:
 	rm -rvf ${lib_LTLIBRARIES_S}
 	rm -rvf ${LTLIB_TEST_S}
 	rm -rvf *.c *.h *.xml *.nsmap *.o *.lo .libs ${EXAMPLES} ${TESTS}
+	rm -vf gsoap.stamp
 	rm -rvf CalcService.wsdl wscalc.xsd
 	rm -rvf glite_gscompat.h sizeof_soap
 	for v in ${gsoap_versions_noflavours} ${gsoap_versions_flavours}; do \
