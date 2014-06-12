@@ -2603,6 +2603,7 @@ int main(int argn, char *argv[]) {
 
 			if ((f = fopen(config.pidfile, "wt")) == NULL) {
 				lprintf(NULL, ERR, "can't create pidfile '%s': %s", config.pidfile, strerror(errno));
+				kill(watched, SIGTERM);
 				goto quit_guard0;
 			}
 			fprintf(f, "%d", watched);
