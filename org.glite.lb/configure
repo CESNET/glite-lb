@@ -538,6 +538,8 @@ sub mode_build {
 release-deb: clean dist distcheck deb
 
 .PHONY: all stage clean check install dist distcheck rpm deb release-rpm release-deb
+
+.NOTPARALLEL:
 /;
 
 		close MAK;
