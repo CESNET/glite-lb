@@ -78,7 +78,7 @@ UTILS:=purge dump load
 ALLUTILS:=${UTILS} mon dump_exporter state_history statistics
 STATISTICS_OBJS:=statistics.o process_attrs.o process_attrs2.o
 
-MAN_GZ:=glite-lb-dump.1.gz glite-lb-load.1.gz glite-lb-purge.1.gz glite-lb-mon.1.gz
+MAN_GZ:=glite-lb-bkpurge-offline.1.gz glite-lb-dump.1.gz glite-lb-dump_exporter.1.gz glite-lb-load.1.gz glite-lb-purge.1.gz glite-lb-mon.1.gz glite-lb-state_history.1.gz glite-lb-statistics.1.gz
 MAN = $(MAN_GZ:.gz=)
 
 compile all: ${ALLUTILS} ${MAN_GZ}

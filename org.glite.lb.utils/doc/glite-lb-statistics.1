@@ -1,0 +1,54 @@
+.TH GLITE-LB-STATISTICS 1 "Jun 2014" "CESNET" "Logging & Bookkeeping Utils"
+
+
+.SH NAME
+glite-lb-statistics - tool for converting L&B job dump to Job History Record in XML
+
+
+.SH SYNOPSIS
+\fBglite-lb-statistics\fR [\fIOPTIONS\fR]
+
+
+.SH DESCRIPTION
+\fBglite-lb-statistics\fR takes a dump file for one job and converts it to XML encoded Job History Record that contains all the relevant information from the job life. The Job History Records can be fed into a statistical tools to reveal interesting information about the job behavior within the Grid.
+
+The dump file should be a dump for one job only. Typically it is used \fBglite-lb-dump_exporter\fR(1) utility to convert L&B server dumps for further processing by \fBglite-lb-statistics\fR(1).
+
+
+.SH OPTIONS
+.TP
+\fB\-1\fR, \fP\-\-versionone\fR
+Use version 1 of the attributes (it is obsolete now).
+
+.TP
+\fB\-f\fR, \fPfile\fR \fIFILE\fR
+A dump file to process.
+
+.TP
+\fB\-h\fR, \fP\-\-help\fR
+Display help and exit.
+
+.TP
+\fB\-o\fR, \fP\-\-outfile\fR \fIFILE\fR
+Output filename.
+
+.TP
+\fB\-V\fR, \fP\-\-version\fR
+Output version information and exit.
+
+.TP
+\fB\-v\fR, \fP\-\-verbose\fR
+Print extensive debug output to stderr.
+
+
+.SH BUGS
+Please report all bugs to CESNET gLite L&B issue tracker available at
+.I https://github.com/CESNET/glite-lb/issues
+
+
+.SH AUTHORS
+L&B Product Team, CESNET.
+
+
+.SH SEE ALSO
+\fBglite-lb-dump_exporter\fP(1), \fBglite-lb-purge\fP(1), README.LB-statistics

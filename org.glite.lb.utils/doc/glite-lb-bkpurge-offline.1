@@ -1,0 +1,76 @@
+.TH GLITE-LB-BKPURGE-OFFLINE 1 "Jun 2014" "CESNET" "Logging & Bookkeeping Utils"
+
+
+.SH NAME
+glite-lb-bkpurge-offline - emergency utility for removing inactive jobs from the L&B database
+
+
+.SH SYNOPSIS
+\fBglite-lb-bkpurge-offline\fR [\fIOPTIONS\fR]
+
+
+.SH DESCRIPTION
+\fBglite-lb-bkpurge-offline\fR is utility for removing inactive jobs from the L&B database. By default, it removes jobs that reached CLEARED, ABORTED and CANCELED state and also OTHER and DONE jobs that are inactive for specific (rather long) time. It calls directly database SQL commands.
+
+This utility is provided for \fBemergency and expert use only\fR. Exact semantics of job age are slightly different from regular \fBglite-lb-bkpurge\fR, there is no synchronization with running L&B server and/or proxy when jobs receive new events while being purged, and error handling is minimal.
+
+
+.SH OPTIONS
+.TP
+\fB\-a\fR \fINNN\fR\fi[smhd]\fR
+Purge ABORTED jobs older than NNN seconds/minutes/hours/days (only one number and one letter allowed). If the time is not specified, the default timeout is determined by the server.
+
+.TP
+\fB\-c\fR \fINNN\fR\fi[smhd]\fR
+Purge CLEARED jobs older than given time.
+
+.TP
+\fB\-d\fR \fINNN\fR\fi[smhd]\fR
+Purge DONE jobs older than given time.
+
+.TP
+\fB\-h\fR
+Display help.
+
+.TP
+\fB\-m\fR \fIBKSERVER\fR
+L&B server machine name. If not specified, the environment variable EDG_WL_QUERY_SERVER is being checked.
+
+.TP
+\fB\-M\fR \fi{singleshot|staged}\fR
+Cleaning method (default=staged).
+
+.TP
+\fB\-n\fR \fINNN\fR\fi[smhd]\fR
+Purge CANCELED jobs older than given time.
+
+.TP
+\fB\-o\fR \fINNN\fR\fi[smhd]\fR
+Purge OTHER (i.e. job in other state than ABORTED, CLEARED or CANCELED) jobs older than given time.
+
+.TP
+\fB\-p\fR
+Purge L&B proxy database (default: L&B server DB).
+
+.TP
+\fB-t\fR
+Free unused space if using MyISAM DB engine. By default MyISAM is not used by default in L&B deployments.
+
+
+.SH ENVIRONMENT
+.TP
+\fBEDG_WL_QUERY_SERVER\fR
+If \fB$EDG_WL_QUERY_SERVER\fR is set, its value is used as the bkserver address.
+
+
+.SH BUGS
+Please report all bugs to CESNET gLite L&B issue tracker available at
+.I https://github.com/CESNET/glite-lb/issues
+
+
+.SH AUTHORS
+L&B Product Team, CESNET.
+
+
+.SH SEE ALSO
+ \fBglite-lb-purge\fP(1)

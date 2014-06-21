@@ -1,0 +1,44 @@
+.TH GLITE-LB-STATE_HISTORY 1 "Jun 2014" "CESNET" "Logging & Bookkeeping Utils"
+
+
+.SH NAME
+glite-lb-state_history - utility to show job state changes stored in Logging and Bookkeeping
+
+
+.SH SYNOPSIS
+\fBglite-lb-state_history\fR [\fB\-f\fR \fIFIELDS\fR] \fIJOBID\fR
+
+
+.SH DESCRIPTION
+\fBglite-lb-state_history\fR shows the job state changes from the events stored in Logging and Bookkeeping.
+
+
+.SH OPTIONS
+.TP
+\fB\-f\fR \fIFIELDS\fR
+Job status fields to show in the history listing.
+
+Basic information always shown:
+  \fBevent name\fR
+  \fBjobid\fR
+  \fBjob status\fR
+
+Fields shown by default:
+  \fBnetwork_server\fR
+  \fBjdl:VirtualOrganisation\fR
+  \fBdestination\fR
+  \fBdone_code\fR
+  \fBreason\fR
+
+
+.SH BUGS
+Please report all bugs to CESNET gLite L&B issue tracker available at
+.I https://github.com/CESNET/glite-lb/issues
+
+
+.SH AUTHORS
+L&B Product Team, CESNET.
+
+
+.SH SEE ALSO
+\fBglite-lb-mon\fP(1), \fBglite-lb-statistics\fP(1)
