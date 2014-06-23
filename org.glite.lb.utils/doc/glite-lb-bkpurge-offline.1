@@ -10,7 +10,7 @@ glite-lb-bkpurge-offline - emergency utility for removing inactive jobs from the
 
 
 .SH DESCRIPTION
-\fBglite-lb-bkpurge-offline\fR is utility for removing inactive jobs from the L&B database. By default, it removes jobs that reached CLEARED, ABORTED and CANCELED state and also OTHER and DONE jobs that are inactive for specific (rather long) time. It calls directly database SQL commands.
+\fBglite-lb-bkpurge-offline\fR is a utility for removing inactive jobs from the L&B database. By default, it removes jobs that reached CLEARED, ABORTED and CANCELED state and also OTHER and DONE jobs that are inactive for a specific (rather long) period of time. It calls SQL database commands directly.
 
 This utility is provided for \fBemergency and expert use only\fR. Exact semantics of job age are slightly different from regular \fBglite-lb-bkpurge\fR, there is no synchronization with running L&B server and/or proxy when jobs receive new events while being purged, and error handling is minimal.
 
@@ -22,11 +22,11 @@ Purge ABORTED jobs older than NNN seconds/minutes/hours/days (only one number an
 
 .TP
 \fB\-c\fR \fINNN\fR\fi[smhd]\fR
-Purge CLEARED jobs older than given time.
+Purge CLEARED jobs older than the given age.
 
 .TP
 \fB\-d\fR \fINNN\fR\fi[smhd]\fR
-Purge DONE jobs older than given time.
+Purge DONE jobs older than the given age.
 
 .TP
 \fB\-h\fR
@@ -34,7 +34,7 @@ Display help.
 
 .TP
 \fB\-m\fR \fIBKSERVER\fR
-L&B server machine name. If not specified, the environment variable EDG_WL_QUERY_SERVER is being checked.
+L&B server machine name. If not specified, the environment variable EDG_WL_QUERY_SERVER is checked for hostname and port.
 
 .TP
 \fB\-M\fR \fi{singleshot|staged}\fR
@@ -42,11 +42,11 @@ Cleaning method (default=staged).
 
 .TP
 \fB\-n\fR \fINNN\fR\fi[smhd]\fR
-Purge CANCELED jobs older than given time.
+Purge CANCELED jobs older than the given age.
 
 .TP
 \fB\-o\fR \fINNN\fR\fi[smhd]\fR
-Purge OTHER (i.e. job in other state than ABORTED, CLEARED or CANCELED) jobs older than given time.
+Purge OTHER jobs (i.e., jobs in states other than ABORTED, CLEARED or CANCELED) older than the given age.
 
 .TP
 \fB\-p\fR
@@ -54,7 +54,7 @@ Purge L&B proxy database (default: L&B server DB).
 
 .TP
 \fB-t\fR
-Free unused space if using MyISAM DB engine. By default MyISAM is not used by default in L&B deployments.
+Free unused space if using MyISAM DB engine. Note that MyISAM is not used by default in L&B deployments.
 
 
 .SH ENVIRONMENT
