@@ -59,7 +59,7 @@ rm -f $SOURCE_URL/${p_base}-${p_ver}.tar.gz
 wget -nv $SOURCE_URL/${p_base}-${p_ver}.tar.gz
 
 mv ${p_base}.spec ${p_base}.spec.orig
-cat ${p_base}.spec.orig | awk '/^%clean/ {getline; getline; getline; next;} {print $0;}' | grep -v '^rm -rf $RPM_BUILD_ROOT' | grep -v '^BuildRoot:' | grep -v ^\%defattr | grep -v '^Vendor:' | grep -v ^Group | grep -v '\<chrpath\>' > ${p_base}.spec
+cat ${p_base}.spec.orig | awk '/^%clean/ {getline; getline; getline; next;} {print $0;}' | grep -v '^rm -rf $RPM_BUILD_ROOT' | grep -v '^rm -rf %{buildroot}' | grep -v '^BuildRoot:' | grep -v ^\%defattr | grep -v '^Vendor:' | grep -v ^Group | grep -v '\<chrpath\>' > ${p_base}.spec
 
 if [ ! -f ${p_base}.spec${DOWNSTREAM_SUF} ]; then
 	echo "${p_base}.spec${DOWNSTREAM_SUF} not found"

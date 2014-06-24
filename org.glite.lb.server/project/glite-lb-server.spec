@@ -101,26 +101,26 @@ CFLAGS="%{?optflags}" CXXFLAGS="%{?optflags} %{?classad_cxxflags}" LDFLAGS="%{?_
 
 
 %install
-rm -rf $RPM_BUILD_ROOT
-make install DESTDIR=$RPM_BUILD_ROOT
+rm -rf %{buildroot}
+make install DESTDIR=%{buildroot}
 %if 0%{?rhel} >= 7 || 0%{?fedora}
 # preserve directory in /var/run
-mkdir -p ${RPM_BUILD_ROOT}%{_tmpfilesdir}
-cat > ${RPM_BUILD_ROOT}%{_tmpfilesdir}/glite-lb-server.conf <<EOF
+mkdir -p %{buildroot}%{_tmpfilesdir}
+cat > %{buildroot}%{_tmpfilesdir}/glite-lb-server.conf <<EOF
 d %{_localstatedir}/run/glite 0755 glite glite -
 EOF
 %endif
-install -m 0644 ChangeLog LICENSE $RPM_BUILD_ROOT%{_pkgdocdir}
-rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
-find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
-mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/lib/glite/dump
-mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/lib/glite/purge
-mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/log/glite
-mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/run/glite
+install -m 0644 ChangeLog LICENSE %{buildroot}%{_pkgdocdir}
+rm -f %{buildroot}%{_libdir}/*.a
+find %{buildroot} -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
+mkdir -p %{buildroot}%{_localstatedir}/lib/glite/dump
+mkdir -p %{buildroot}%{_localstatedir}/lib/glite/purge
+mkdir -p %{buildroot}%{_localstatedir}/log/glite
+mkdir -p %{buildroot}%{_localstatedir}/run/glite
 
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 
 
 %pre

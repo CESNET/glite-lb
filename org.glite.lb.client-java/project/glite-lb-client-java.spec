@@ -146,23 +146,23 @@ CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make LOADER_SOURCES=JNIFedo
 
 
 %install
-rm -rf $RPM_BUILD_ROOT
-make install DESTDIR=$RPM_BUILD_ROOT
+rm -rf %{buildroot}
+make install DESTDIR=%{buildroot}
 # move API docs
-mkdir -p $RPM_BUILD_ROOT%{_javadocdir}
-mv $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}/api $RPM_BUILD_ROOT%{_javadocdir}/%{name}
-rm -rf $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
+mkdir -p %{buildroot}%{_javadocdir}
+mv %{buildroot}%{_docdir}/%{name}-%{version}/api %{buildroot}%{_javadocdir}/%{name}
+rm -rf %{buildroot}%{_docdir}/%{name}-%{version}
 # move JNI
-mkdir -p $RPM_BUILD_ROOT%{_libdir}/%{name}
-mv $RPM_BUILD_ROOT%{_libdir}/libglite_lb_sendviasocket.so* $RPM_BUILD_ROOT%{_libdir}/%{name}
+mkdir -p %{buildroot}%{_libdir}/%{name}
+mv %{buildroot}%{_libdir}/libglite_lb_sendviasocket.so* %{buildroot}%{_libdir}/%{name}
 # move JAR (using JNI)
-mkdir -p $RPM_BUILD_ROOT%{_jnidir}
-mv $RPM_BUILD_ROOT%{_javadir}/%{name}.jar $RPM_BUILD_ROOT%{_jnidir}
-rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
-rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
-find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
-mkdir -p $RPM_BUILD_ROOT%{_mavenpomdir}
-install -m 0644 JPP-%{name}.pom JPP-%{name}-axis.pom $RPM_BUILD_ROOT%{_mavenpomdir}
+mkdir -p %{buildroot}%{_jnidir}
+mv %{buildroot}%{_javadir}/%{name}.jar %{buildroot}%{_jnidir}
+rm -f %{buildroot}%{_libdir}/*.a
+rm -f %{buildroot}%{_libdir}/*.la
+find %{buildroot} -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
+mkdir -p %{buildroot}%{_mavenpomdir}
+install -m 0644 JPP-%{name}.pom JPP-%{name}-axis.pom %{buildroot}%{_mavenpomdir}
 %if 0%{?add_maven_depmap:1}
 %add_maven_depmap JPP-%{name}.pom %{name}.jar
 %add_maven_depmap JPP-%{name}-axis.pom %{name}-axis.jar -f axis
@@ -174,7 +174,7 @@ touch .mfiles .mfiles-axis
 
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 
 
 %if 0%{?rhel} <= 6 && ! 0%{?fedora}

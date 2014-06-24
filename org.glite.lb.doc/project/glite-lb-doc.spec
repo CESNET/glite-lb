@@ -42,13 +42,13 @@ make
 
 
 %install
-rm -rf $RPM_BUILD_ROOT
-make install DESTDIR=$RPM_BUILD_ROOT
-install -m 0644 ChangeLog LICENSE $RPM_BUILD_ROOT%{_pkgdocdir}
+rm -rf %{buildroot}
+make install DESTDIR=%{buildroot}
+install -m 0644 ChangeLog LICENSE %{buildroot}%{_pkgdocdir}
 
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 
 
 %files

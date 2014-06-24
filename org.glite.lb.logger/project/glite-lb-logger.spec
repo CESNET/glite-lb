@@ -61,27 +61,27 @@ CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make %{?_smp_mflags}
 
 
 %install
-rm -rf $RPM_BUILD_ROOT
-make install DESTDIR=$RPM_BUILD_ROOT
+rm -rf %{buildroot}
+make install DESTDIR=%{buildroot}
 %if 0%{?rhel} >= 7 || 0%{?fedora}
 # preserve directory in /var/run
-mkdir -p ${RPM_BUILD_ROOT}%{_tmpfilesdir}
-cat > ${RPM_BUILD_ROOT}%{_tmpfilesdir}/glite-lb-logger.conf <<EOF
+mkdir -p %{buildroot}%{_tmpfilesdir}
+cat > %{buildroot}%{_tmpfilesdir}/glite-lb-logger.conf <<EOF
 d %{_localstatedir}/run/glite 0755 glite glite -
 EOF
 %else
-sed -i 's,\(lockfile=/var/lock\),\1/subsys,' $RPM_BUILD_ROOT/etc/rc.d/init.d/glite-lb-locallogger
+sed -i 's,\(lockfile=/var/lock\),\1/subsys,' %{buildroot}/etc/rc.d/init.d/glite-lb-locallogger
 %endif
-find $RPM_BUILD_ROOT -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
-mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/lib/glite
-mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/run/glite
-touch $RPM_BUILD_ROOT%{_localstatedir}/run/glite/glite-lb-interlogger.sock
-touch $RPM_BUILD_ROOT%{_localstatedir}/run/glite/glite-lb-notif.sock
-touch $RPM_BUILD_ROOT%{_localstatedir}/run/glite/glite-lb-proxy.sock
+find %{buildroot} -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
+mkdir -p %{buildroot}%{_localstatedir}/lib/glite
+mkdir -p %{buildroot}%{_localstatedir}/run/glite
+touch %{buildroot}%{_localstatedir}/run/glite/glite-lb-interlogger.sock
+touch %{buildroot}%{_localstatedir}/run/glite/glite-lb-notif.sock
+touch %{buildroot}%{_localstatedir}/run/glite/glite-lb-proxy.sock
 
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 
 
 %pre

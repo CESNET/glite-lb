@@ -66,12 +66,12 @@ make %{?_smp_mflags}
 
 
 %install
-rm -rf $RPM_BUILD_ROOT
-make install DESTDIR=$RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT%{_javadocdir}
-mv $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}/api $RPM_BUILD_ROOT%{_javadocdir}/%{name}
-mkdir -p $RPM_BUILD_ROOT%{_mavenpomdir}
-install -m 0644 JPP-%{name}.pom $RPM_BUILD_ROOT%{_mavenpomdir}
+rm -rf %{buildroot}
+make install DESTDIR=%{buildroot}
+mkdir -p %{buildroot}%{_javadocdir}
+mv %{buildroot}%{_docdir}/%{name}-%{version}/api %{buildroot}%{_javadocdir}/%{name}
+mkdir -p %{buildroot}%{_mavenpomdir}
+install -m 0644 JPP-%{name}.pom %{buildroot}%{_mavenpomdir}
 %if 0%{?add_maven_depmap:1}
 %add_maven_depmap JPP-%{name}.pom %{name}.jar
 %else
@@ -81,7 +81,7 @@ touch .mfiles
 
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 
 
 %if 0%{?rhel} <= 6 && ! 0%{?fedora}
