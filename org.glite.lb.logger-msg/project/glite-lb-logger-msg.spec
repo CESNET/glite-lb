@@ -31,7 +31,7 @@ BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
 Requires:       crontabs
 Requires:       perl-LDAP
-Requires:       glite-lb-logger
+Requires:       glite-lb-logger%{?_isa}
 
 %description
 @DESCRIPTION@

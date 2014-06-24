@@ -26,7 +26,7 @@ BuildRequires:  perl
 BuildRequires:  perl(Getopt::Long)
 BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
-Requires:       glite-lb-state-machine-plugins
+Requires:       glite-lb-state-machine-plugins%{?_isa}
 
 %description
 @DESCRIPTION@

@@ -66,12 +66,12 @@ BuildRequires:  perl(Getopt::Long)
 BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
 Requires:       crontabs
-Requires:       mysql-server
+Requires:       mysql-server%{?_isa}
 # for upgrade from EMI-1:
 # new function glite_srvbones_daemon_listen() in 2.2.0
 Requires:       glite-lbjp-common-server-bones%{?_isa} >= 2.2.0
-Requires:       glite-lb-client-progs
-Requires:       glite-lb-utils
+Requires:       glite-lb-client-progs%{?_isa}
+Requires:       glite-lb-utils%{?_isa}
 %if 0%{?rhel} >= 7 || 0%{?fedora}
 Requires(post): systemd
 Requires(preun): systemd
