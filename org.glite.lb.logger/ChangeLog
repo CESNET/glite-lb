@@ -357,3 +357,7 @@ gLite L&B setup script:
 - ChangeLogs moved from project subdirectory to module root directory
 - Simplified Debian packaging (dh 7)
 
+2.4.23-1
+- Using rpm macros consistently as recommended in packaging guidelines
+- Bug reporting information updated in man pages
+
