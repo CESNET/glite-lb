@@ -142,3 +142,6 @@ Clean of legacy build files
 - ChangeLogs moved from project subdirectory to module root directory
 - Simplified Debian packaging (dh 7)
 
+2.3.11-1
+- Using rpm macros consistently as recommended in packaging guidelines
+
