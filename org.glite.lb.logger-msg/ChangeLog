@@ -160,3 +160,7 @@ Fixed dependency of msg-plugin for Debian
 - ChangeLogs moved from project subdirectory to module root directory
 - Simplified Debian packaging (dh 7)
 
+1.2.13-1
+- Always use arched runtime dependency in RPM, if both RPM and dependency are arched
+- Using rpm macros consistently as recommended in packaging guidelines
+
