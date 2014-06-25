@@ -309,3 +309,9 @@
 - ChangeLogs moved from project subdirectory to module root directory
 - Simplified Debian packaging (dh 7)
 
+9.1.1-1
+- Using rpm macros consistently as recommended in packaging guidelines
+- Using proper compiler to link context unittest (needed for recent platforms)
+- Paranoid unittest for context initialization and settings of context parameters
+- Fixing urgent error in context parameter settings
+
