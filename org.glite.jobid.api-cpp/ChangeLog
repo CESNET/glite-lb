@@ -124,3 +124,6 @@
 - ChangeLogs moved from project subdirectory to module root directory
 - Simplified Debian packaging (dh 7)
 
+1.3.10-1
+- Using rpm macros consistently as recommended in packaging guidelines
+
