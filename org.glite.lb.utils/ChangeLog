@@ -179,3 +179,9 @@
 - ChangeLogs moved from project subdirectory to module root directory
 - Simplified Debian packaging (dh 7)
 
+2.3.11-1
+- Always use arched runtime dependency in RPM, if both RPM and dependency are arched
+- Using rpm macros consistently as recommended in packaging guidelines
+- Updating and adding man pages missing from lb.utils (Fedora Review #1052852)
+- Bug reporting information updated in man pages
+
