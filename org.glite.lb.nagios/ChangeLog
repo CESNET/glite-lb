@@ -93,3 +93,7 @@
 - ChangeLogs moved from project subdirectory to module root directory
 - Simplified Debian packaging (dh 7)
 
+1.2.15-1
+- Using rpm macros consistently as recommended in packaging guidelines
+- Proper version in the "Provides" clause (fixes "invalid version" rpm warning)
+
