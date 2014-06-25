@@ -201,3 +201,7 @@
 - ChangeLogs moved from project subdirectory to module root directory
 - Simplified Debian packaging (dh 7)
 
+4.5.15-1
+- Using rpm macros consistently as recommended in packaging guidelines
+- Updating purge parameters in all places (YAIM, documentation, example configurations)
+
