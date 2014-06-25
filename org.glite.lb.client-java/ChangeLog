@@ -165,3 +165,10 @@
   - support different locations without patching the upstream code
   - update packaging according to the guidelines (http://fedoraproject.org/wiki/Packaging:Java#Packaging_JAR_files_that_use_JNI, http://www.debian.org/doc/packaging-manuals/java-policy/x104.html), new Debian subpackage libglite-lb-client-jni
   - ldconfig command not needed anymore
+
+2.0.7-1
+- Using rpm macros consistently as recommended in packaging guidelines
+- Setting long enough timeout for building on slower machines
+- Using .mfiles in Java RPMs to build also with javapackages 4.x (Fedora 21)
+- Proper "commons-lang" runtime dependency for Fedora
+
