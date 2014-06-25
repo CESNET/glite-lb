@@ -728,3 +728,12 @@
 - ChangeLogs moved from project subdirectory to module root directory
 - Simplified Debian packaging (dh 7)
 
+3.0.18-1
+- Always use arched runtime dependency in RPM, if both RPM and dependency are arched
+- Using rpm macros consistently as recommended in packaging guidelines
+- Purge parameters updated in all places (YAIM, documentation, example configurations)
+- Setting purge timeout for done jobs
+- Polishing makefile rules usage for bison files
+- Removing bogus "missing classad_version" messages during build. This fixes launching of unittests on Debian 8/jessie.
+- Bug reporting information updated in man pages
+
