@@ -8,8 +8,7 @@
 %global mysqlconfdir %{_sysconfdir}/mysql/conf.d
 %endif
 
-# condor classads requires 2011 ISO C++ standard since Fedora 19 (EPEL 7 based
-# on Fedora 19)
+# condor classads requires 2011 ISO C++ standard since Fedora 19
 %if 0%{?rhel} >= 7 || 0%{?fedora} >= 19
 %global classad_cxxflags -std=c++11
 %endif
@@ -26,8 +25,7 @@ Vendor:         EMI
 Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.server/%{version}/src/%{name}-%{version}.tar.gz
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
-BuildRequires:  expat
-# gssapi is needed explicitly for glite-lb-server, but the proper package is
+# gssapi.h is needed explicitly for glite-lb-server, but the proper package is
 # known only in glite-lbjp-common-gss-devel:
 #  - gssapi from Globus (globus-gssapi-gsi-devel)
 #  - gssapi from MIT Kerberos (krb5-devel)
@@ -135,7 +133,7 @@ exit 0
 %else
 /sbin/chkconfig --add glite-lb-bkserverd
 if [ $1 -eq 1 ] ; then
-	/sbin/chkconfig glite-lb-bkserverd off
+    /sbin/chkconfig glite-lb-bkserverd off
 fi
 
 # upgrade from lb.server <= 3.0.1 (L&B <= 4.0.1)

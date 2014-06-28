@@ -1,1 +1,1 @@
-glite-lb-server is the gLite LB server. This package contains the LB server daemon (glite-lb-bkserverd) and a tool for rebuilding server indices (glite-lb-bkindex).
+glite-lb-server is the gLite Logging and Bookkeeping server. This package contains the L&B server daemon (glite-lb-bkserverd) and a tool for rebuilding server indices (glite-lb-bkindex).

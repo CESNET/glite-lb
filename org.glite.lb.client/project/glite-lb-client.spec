@@ -70,7 +70,7 @@ CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make %{?_smp_mflags}
 rm -rf %{buildroot}
 make install DESTDIR=%{buildroot}
 # another installed documentation can't be combined with %%doc on EPEL 5/6,
-# install these file here instead
+# install these files here instead
 install -m 0644 ChangeLog LICENSE %{buildroot}%{_pkgdocdir}
 rm -f %{buildroot}%{_libdir}/*.a
 rm -f %{buildroot}%{_libdir}/*.la

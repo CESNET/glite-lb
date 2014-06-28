@@ -90,8 +90,8 @@ rm -rf %{buildroot}
 %files devel
 %defattr(-,root,root)
 %dir %{_datadir}/glite-lb/xsd/
-%{_libdir}/libglite_lb_statemachine.so
 %{_includedir}/glite/lb/*.h
+%{_libdir}/libglite_lb_statemachine.so
 %{_datadir}/glite-lb/xsd/*.xsd
 
 %files plugins

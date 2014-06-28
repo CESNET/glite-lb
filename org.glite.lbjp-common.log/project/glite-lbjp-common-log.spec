@@ -22,6 +22,7 @@ BuildRequires:  pkgconfig
 %description
 @DESCRIPTION@
 
+
 %package        devel
 Summary:        Development files for gLite L&B/JP common log module
 Group:          Development/Libraries

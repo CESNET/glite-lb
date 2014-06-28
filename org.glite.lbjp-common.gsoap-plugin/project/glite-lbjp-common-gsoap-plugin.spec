@@ -13,14 +13,14 @@ BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildRequires:  c-ares-devel
 BuildRequires:  cppunit-devel
 BuildRequires:  chrpath
-# gssapi is needed explicitly for gsoap-plugin, but the proper package is
+BuildRequires:  glite-lbjp-common-gss-devel
+# gssapi.h is needed explicitly for gsoap-plugin, but the proper package is
 # known only in glite-lbjp-common-gss-devel:
 #  - gssapi from Globus (globus-gssapi-gsi-devel)
 #  - gssapi from MIT Kerberos (krb5-devel)
 #  - gssapi from Heimdal Kerberos
 #BuildRequires: globus-gssapi-gsi-devel
 BuildRequires:  gsoap-devel
-BuildRequires:  glite-lbjp-common-gss-devel
 BuildRequires:  libtool
 BuildRequires:  perl
 BuildRequires:  perl(Getopt::Long)
