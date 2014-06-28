@@ -1,0 +1,90 @@
+.TH GLITE_LB_NOTIF_KEEPER 8 "June 2014" "CESNET" "Logging&Bookkeeping"
+
+
+.SH NAME
+glite-lb-notif-keeper - script for refreshing site-specific notifications
+
+
+.SH SYNOPSIS
+\fBglite-lb-notif-keeper\fR [\fIOPTIONS\fR]
+
+
+.SH DESCRIPTION
+\fBglite-lb-notif-keeper\fR is a script for registering, checking and refreshing site-specific notifications. It is intended primarily to be run by cron, but can be run manually by site admins to avoid waiting for the next cron cycle.
+
+
+.SH OPTIONS
+
+.TP
+\fB\-h\fR, \fP--help\fR
+Show help message.
+
+.TP
+\fB\-f\fR, \fP--file-prefix\fR
+Notification files prefix (the same value as for server and notification interlogger).
+
+.TP
+\fB\-n\fR, \fP--site-notif\fR
+Location of the site-notif.conf (input definition) file.
+
+.TP
+\fB\-a\fR, \fP--stale-age\fR
+Time in seconds since last read before the registration is considered stale (default 345600 = 4 days).
+
+.TP
+\fB\-s\fR, \fP--grace-size\fR
+Message queue size limit in kBytes. Registration will be extended even if stale, provided the message queue is bellow the limit. (default 2048 = 2 MB)
+
+.TP
+\fB\-l\fR, \fP--allow-legacy\fR
+Allow conditions without the -a option.
+
+.TP
+\fB\-v\fR, \fP--verbose\fR
+Verbose command line output. (Repeat for higher verbosity)
+
+
+.SH ENVIRONMENT
+
+.TP
+.B GLITE_LOCATION \fR[prefix]
+Standard prefix (typically /usr).
+
+.TP
+.B GLITE_USER \fR["glite"]
+User, whose home directory will be used. Value hardcoded to "glite".
+
+.TP
+.B GLITE_HOST_CERT \fR[$GLITE_HOME/.certs/hostcert.pem]
+Machine public certificate file.
+
+.TP
+.B GLITE_HOST_KEY \fR[$GLITE_HOME/.certs/hostkey.pem]
+Machine certificate key file.
+
+.TP
+.B GLITE_LB_LOCATION_VAR \fR[$GLITE_HOME]
+Location for \fBglite-lb-notif-keeper\fR(8) internal data (text file per each notification).
+
+.TP
+.B GLITE_LB_NOTIFY \fR[$GLITE_LOCATION/bin/glite-lb-notify]
+Path to \fBglite-lb-notify\fR(1) program.
+
+
+.SH FILES
+.TP
+.I /etc/glite-lb/site-notif.conf
+Default location with site-specific notifications.
+
+
+.SH BUGS
+Please report all bugs to CESNET gLite L&B issue tracker available at
+.I https://github.com/CESNET/glite-lb/issues
+
+
+.SH AUTHORS
+L&B Product Team, CESNET.
+
+
+.SH SEE ALSO
+\fBglite-lb-notify\fR(1)

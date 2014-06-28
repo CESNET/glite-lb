@@ -1,0 +1,40 @@
+.TH GLITE_LB_MIGRATE_DB2VERSION40 8 "June 2014" "CESNET" "Logging&Bookkeeping"
+
+
+.SH NAME
+glite-lb-migrate_db2version40 - L&B database migration script
+
+
+.SH SYNOPSIS
+\fBglite-lb-migrate_db2version40\fR [\fB-d\fR \fIDB_NAME\fR]
+
+
+.SH DESCRIPTION
+There was a change in the database schema between L&B version 3.x and L&B version 4.x. \fBglite-lb-migrate_db2version40\fR migration script migrates older L&B server database (\fBL&B 2.x, L&B 3.x\fR) to the new schema required for storing job connections (\fBL&B 4.x\fR).
+
+Note, this migration script is called automatically by \fBglite-lb-setup\fR(8) when needed.
+
+
+.SH OPTIONS
+.TP
+\fB\-d\fR \fIDB_NAME\fR
+Database name, if it is different from default.
+
+.TP
+\fB\-h\fR
+Show help message.
+
+
+.SH BUGS
+Please report all bugs to CESNET gLite L&B issue tracker available at
+.I https://github.com/CESNET/glite-lb/issues
+
+
+.SH AUTHORS
+L&B Product Team, CESNET.
+
+
+.SH SEE ALSO
+\fBglite-lb-bkserverd\fR(8)
+\fBglite-lb-migrate_db2varsion20\fR(8)
+\fBglite-lb-setup\fR(8)

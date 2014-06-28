@@ -1,0 +1,49 @@
+.TH GLITE_LB_MIGRATE_DB2VERSION20 8 "June 2014" "CESNET" "Logging&Bookkeeping"
+
+
+.SH NAME
+glite-lb-migrate_db2version20 - L&B database migration script
+
+
+.SH SYNOPSIS
+\fBglite-lb-migrate_db2version20\fR {\fB\-s|\-p\fR} [\fB-d\fR \fIDB_NAME\fR]
+
+
+.SH DESCRIPTION
+\fBglite-lb-migrate_db2version20\fR migration script migrates older L&B server or proxy database (\fBL&B 1.x\fR) to the new schema required for transaction locking and united L&B server and L&B proxy (\fBL&B 2.x\fR).
+
+The database schema change is required due to support of merged L&B server and proxy services using single database, pointers to purged jobs (“zombies”) and other improvements.
+
+Note, there are two types of L&B database based on the fact that you can have a L&B server or L&B proxy.
+
+
+.SH OPTIONS
+.TP
+\fB\-d\fR \fIDB_NAME\fR
+Database name, if it is different from default.
+
+.TP
+\fB\-h\fR
+Show help message.
+
+.TP
+\fB\-p\fR
+Migrate old L&B proxy database to the new version.
+
+.TP
+\fB\-s\fR
+Migrate old L&B server database to the new version.
+
+
+.SH BUGS
+Please report all bugs to CESNET gLite L&B issue tracker available at
+.I https://github.com/CESNET/glite-lb/issues
+
+
+.SH AUTHORS
+L&B Product Team, CESNET.
+
+
+.SH SEE ALSO
+\fBglite-lb-bkserverd\fR(8)
+\fBglite-lb-migrate_db2varsion40\fR(8)

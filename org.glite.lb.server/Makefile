@@ -283,7 +283,7 @@ WS_CLIENT_LIBS:= ${GSOAP_LIB} -lglite_lb_common${default_flavour} \
 HDRS=index.h lb_authz.h store.h
 
 MAN1_GZ:=glite-lb-mon-db.1.gz
-MAN8_GZ:=glite-lb-bkindex.8.gz glite-lb-bkserverd.8.gz glite-lb-setup.8.gz
+MAN8_GZ:=glite-lb-bkindex.8.gz glite-lb-bkserverd.8.gz glite-lb-export.8.gz glite-lb-migrate_db2version20.8.gz glite-lb-migrate_db2version40.8.gz glite-lb-notif-keeper.8.gz glite-lb-setup.8.gz
 MAN_GZ:=$(MAN1_GZ) $(MAN8_GZ)
 MAN = $(MAN_GZ:.gz=)
 

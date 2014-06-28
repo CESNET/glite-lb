@@ -1,0 +1,103 @@
+.TH GLITE_LB_EXPORT 8 "June 2014" "CESNET" "Logging&Bookkeeping"
+
+
+.SH NAME
+glite-lb-export - helper script for purging L&B and exporting dumps
+
+
+.SH SYNOPSIS
+\fBglite-lb-export\fR [\fIPURGE_TYPE\fR]
+
+
+.SH DESCRIPTION
+\fBglite-lb-export\fR is helper script for purging old data from L&B database. Optionally it can be enabled job export for importing job data into Job Provenance. It calls \fBglite-lb-purge\fR(8), and (when enabled) \fBglite-lb-dump_exporter\fR(8).
+
+\fBglite-lb-export\fR should be run periodically.
+
+\fIPURGE_TYPE\fR may be \fBserver\fR, \fBproxy\fR, or \fBboth\fR. Default is \fBserver\fR.
+
+
+.SH ENVIRONMENT
+
+.TP
+.B GLITE_LB_TYPE \fR["server"]
+L&B node type (server, proxy, or both).
+
+.TP
+.B GLITE_LOCATION \fR[`dirname $0`/..]
+Standard prefix (typically /usr).
+
+.TP
+.B GLITE_USER \fR["glite"]
+User, whose home directory will be used.
+
+.TP
+.B GLITE_HOST_CERT \fR[$GLITE_HOME/.certs/hostcert.pem]
+Machine public certificate file.
+
+.TP
+.B GLITE_HOST_KEY \fR[$GLITE_HOME/.certs/hostkey.pem]
+Machine certificate key file.
+
+.TP
+.B GLITE_LB_EXPORT_PURGEDIR \fR[$GLITE_HOME/purge]
+L&B purge directory.
+
+.TP
+.B GLITE_LB_EXPORT_DUMPDIR \fR[$GLITE_HOME/dump]
+L&B dump directory.
+
+.TP
+.B GLITE_LB_EXPORT_PURGEDIR_KEEP \fR[none]
+Backup directory for purged dumps.
+
+.TP
+.B GLITE_LB_EXPORT_DUMPDIR_KEEP \fR[none]
+Backup directory for processed dumps.
+
+.TP
+.B GLITE_LB_EXPORT_JPDUMP_MAILDIR \fR[/var/spool/glite/jpdump]
+Maildir dump directory for \fBglite-jp-importer\fR(8).
+
+.TP
+.B GLITE_LB_EXPORT_JOBSDIR \fR[/var/spool/glite/lbexport]
+Directory with exported data (file per job) for \fBglite-jp-importer\fR(8).
+
+.TP
+.B GLITE_LB_EXPORT_PURGE_ARGS \fR["--cleared 2d --aborted 15d --cancelled 15d --done 60d --other 60d"]
+Arguments for \fBglite-lb-purge\fR(8).
+
+.TP
+.B GLITE_LB_PURGE_OTHER_OPTIONS \fR[]
+Additional options for \fBglite-lb-purge\fR(8).
+
+.TP
+.B GLITE_LB_SERVER_PORT \fR[9000]
+L&B server port.
+
+.TP
+.B GLITE_LB_EXPORT_BKSERVER \fR[localhost]
+L&B server machine to purge.
+
+.TP
+.B GLITE_LB_PURGE_ENABLED \fR[true]
+Whether enable the purge.
+
+.TP
+.B GLITE_LB_EXPORT_ENABLED \fR[false]
+Whether enable transport to Job Provenance.
+
+.SH BUGS
+Please report all bugs to CESNET gLite L&B issue tracker available at
+.I https://github.com/CESNET/glite-lb/issues
+
+
+.SH AUTHORS
+L&B Product Team, CESNET.
+
+
+.SH SEE ALSO
+\fBglite-lb-bkserverd\fR(8)
+\fBglite-lb-dump_exporter\fR(8)
+\fBglite-lb-purge\fR(8)
+\fBglite-jp-importer\fR(8)
