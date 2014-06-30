@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 #+##############################################################################
 #                                                                              #
-# File: msg-brokers                                                            #
+# File: glite-lb-msg-brokers                                                   #
 #                                                                              #
 # Description: manipulate messaging brokers information                        #
 #                                                                              #
@@ -274,17 +274,15 @@ __END__
 
 =head1 NAME
 
-msg-brokers - manipulate messaging brokers information
+glite-lb-msg-brokers - manipulate messaging brokers information
 
 =head1 SYNOPSIS
 
-B<msg-brokers> [I<OPTIONS>] B<find>|B<list>
+B<glite-lb-msg-brokers> [I<OPTIONS>] B<find>|B<list>
 
 =head1 DESCRIPTION
 
-B<msg-brokers> has three different modes of operation. In all cases,
-it manipulates information about messaging brokers and reports a
-(possibly empty) list of broker URIs, one per line.
+B<glite-lb-msg-brokers> has two different modes of operation. In all cases, it manipulates information about messaging brokers and reports a (possibly empty) list of broker URIs, one per line.
 
 =over
 
@@ -336,11 +334,11 @@ show the complete man page
 
 =item B<--network> I<string>
 
-consider only the brokers for this network
+consider only the brokers for this network (for example PROD or TEST-NWOB)
 
 =item B<--quiet>, B<-q>
 
-supress the printing of warnings
+suppress the printing of warnings
 
 =item B<--sort>, B<-s>
 
@@ -348,10 +346,27 @@ sort the brokers per elapsed time to perform the test
 
 =back
 
+=head1 ENVIRONMENT
+
+=over
+
+=item B<LCG_GFAL_INFOSYS>
+
+I<host>[:I<port>] of the BDII to contact
+
+=back
+
+=head1 BUGS
+
+Please report all bugs to CESNET gLite L&B issue tracker available at
+I<https://github.com/CESNET/glite-lb/issues>
+
+=head1 AUTHORS
+
+Lionel Cons L<http://cern.ch/lionel.cons>
+
+L&B Product Team, CESNET L<http://cesnet.cz>
+
 =head1 SEE ALSO
 
 L<Net::STOMP::Client>
-
-=head1 AUTHOR
-
-Lionel Cons L<http://cern.ch/lionel.cons>

@@ -26,7 +26,11 @@ BuildRequires:  glite-lbjp-common-log-devel
 BuildRequires:  glite-lbjp-common-trio-devel
 BuildRequires:  libtool
 BuildRequires:  perl
+%if 0%{?rhel} >= 7 || 0%{?fedora}
+BuildRequires:  perl-Pod-Perldoc
+%endif
 BuildRequires:  perl(Getopt::Long)
+BuildRequires:  perl(Pod::Man)
 BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
 Requires:       crontabs
@@ -70,6 +74,7 @@ rm -rf %{buildroot}
 %{_libdir}/activemq_cpp_plugin.so.0.0.0
 %{_libdir}/glite-lb/examples/glite-lb-cmsclient
 %{_sbindir}/glite-lb-msg-*
+%{_mandir}/man8/*.8*
 
 
 %changelog

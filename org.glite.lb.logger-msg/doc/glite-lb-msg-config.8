@@ -1,0 +1,53 @@
+.TH GLITE_LB_MSG_CONFIG 8 "June 2014" "CESNET" "Logging&Bookkeeping"
+
+
+.SH NAME
+glite-lb-msg-config - glite-lb-logger messaging plugin configuration generator
+
+
+.SH SYNOPSIS
+\fBglite-lb-msg-config\fR \fITEMPLATE\fR [\fITARGET\fR]
+
+
+.SH DESCRIPTION
+\fBglite-lb-msg-config\fR is a script for generating or updating glite-lb-logger messaging plugin configuration. Configuration parameters can be specified by environment variables. \fITEMPLATE\fR is the original configuration file, basic content is generated in case the original doesn't exist. \fITARGET\fR is the target configuration file. If \fITARGET\fR is not specified, the \fITEMPLATE\fR is modified instead.
+
+This script is intended primarily to be run by cron, but can be run manually by site admins to avoid waiting for the next cron cycle.
+
+
+.SH ENVIRONMENT
+
+.TP
+.B GLITE_LOCATION \fR[prefix]
+Standard prefix (typically /usr).
+
+.TP
+.B GLITE_LB_MSG_BROKER \fR[]
+The special values are: \fBfalse\fR (do nothing), \fBauto\fR (refresh messaging brokers from BDII), \fBonce\fR (refresh messaging brokers only when \fB$GLITE_LB_SETUP\fR is not set). Empty value means \fBauto\fR, any other values means broker URL list.
+
+For refreshing messaging brokers the \fBglite-lb-msg-brokers\fR(8) utility is called.
+
+.TP
+.B GLITE_LB_MSG_NETWORK \fR[PROD]
+Let \fBglite-lb-msg-brokers\fR(8) search only in specified network. Typical values are PROD or TEST-NWOB.
+
+.TP
+.B LCG_GFAL_INFOSYS \fR[lcg-bdii.cern.ch:2170]
+\fIhost\fR[:\fIport\fR] of the BDII server.
+
+.TP
+.B GLITE_LB_SETUP \fR[]
+Helper variable. It should be set, when this configuration generator is called during setup stage (when \fBonce\fR value in \fB$GLITE_LB_MSG_BROKER\fR should trigger BDII search).
+
+
+.SH BUGS
+Please report all bugs to CESNET gLite L&B issue tracker available at
+.I https://github.com/CESNET/glite-lb/issues
+
+
+.SH AUTHORS
+L&B Product Team, CESNET.
+
+
+.SH SEE ALSO
+\fBglite-lb-msg-brokers\fR(8)

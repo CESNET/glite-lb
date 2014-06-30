@@ -26,6 +26,7 @@ VPATH:=${top_srcdir}/src:${top_srcdir}/interface:${top_srcdir}/test:${top_srcdir
 
 SOURCES=\
 	config/msg.* \
+	doc/*.8 \
 	examples/*.cpp \
 	project/il.conf \
 	src/*.cpp src/msg-* \
@@ -70,6 +71,8 @@ SOLINK:=libtool --mode=link ${CXX} -module ${LDFLAGS} -rpath ${stagedir}${prefix
 
 HDRS:=
 
+MAN8:=glite-lb-msg-brokers.8 glite-lb-msg-config.8
+
 COMMON_LIB:=
 
 EXT_LIB:=${ACTIVEMQ_CPP_LIBS}
@@ -93,7 +96,9 @@ endif
 
 sysdefaultdir?=${sysconfdir}/default
 
-all compile: ${PLUGIN_LIB} ${EXAMPLES} ${SCRIPTS}
+all: man compile
+
+compile: ${PLUGIN_LIB} ${EXAMPLES} ${SCRIPTS}
 
 ${PLUGIN_LIB}: ${PLUGIN_LOBJS}
 	${SOLINK} -o $@ ${PLUGIN_LOBJS} ${EXT_LIB} -lglite_lb_common${default_flavour} -lglite_jobid -lglite_lbu_log
@@ -104,7 +109,7 @@ ${PLUGIN_LIB}: ${PLUGIN_LOBJS}
 glite-lb-cmsclient: cmsclient.o
 	$(CXX) $< ${EXT_LIB} -o $@
 
-man: ${MAN_GZ}
+man: glite-lb-msg-brokers.8
 
 stage: compile
 	$(MAKE) install PREFIX=${stagedir} 
@@ -123,12 +128,14 @@ install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/sbin
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/glite-lb
 	-mkdir -p ${DESTDIR}${PREFIX}${sysconfdir}/cron.d
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 	${INSTALL} -m 644 ${top_srcdir}/config/msg.conf.example ${DESTDIR}${PREFIX}${docdir}
 	${INSTALL} -m 755 ${PLUGIN_LIB} ${DESTDIR}${PREFIX}${prefix}/${libdir}
 	${INSTALL} -m 755 ${EXAMPLES} ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/examples
 	${INSTALL} -m 755 ${top_srcdir}/src/msg-brokers ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-msg-brokers
 	${INSTALL} -m 755 msg-config.new ${DESTDIR}${PREFIX}${prefix}/sbin/glite-lb-msg-config
 	${INSTALL} -m 644 msg.cron.new ${DESTDIR}${PREFIX}${sysconfdir}/cron.d/glite-lb-logger-msg
+	${INSTALL} -m 644 glite-lb-msg-brokers.8 ${top_srcdir}/doc/*.8 ${DESTDIR}${PREFIX}${prefix}/share/man/man8
 
 %.lo %.o: %.cpp
 	${COMPILEXX} -c $< -o $@
@@ -139,8 +146,13 @@ install:
 clean:
 	rm -rvf .libs/ *.o *.lo ${PLUGIN_LIB} ${MAN_GZ} ${EXAMPLES} ${SCRIPTS}
 	rm -rvf dist ${package}-*.tar.gz
+	rm -fv glite-lb-msg-brokers.8
 
 distclean:
 	rm -rvf project/changelog Makefile.inc *.spec debian/
+
+glite-lb-msg-brokers.8: msg-brokers
+	perldoc -M Pod::Man $< > $@
+	sed -i 's/^\.TH.*/.TH GLITE-LB-MSG-BROKERS 8 "June 2014" "CESNET" "Logging\&Bookkeeping"/' $@
 
 .PHONY: default all compile man stage check install clean dist distclean distcheck
