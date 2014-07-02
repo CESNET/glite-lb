@@ -103,7 +103,7 @@ public:
 
 @@@{
 	selectType $status '_common_';
-	for my $n (getAllFields $status) {
+	for my $n (sort {$a cmp $b} getAllFields $status) {
 		selectField $status $n;
 		my $f = getField $status;
 		if ($f->{codes}) {

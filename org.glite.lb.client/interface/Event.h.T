@@ -120,8 +120,8 @@ public:
 	};
 
 @@@{
-	for my $f (getAllFields $event) {
-		for my $t (getFieldOccurence $event $f) {
+	for my $f (sort {$a cmp $b} getAllFields $event) {
+		for my $t (sort (getFieldOccurence $event $f)) {
 			my $ff;
 			my $ut;
 			my $utf;
