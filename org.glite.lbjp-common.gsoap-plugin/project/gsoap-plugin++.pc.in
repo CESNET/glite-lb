@@ -8,4 +8,4 @@ Description: Plugin for gSoap to use glite-security-gss as the communication lay
 Version: @VERSION@
 Requires: gsoap++ glite-security-gss
 Libs: -L${libdir} -lglite_security_gsoap_plugin_@LIB_SUFFIX@_cxx -lglite_security_gss
-Cflags: -I${includedir}
+Cflags: -I${includedir} -I${libdir}/glite-lb/include

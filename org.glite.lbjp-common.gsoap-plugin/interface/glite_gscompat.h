@@ -18,15 +18,7 @@ limitations under the License.
 #ifndef GLITE_SECURITY_GSCOMPAT_H
 #define GLITE_SECURITY_GSCOMPAT_H
 
-#ident "$Header: "
-
-/*
- * for basic sanity check
- *
- * size of the soap structure can differs with compilation flags
- * or with C/C++ compilers
- */
-#define GSOAP_SIZEOF_STRUCT_SOAP @sizeof_struct_soap@
+#include <glite/security/glite_gsplatform.h>
 
 #ifndef GSOAP_VERSION
   #error GSOAP_VERSION required

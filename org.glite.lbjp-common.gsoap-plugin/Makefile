@@ -132,7 +132,7 @@ endif
 EX_NOTHRLIBS:=-L${stagedir}${prefix}/${libdir} -lglite_security_gss_${nothrflavour}
 EX_THRLIBS:=-L${stagedir}${prefix}/${libdir} -lglite_security_gss_${thrflavour}
 EX_LIBS:=-L${stagedir}${prefix}/${libdir} -lglite_security_gss
-HDRS:=glite_gsplugin.h glite_gsplugin-int.h
+HDRS:=glite_gsplugin.h glite_gsplugin-int.h glite_gscompat.h
 EXAMPLES:=wscalc_clt_ex wscalc_srv_ex wscalc_srv_ex2
 TESTS:=test_cxx
 
@@ -233,7 +233,7 @@ endif
 
 all compile: \
 	${lib_LTLIBRARIES} \
-	all-libs-with-soap examples glite_gscompat.h pkgconfig
+	all-libs-with-soap examples glite_gsplatform.h pkgconfig
 
 check: check.cxx
 
@@ -324,9 +324,9 @@ sizeof_soap.o: sizeof_soap.c stdsoap2.h
 sizeof_soap: sizeof_soap.o
 	${LINK} $< -o $@
 
-glite_gscompat.h: glite_gscompat.h.in sizeof_soap
+glite_gsplatform.h: glite_gsplatform.h.in sizeof_soap
 	size=${shell ./sizeof_soap}; \
-	sed "s/@sizeof_struct_soap@/$$size/" ${top_srcdir2}/interface/glite_gscompat.h.in > $@
+	sed "s/@sizeof_struct_soap@/$$size/" ${top_srcdir2}/interface/glite_gsplatform.h.in > $@
 
 pkgconfig: ${PKG_CONFIG_FILES}
 
@@ -339,8 +339,9 @@ install:
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/pkgconfig
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/glite/security
 	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/include/glite/security/
+	-mkdir -p ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/include/glite/security/
 	cd ${top_srcdir2}/interface && ${INSTALL} -m 644 ${HDRS} ${DESTDIR}${PREFIX}${prefix}/include/glite/security/
-	${INSTALL} -m 644 glite_gscompat.h ${DESTDIR}${PREFIX}${prefix}/include/glite/security/
+	${INSTALL} -m 644 glite_gsplatform.h ${DESTDIR}${PREFIX}${prefix}/${libdir}/glite-lb/include/glite/security/
 	for v in ${gsoap_versions_noflavours}; do \
 		${MAKE} -C `echo $$v | tr -d .` -f ${top_srcdir_l2}/Makefile install-soaplib gsoap_version=$$v lang= PREFIX=${PREFIX} top_srcdir2=${top_srcdir_l2} || exit $?; \
 	done
@@ -362,7 +363,7 @@ clean:
 	rm -rvf *.c *.h *.xml *.nsmap *.o *.lo .libs ${EXAMPLES} ${TESTS}
 	rm -vf gsoap.stamp
 	rm -rvf CalcService.wsdl wscalc.xsd
-	rm -rvf glite_gscompat.h sizeof_soap
+	rm -rvf glite_gsplatform.h sizeof_soap
 	for v in ${gsoap_versions_noflavours} ${gsoap_versions_flavours}; do \
 		rm -rvf `echo $$v | tr -d .`; \
 	done

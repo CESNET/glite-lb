@@ -85,9 +85,14 @@ rm -rf %{buildroot}
 %files devel
 %defattr(-,root,root)
 %doc examples
+%dir %{_libdir}/glite-lb/
+%dir %{_libdir}/glite-lb/include/
+%dir %{_libdir}/glite-lb/include/glite/
+%dir %{_libdir}/glite-lb/include/glite/security/
 %{_includedir}/glite/security/glite_gscompat.h
 %{_includedir}/glite/security/glite_gsplugin.h
 %{_includedir}/glite/security/glite_gsplugin-int.h
+%{_libdir}/glite-lb/include/glite/security/*.h
 %{_libdir}/libglite_security_gsoap_plugin_*.so
 %{_libdir}/pkgconfig/*.pc
 
