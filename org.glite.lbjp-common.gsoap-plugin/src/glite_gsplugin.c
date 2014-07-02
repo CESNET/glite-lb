@@ -571,8 +571,11 @@ static int get_error(int err, edg_wll_GssStatus *gss_stat, const char *msg, char
 		num = h_errno;
 		s = hstrerror(num);
 		if (desc) {
-			if (s) asprintf(desc, "%s: %s",  msg, s);
-			else asprintf(desc, "%s: herrno %d", msg, num);
+			if (s) {
+				if (asprintf(desc, "%s: %s",  msg, s) == -1) *desc = NULL;
+			} else {
+				if (asprintf(desc, "%s: herrno %d", msg, num) == -1) *desc = NULL;
+			}
 		}
 		return num;
 	case EDG_WLL_GSS_ERROR_ERRNO:
@@ -585,10 +588,16 @@ static int get_error(int err, edg_wll_GssStatus *gss_stat, const char *msg, char
 		num = ENOTCONN;
 		break;
 	default:
-		if (desc) asprintf(desc, "%s: unknown error type %d from glite_gss", msg, err);
+		if (desc) {
+			if (asprintf(desc, "%s: unknown error type %d from glite_gss", msg, err) == -1)
+				*desc = NULL;
+		}
 		return EINVAL;
 	}
 
-	if (desc) asprintf(desc, "%s: %s", msg, strerror(num));
+	if (desc) {
+		if (asprintf(desc, "%s: %s", msg, strerror(num)) == -1)
+			*desc = NULL;
+	}
 	return num;
 }
