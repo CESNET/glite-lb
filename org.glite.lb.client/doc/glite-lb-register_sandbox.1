@@ -1,0 +1,63 @@
+.TH GLITE-LB-REGISTER_SANDBOX 1 "Jul 2014" "CESNET" "Logging & Bookkeeping"
+
+
+.SH NAME
+glite-lb-register_sandbox - Register sandbox transfer job
+
+
+.SH SYNOPSIS
+\fBglite-lb-register_sandbox\fR {\-j|--jobid} \fIJOBID\fR { \-i|--input } {\-f|--from} \fIURI\fR {\-t|--to} \fIURI\fR [\fIOPTIONS\fR]
+
+\fBglite-lb-register_sandbox\fR {\-j|--jobid} \fIJOBID\fR { \-o|--output } {\-f|--from} \fIURI\fR {\-t|--to} \fIURI\fR [\fIOPTIONS\fR]
+
+.SH DESCRIPTION
+A sandbox transfer is special entity in Logging & Bookkeeping, which tracks the transfer of input or output sandboxes of the (compute) job. Thus, it allows to check state of sandboxes giving more detailed overview of the status of compute job.
+
+\fBglite-lb-register_sandbox\fR(1) registers new input or output sandbox transfer job associated with existing compute job.
+
+
+.SH OPTIONS
+.TP
+\fB\-j\fR, \fP--jobid\fR \fIJOBID\fR (mandatory)
+Jobid of the compute job, whose transfer will be tracked.
+
+.TP
+\fB\-i\fR, \fP--input\fR
+Register \fBinput\fR transfer job. This option or \fB-o\fR, \fP--output\fR is mandatory.
+
+.TP
+\fB\-o\fR, \fP--output\fR
+Register \fBoutput\fR transfer job. This option or \fB-i\fR, \fP--input\fR is mandatory.
+
+.TP
+\fB\-f\fR, \fP--from\fR \fIURI\fR (mandatory)
+URI of the sandbox source.
+
+.TP
+\fB\-t\fR, \fP--to\fR \fIURI\fR (mandatory)
+URI of the sandbox destionation.
+
+.TP
+\fB\-s\fR, \fP--source\fR \fI\fR (default: LRMS)
+Software component, which registers this sandbox transfer job. For example: UserInterface, NetworkServer, WorkloadManager, JobController, LogMonitor, LRMS, Application, CloudManager, ...
+
+.TP
+\fB\-c\fR, \fP--sequence\fR \fILB_SEQUENCE_CODE\fR
+L&B sequence code of the compute job as returned from registration, \fBglite-lb-logevent\fP(1), or \fBglite-lb-register_sandbox\fR(1).
+
+.TP
+\fB\-n\fR, \fP--subjobs\fR \fIN\fR
+Mass registration of sandbox transfers.
+
+
+.SH BUGS
+Please report all bugs to CESNET gLite L&B issue tracker available at
+.I https://github.com/CESNET/glite-lb/issues
+
+
+.SH AUTHORS
+L&B Product Team, CESNET.
+
+
+.SH SEE ALSO
+\fBglite-lb-logevent\fP(1)
