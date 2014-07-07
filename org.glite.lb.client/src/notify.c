@@ -583,7 +583,7 @@ cleanup:
 	}
 
 	int retval;
-	if (retval = edg_wll_Error(ctx,&errt,&errd)) 
+	if ((retval = edg_wll_Error(ctx,&errt,&errd)) != 0)
 		fprintf(stderr, "%s: %s (%s)\n", me, errt, errd);
 
 	edg_wll_NotifCloseFd(ctx);

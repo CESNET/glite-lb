@@ -90,7 +90,7 @@ static void get_name_and_port(const char *address, char **name, int *port)
 		*port = atoi(p+1);
 		*p = 0;
 	}
-	if (p = strrchr(n, '[')) {
+	if ((p = strrchr(n, '[')) != NULL) {
 		int len = strcspn(p+1, "]");
 		*name = (char*)malloc(sizeof(char*) * (len+1));
 		strncpy(*name, p+1, len);
