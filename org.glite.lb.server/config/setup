@@ -424,7 +424,6 @@ if test "$setup_db" = 1; then
 	if ! mysqlshow $MYSQL_ROOT_ARGS --password="$MYSQL_ROOT_PASSWORD" 2>/dev/null | grep "\<$MYSQL_LB_DB\>" > /dev/null 2>&1 || \
 	   ! check_mysql_table "$MYSQL_LB_DB" jobs; then
 		mysql $MYSQL_ROOT_ARGS --password="$MYSQL_ROOT_PASSWORD" -e "CREATE DATABASE $MYSQL_LB_DB"
-		mysql $MYSQL_ROOT_ARGS --password="$MYSQL_ROOT_PASSWORD" -e "GRANT ALL PRIVILEGES on $MYSQL_LB_DB.* to '$MYSQL_LB_USER' IDENTIFIED BY '$MYSQL_LB_SQL_PASSWORD' WITH GRANT OPTION;"
 		if test -z "$MYSQL_LB_HOST" -o "$MYSQL_LB_HOST" = "localhost"; then
 			mysql $MYSQL_ROOT_ARGS --password="$MYSQL_ROOT_PASSWORD" -e "GRANT ALL PRIVILEGES on $MYSQL_LB_DB.* to '$MYSQL_LB_USER'@'$HOSTNAME' IDENTIFIED BY '$MYSQL_LB_SQL_PASSWORD' WITH GRANT OPTION;"
 			mysql $MYSQL_ROOT_ARGS --password="$MYSQL_ROOT_PASSWORD" -e "GRANT ALL PRIVILEGES on $MYSQL_LB_DB.* to '$MYSQL_LB_USER'@localhost IDENTIFIED BY '$MYSQL_LB_SQL_PASSWORD' WITH GRANT OPTION;"
