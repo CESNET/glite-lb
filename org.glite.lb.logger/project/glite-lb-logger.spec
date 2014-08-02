@@ -24,6 +24,7 @@ BuildRequires:  perl
 BuildRequires:  perl(Getopt::Long)
 BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
+Requires(pre):  shadow-utils
 %if 0%{?rhel} >= 7 || 0%{?fedora}
 Requires(post): systemd
 Requires(preun): systemd
@@ -154,14 +155,16 @@ fi
 
 %files
 %defattr(-,root,root)
-%dir %attr(0755, glite, glite) %{_localstatedir}/lib/glite
-%dir %attr(0755, glite, glite) %{_localstatedir}/run/glite
-%dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite
-%dir %attr(0775, glite, glite) %{_localstatedir}/spool/glite/lb-locallogger
-%dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-notif
-%dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-proxy
-%dir %{_datadir}/glite-lb-logger
 %doc ChangeLog LICENSE
+%dir %attr(-, glite, glite) %{_localstatedir}/lib/glite
+%dir %attr(-, glite, glite) %{_localstatedir}/run/glite
+%dir %attr(-, glite, glite) %{_localstatedir}/spool/glite
+# keep additional group permissions for locallogger directory,
+# for storing data files locally by external components (like CREAM)
+%dir %attr(-, glite, glite) %{_localstatedir}/spool/glite/lb-locallogger
+%dir %attr(-, glite, glite) %{_localstatedir}/spool/glite/lb-notif
+%dir %attr(-, glite, glite) %{_localstatedir}/spool/glite/lb-proxy
+%dir %{_datadir}/glite-lb-logger
 %ghost %{_localstatedir}/run/glite/glite-lb-interlogger.sock
 %ghost %{_localstatedir}/run/glite/glite-lb-notif.sock
 %ghost %{_localstatedir}/run/glite/glite-lb-proxy.sock

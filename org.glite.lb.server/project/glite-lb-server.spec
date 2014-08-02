@@ -1,7 +1,5 @@
 %global _hardened_build 1
 
-%{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
-
 %if 0%{?rhel} >= 7 || 0%{?fedora}
 %global mysqlconfdir %{_sysconfdir}/my.cnf.d
 %else
@@ -70,6 +68,8 @@ Requires:       mysql-server%{?_isa}
 Requires:       glite-lbjp-common-server-bones%{?_isa} >= 2.2.0
 Requires:       glite-lb-client-progs%{?_isa}
 Requires:       glite-lb-utils%{?_isa}
+Requires:       logrotate
+Requires(pre):  shadow-utils
 %if 0%{?rhel} >= 7 || 0%{?fedora}
 Requires(post): systemd
 Requires(preun): systemd
@@ -90,7 +90,7 @@ Requires(preun): initscripts
 
 
 %build
-perl ./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --docdir=%{_pkgdocdir} --mysqlconfdir=%{mysqlconfdir} --sysdefaultdir=%{_sysconfdir}/sysconfig --project=emi
+perl ./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --mysqlconfdir=%{mysqlconfdir} --sysdefaultdir=%{_sysconfdir}/sysconfig --project=emi
 CFLAGS="%{?optflags}" CXXFLAGS="%{?optflags} %{?classad_cxxflags}" LDFLAGS="%{?__global_ldflags}" make %{?_smp_mflags}
 
 
@@ -108,8 +108,8 @@ cat > %{buildroot}%{_tmpfilesdir}/glite-lb-server.conf <<EOF
 d %{_localstatedir}/run/glite 0755 glite glite -
 EOF
 %endif
-install -m 0644 ChangeLog LICENSE %{buildroot}%{_pkgdocdir}
 rm -f %{buildroot}%{_libdir}/*.a
+rm -rvf %{buildroot}%{_docdir}
 find %{buildroot} -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
 mkdir -p %{buildroot}%{_localstatedir}/lib/glite/dump
 mkdir -p %{buildroot}%{_localstatedir}/lib/glite/purge
@@ -170,26 +170,25 @@ fi
 
 %files
 %defattr(-,root,root)
-%dir %attr(0755, glite, glite) %{_localstatedir}/lib/glite
-%dir %attr(0755, glite, glite) %{_localstatedir}/lib/glite/dump
-%dir %attr(0755, glite, glite) %{_localstatedir}/lib/glite/purge
-%dir %attr(0755, glite, glite) %{_localstatedir}/log/glite
-%dir %attr(0755, glite, glite) %{_localstatedir}/run/glite
-%dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite
-%dir %attr(0775, glite, glite) %{_localstatedir}/spool/glite/lb-locallogger
-%dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-notif
-%dir %attr(0755, glite, glite) %{_localstatedir}/spool/glite/lb-proxy
+%doc ChangeLog LICENSE glite-lb
+%dir %attr(-, glite, glite) %{_localstatedir}/lib/glite
+%dir %attr(-, glite, glite) %{_localstatedir}/lib/glite/dump
+%dir %attr(-, glite, glite) %{_localstatedir}/lib/glite/purge
+%dir %attr(-, glite, glite) %{_localstatedir}/log/glite
+%dir %attr(-, glite, glite) %{_localstatedir}/run/glite
+%dir %attr(-, glite, glite) %{_localstatedir}/spool/glite
+# keep additional group permissions for locallogger directory,
+# for storing data files locally by external components (like CREAM)
+%dir %attr(-, glite, glite) %{_localstatedir}/spool/glite/lb-locallogger
+%dir %attr(-, glite, glite) %{_localstatedir}/spool/glite/lb-notif
+%dir %attr(-, glite, glite) %{_localstatedir}/spool/glite/lb-proxy
 %dir %{_datadir}/glite/
-%dir %{_pkgdocdir}/
 %dir %{_sysconfdir}/glite-lb/
 %config(noreplace) %{_sysconfdir}/cron.d/%{name}-*
 %config(noreplace) %{_sysconfdir}/glite-lb/*
 %config(noreplace) %{_sysconfdir}/logrotate.d/glite-lb-server
 %config(noreplace) %{mysqlconfdir}/glite-lb-server.cnf
 %config(noreplace missingok) %{_sysconfdir}/sysconfig/glite-lb
-%{_pkgdocdir}/ChangeLog
-%{_pkgdocdir}/LICENSE
-%{_pkgdocdir}/glite-lb
 %if 0%{?rhel} >= 7 || 0%{?fedora}
 %{_tmpfilesdir}/glite-lb-server.conf
 %{_unitdir}/glite-lb-bkserverd.service

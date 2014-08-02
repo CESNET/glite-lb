@@ -1,7 +1,5 @@
 %global _hardened_build 1
 
-%{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
-
 Name:           glite-lb-harvester
 Version:        @MAJOR@.@MINOR@.@REVISION@
 Release:        @AGE@%{?dist}
@@ -48,14 +46,14 @@ Requires(preun): initscripts
 
 
 %build
-perl ./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --docdir=%{_pkgdocdir} --sysdefaultdir=%{_sysconfdir}/sysconfig --project=emi
+perl ./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --sysdefaultdir=%{_sysconfdir}/sysconfig --project=emi
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make %{?_smp_mflags}
 
 
 %install
 rm -rf %{buildroot}
 make install DESTDIR=%{buildroot}
-install -m 0644 ChangeLog LICENSE %{buildroot}%{_pkgdocdir}
+rm -rfv %{buildroot}%{_docdir}
 %if 0%{?rhel} >= 7 || 0%{?fedora}
 # preserve directory in /var/run
 mkdir -p %{buildroot}%{_tmpfilesdir}
@@ -119,9 +117,9 @@ fi
 
 %files
 %defattr(-,root,root)
-%dir %attr(0755, glite, glite) %{_localstatedir}/lib/glite
-%dir %attr(0755, glite, glite) %{_localstatedir}/run/glite
-%dir %{_pkgdocdir}/
+%doc ChangeLog LICENSE README
+%dir %attr(-, glite, glite) %{_localstatedir}/lib/glite
+%dir %attr(-, glite, glite) %{_localstatedir}/run/glite
 %dir %{_sysconfdir}/glite-lb/
 %dir %{_libdir}/glite-lb/
 %dir %{_libdir}/glite-lb/examples/
@@ -135,9 +133,6 @@ fi
 %{_sbindir}/glite-lb-harvester
 %{_libdir}/glite-lb/examples/glite-lb-harvester-test.sh
 %{_libdir}/glite-lb/examples/glite-lb-harvester-dbg
-%{_pkgdocdir}/ChangeLog
-%{_pkgdocdir}/LICENSE
-%{_pkgdocdir}/README
 %{_datadir}/glite/*
 %{_mandir}/man8/glite-lb-harvester.8*
 
