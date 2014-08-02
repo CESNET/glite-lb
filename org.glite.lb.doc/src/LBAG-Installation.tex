@@ -218,38 +218,40 @@ Install and configure a clean system, the \textbf{EPEL} repository, and the \tex
 
 Install and configure OS and basic services (certificates, CAs, time synchronization, software repositories) according to the \htmladdnormallink{https://twiki.cern.ch/twiki/bin/view/LCG/GenericInstallGuide320}{https://twiki.cern.ch/twiki/bin/view/LCG/GenericInstallGuide320}. Then install metapackage \texttt{glite-LB} from an appropriate gLite software repository.
 
-%\item Installing from \textbf{native distribution repositories}
-%\TODO{only several packages available in Fedora/EPEL for now}
-%
-%Install and configure OS and basic services (certificates, CAs, time synchronization, software repositories). See \htmladdnormallink{https://wiki.egi.eu/wiki/EGI\_IGTF\_Release}{https://wiki.egi.eu/wiki/EGI\_IGTF\_Release} (CAs), \htmladdnormallink{http://fedoraproject.org/wiki/EPEL}{http://fedoraproject.org/wiki/EPEL} (RHEL/Scientific Linux). Then select and install packages:
-%
-%\begin{itemize}
-%
-%\item \LB server
-%
-%\texttt{glite-lb-server glite-lb-logger glite-lb-logger-msg glite-lb-harvester}
-%
-%\item Information systems - BDII
-%
-%\texttt{bdii glite-info-provider-service glue-schema}
-%
-%\item Information systems - EMIR
-%
-%\texttt{emir-serp}
-%
-%\item Recommended packages
-%
-%\texttt{fetch-crl glite-lb-doc}
-%
-%\item Other packages
-%
-%\texttt{glite-lb-client-java glite-lb-ws-test emi-lb-nagios-plugins}
-%
-%\end{itemize}
-%
+\item Installing from \textbf{Linux distributions repositories} (Fedora, EPEL)
+
+Install and configure OS and basic services (certificates, CAs, time synchronization, software repositories). See \htmladdnormallink{https://wiki.egi.eu/wiki/EGI\_IGTF\_Release}{https://wiki.egi.eu/wiki/EGI\_IGTF\_Release} (CAs), \htmladdnormallink{http://fedoraproject.org/wiki/EPEL}{http://fedoraproject.org/wiki/EPEL} (RHEL/Scientific Linux).
+
+There is no metapackage available, you need to pick required packages:
+
+\begin{itemize}
+
+\item \LB server (or \LB proxy)
+
+\texttt{glite-lb-server glite-lb-logger glite-lb-logger-msg}
+
+\item Recommended packages
+
+\texttt{fetch-crl glite-lb-doc}
+
+\item Information systems - BDII
+
+\texttt{bdii glite-info-provider-service glue-schema}
+
+\item Information systems - EMIR
+
+\texttt{emir-serp}
+
+\item Other optional packages
+
+\texttt{glite-lb-client-java glite-lb-ws-test emi-lb-nagios-plugins \\
+glite-lb-harvester}
+
 \end{itemize}
 
-Configuration can be done by YAIM or by provided script \texttt{glite-lb-setup}. YAIM can do full configuration (even for different nodes), \texttt{glite-lb-setup} solves only \LB part of the setup, Information Systems, and fetch-crl.
+\end{itemize}
+
+Configuration can be done by YAIM or by provided script \texttt{glite-lb-setup}. YAIM can do full configuration (even for different nodes), \texttt{glite-lb-setup} covers only \LB part of the setup, Information Systems, and fetch-crl.
 
 \subsubsection{YAIM configuration}
 
@@ -259,7 +261,7 @@ YAIM configuration can be done:
 \texttt{/opt/glite/yaim/bin/yaim -c -s site-info.def -n glite-LB}
 \end{quote}
 
-Where \texttt{site-info.def} file contains configuration parameters.
+Where \texttt{site-info.def} file contains configuration parameters (see \ref{inst:parameters}).
 
 \subsubsection{\LB setup script}
 
@@ -281,7 +283,7 @@ Available parameters specific to LB server are (mandatory parameters are \textbf
 
 %variable&meaning&default value &further details\\
 \begin{itemize}
-\item \textbf{MYSQL\_PASSWORD} -- root password of MySQL server (mandatory for YAIM, otherwise may be empty if not set)
+\item \textbf{MYSQL\_PASSWORD} -- root password of MySQL server (mandatory for YAIM, otherwise may be empty if root password is not set)
 \item \texttt{MYSQL\_USER} -- admin user of MySQL server (default: root)
 \item \texttt{GLITE\_LB\_EXPORT\_PURGE\_ARGS} -- purge timeouts (default: \texttt{--cleared 2d --aborted 15d --cancelled 15d --done 60d --other 60d})
 
@@ -335,7 +337,7 @@ Lists are separated by comma.
 
 \subsubsection{Configuration Files}
 
-Using \emph{yaim}, you do not need to edit \LB's configuration files for your installation to work. On the other hand, if you cannot use \emph{yaim}, you may configure your \LB server through config files detailed bellow. Since \LBver{3.0} configuration files are located in \texttt{/etc/glite-lb/}.
+Using \emph{yaim} (or \emph{glite-lb-setup} script), you do not need to edit \LB's configuration files for your installation to work. On the other hand, if you cannot use \emph{yaim}, you may configure your \LB server through config files detailed bellow. Since \LBver{3.0} configuration files are located in \texttt{/etc/glite-lb/}.
 
 \begin{tabularx}{\textwidth}{>{\tt}lX}
 glite-lb-authz.conf & Authorization policy, in use since \LBver{2.1}. Extensively explained in Section \ref{inst:authz} (page \pageref{inst:authz}).\\
