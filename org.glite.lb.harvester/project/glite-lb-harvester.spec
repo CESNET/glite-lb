@@ -117,7 +117,7 @@ fi
 
 %files
 %defattr(-,root,root)
-%doc ChangeLog LICENSE README
+%doc ChangeLog LICENSE doc/README
 %dir %attr(-, glite, glite) %{_localstatedir}/lib/glite
 %dir %attr(-, glite, glite) %{_localstatedir}/run/glite
 %dir %{_sysconfdir}/glite-lb/
