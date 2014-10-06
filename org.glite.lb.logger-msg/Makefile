@@ -60,7 +60,7 @@ COMPILEXX:=libtool --mode=compile ${CXX} ${CFLAGS}
 LINK:=libtool --mode=link ${CC} ${LDFLAGS}
 LINKXX:=libtool --mode=link ${CXX} ${LDFLAGS}
 INSTALL:=libtool --mode=install install
-SOLINK:=libtool --mode=link ${CXX} -module ${LDFLAGS} -rpath ${stagedir}${prefix}/${libdir}
+SOLINK:=libtool --mode=link ${CXX} -module ${LDFLAGS} -rpath ${stagedir}${prefix}/${libdir} -avoid-version
 
 #ifneq (${expat_prefix},/usr)
 #	EXPAT_LIBS:=-L${expat_prefix}/lib

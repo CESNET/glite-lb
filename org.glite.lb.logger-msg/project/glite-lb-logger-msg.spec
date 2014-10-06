@@ -70,8 +70,6 @@ rm -rf %{buildroot}
 %dir %{_libdir}/glite-lb/examples/
 %config(noreplace) %{_sysconfdir}/cron.d/%{name}
 %{_libdir}/activemq_cpp_plugin.so
-%{_libdir}/activemq_cpp_plugin.so.0
-%{_libdir}/activemq_cpp_plugin.so.0.0.0
 %{_libdir}/glite-lb/examples/glite-lb-cmsclient
 %{_sbindir}/glite-lb-msg-*
 %{_mandir}/man8/*.8*
