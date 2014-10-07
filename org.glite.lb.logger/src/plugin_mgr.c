@@ -35,16 +35,28 @@ static struct plugin_list *plugins = NULL;
 	dlerror(); \
 	var = (type) dlsym(handle, name); \
 	if(var == NULL) { \
-		snprintf(err, sizeof(err), "plugin_init: error resolving %s: %s", name, dlerror()); \
-		set_error(IL_DL, ENOENT, err); \
-		return -1; \
+		*last_name = name; \
+		return -2; \
 	}
+
+
+static int plugin_init(struct plugin_list *plugin, void *dl_handle, char *cfg, char **last_name) {
+	DL_RESOLVESYM(plugin->plugin_def.plugin_init, dl_handle, "plugin_init", int(*)(char *));
+	DL_RESOLVESYM(plugin->plugin_def.plugin_supports_scheme, dl_handle,  "plugin_supports_scheme", int(*)(const char *));
+	DL_RESOLVESYM(plugin->plugin_def.event_queue_connect, dl_handle, "event_queue_connect", int (*)(struct event_queue*, struct queue_thread *));
+	DL_RESOLVESYM(plugin->plugin_def.event_queue_send, dl_handle, "event_queue_send", int (*)(struct event_queue *,struct queue_thread *));
+	DL_RESOLVESYM(plugin->plugin_def.event_queue_close, dl_handle, "event_queue_close", int (*)(struct event_queue *,struct queue_thread *));
+
+	return (*plugin->plugin_def.plugin_init)(cfg) >= 0 ? 0 : -1;
+}
+
 
 int plugin_mgr_init(const char *plugin_name, char *cfg)
 {
 	char err[256];
 	void *dl_handle;
 	struct plugin_list *plugin;
+	char *last_symbol_name = NULL;
 
 	dlerror();
 	dl_handle = dlopen(plugin_name, RTLD_LAZY);
@@ -58,19 +70,31 @@ int plugin_mgr_init(const char *plugin_name, char *cfg)
 	plugin = malloc(sizeof(*plugin));
 	if(plugin == NULL) {
 		set_error(IL_NOMEM, ENOMEM, "plugin_init: error allocating plugin description");
+		dlclose(dl_handle);
 		return -1;
+	}
+
+	switch (plugin_init(plugin, dl_handle, cfg, &last_symbol_name)) {
+	case -1:
+		snprintf(err, sizeof(err), "plugin_init: error initializing plugin");
+		set_error(IL_DL, ENOENT, err);
+		free(plugin);
+		dlclose(dl_handle);
+		return -1;
+	case -2:
+		snprintf(err, sizeof(err), "plugin_init: error resolving %s: %s", last_symbol_name, dlerror());
+		set_error(IL_DL, ENOENT, err);
+		free(plugin);
+		dlclose(dl_handle);
+		return -1;
+	default:
+		break;
 	}
 
 	plugin->next = plugins;
 	plugins = plugin;
 
-	DL_RESOLVESYM(plugin->plugin_def.plugin_init, dl_handle, "plugin_init", int(*)(char *));
-	DL_RESOLVESYM(plugin->plugin_def.plugin_supports_scheme, dl_handle,  "plugin_supports_scheme", int(*)(const char *));
-	DL_RESOLVESYM(plugin->plugin_def.event_queue_connect, dl_handle, "event_queue_connect", int (*)(struct event_queue*, struct queue_thread *));
-	DL_RESOLVESYM(plugin->plugin_def.event_queue_send, dl_handle, "event_queue_send", int (*)(struct event_queue *,struct queue_thread *));
-	DL_RESOLVESYM(plugin->plugin_def.event_queue_close, dl_handle, "event_queue_close", int (*)(struct event_queue *,struct queue_thread *));
-
-	return (*plugin->plugin_def.plugin_init)(cfg);
+	return 0;
 }
 
 
