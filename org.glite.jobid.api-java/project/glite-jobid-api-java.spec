@@ -27,7 +27,11 @@ BuildRequires:  jakarta-commons-codec
 BuildRequires:  java-devel
 BuildRequires:  jpackage-utils
 %endif
+%if 0%{?rhel} >= 7 || 0%{?fedora}
+Requires:       apache-commons-codec
+%else
 Requires:       jakarta-commons-codec
+%endif
 %if 0%{?rhel} >= 7 || 0%{?fedora} >= 20
 Requires:       java-headless
 %else
