@@ -25,6 +25,7 @@
 prog=glite-lb-logd
 exec=/usr/sbin/$prog
 lockfile=/var/lock/subsys/$prog
+pidfile=/var/run/glite/${prog}.pid
 
 GLITE_USER='glite'
 GLITE_HOME=`getent passwd ${GLITE_USER} | cut -d: -f6`
@@ -65,7 +66,7 @@ start() {
 
 stop() {
 	echo -n "Shutting down $prog: "
-	killproc -p /var/run/glite/glite-lb-logd.pid $prog
+	killproc -p $pidfile $prog
 	retval=$?
 	echo
 	[ $retval -eq 0 ] && rm -f $lockfile
@@ -74,22 +75,22 @@ stop() {
 
 case "$1" in
     start)
-	status $prog >/dev/null 2>&1 && exit 0
+	status -p $pidfile $prog >/dev/null 2>&1 && exit 0
 	start
 	;;
     stop)
-	status $prog >/dev/null 2>&1 || exit 0
+	status -p $pidfile $prog >/dev/null 2>&1 || exit 0
 	stop
 	;;
     status)
-	status $prog
+	status -p $pidfile $prog
 	;;
     restart|reload|force-reload)
 	stop
 	start
 	;;
     condrestart|try-restart)
-	status $prog >/dev/null 2>&1 || exit 0
+	status -p $pidfile $prog >/dev/null 2>&1 || exit 0
 	stop
 	start
 	;;
