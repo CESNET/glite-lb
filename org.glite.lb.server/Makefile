@@ -205,7 +205,8 @@ gsoap_bin_prefix:=${shell if [ -x  ${gsoap_prefix}/bin/soapcpp2 ]; then echo ${g
 EXT_LIBS:=  \
 	${GRIDSITE_LIBS} \
 	${CLASSADS_LIBS} \
-	${LIBCARES_LIBS} 
+	${LIBCARES_LIBS} \
+	-lcrypto -lssl
 
 ifeq ($(gssapi_provider), kerberos)
 else
