@@ -90,7 +90,7 @@ Requires(preun): initscripts
 
 
 %build
-perl ./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --mysqlconfdir=%{mysqlconfdir} --sysdefaultdir=%{_sysconfdir}/sysconfig --project=emi
+./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --mysqlconfdir=%{mysqlconfdir} --sysdefaultdir=%{_sysconfdir}/sysconfig --project=emi
 CFLAGS="%{?optflags}" CXXFLAGS="%{?optflags} %{?classad_cxxflags}" LDFLAGS="%{?__global_ldflags}" make %{?_smp_mflags}
 
 

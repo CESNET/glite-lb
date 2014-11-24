@@ -19,7 +19,7 @@ classad_cxxflags=$(shell if dpkg --compare-versions $(classad_version) '>=' '8';
 
 override_dh_auto_configure: config.status
 config.status:
-	perl ./configure --root=/ --prefix=/usr --libdir=lib --docdir=/usr/share/doc/$(p_base) --mysqlconfdir=/etc/mysql/conf.d --sysdefaultdir=/etc/default --project=emi
+	./configure --root=/ --prefix=/usr --libdir=lib --docdir=/usr/share/doc/$(p_base) --mysqlconfdir=/etc/mysql/conf.d --sysdefaultdir=/etc/default --project=emi
 
 override_dh_auto_build:
 	CXXFLAGS="$(CXXFLAGS) $(classad_cxxflags)" dh_auto_build --parallel

@@ -30,7 +30,7 @@ Provides:       glite-lb-nagios-plugins = %{version}-%{release}
 
 
 %build
-perl ./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi
+./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi
 make %{?_smp_mflags}
 
 

@@ -59,7 +59,7 @@ This package contains L&B state machine plugins for L&B tools and Job Provenance
 
 
 %build
-perl ./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi
+./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make %{?_smp_mflags}
 
 

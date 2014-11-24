@@ -36,7 +36,7 @@ BuildRequires:  tetex-latex
 
 
 %build
-perl ./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --docdir=%{_pkgdocdir} --project=emi
+./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --docdir=%{_pkgdocdir} --project=emi
 # parallel build not supported (problems with pdflatex)
 make
 

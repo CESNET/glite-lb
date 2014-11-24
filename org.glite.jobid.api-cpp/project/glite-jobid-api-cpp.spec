@@ -36,7 +36,7 @@ Provides:       %{name} = %{version}-%{release}
 
 
 %build
-perl ./configure --root=/ --prefix=%{_prefix} --project=emi
+./configure --root=/ --prefix=%{_prefix} --project=emi
 make %{?_smp_mflags}
 
 
