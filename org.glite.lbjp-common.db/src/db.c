@@ -210,6 +210,8 @@ int glite_lbu_DBConnect(glite_lbu_DBContext ctx, const char *cs) {
 void glite_lbu_DBClose(glite_lbu_DBContext ctx) {
 	if (!VALID(ctx->backend)) return;
 	backends[ctx->backend]->close(ctx);
+	free(ctx->connection_string);
+	ctx->connection_string = NULL;
 }
 
 
