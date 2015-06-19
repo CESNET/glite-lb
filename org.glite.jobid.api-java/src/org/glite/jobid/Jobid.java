@@ -50,7 +50,7 @@ public class Jobid {
      * 
      * @param bkserver BK server address
      * @param port BK server port
-     * @throws java.land.IllegalArgumentException if bkserver is null
+     * @throws java.lang.IllegalArgumentException if bkserver is null
      * @throws java.lang.IllegalArgumentException if port is lower than 1 or 
      * bigger than 65535
      */
@@ -197,7 +197,7 @@ public class Jobid {
     /**
      * Sets unique part of jobId
      * 
-     * @param unique
+     * @param unique unique part of jobId
      * @throws java.lang.IllegalArgumentException if unique is null
      */
     public void setUnique(String unique) {
