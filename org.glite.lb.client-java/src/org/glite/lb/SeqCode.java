@@ -46,8 +46,9 @@ public class SeqCode {
     /**
      * Constructor which creates new instance of SeqCode with values set by user
      * in input attribute
-     * 
-     * @param seqCodeString
+     *
+     * @param type type of sequence code
+     * @param seqCodeString sequence code string
      */
     public SeqCode(int type,String seqCodeString) {
 	getSeqCodeFromString(type,seqCodeString);
@@ -56,7 +57,7 @@ public class SeqCode {
     /**
      * This method increments one specific part of sequence code given by part attribute
      * 
-     * @param part part of sequence number which will be increased
+     * @param src the source, whose part of sequence number will be increased
      */
     public void incrementSeqCode(Sources src) {
 	int part = src.source;
@@ -81,7 +82,8 @@ public class SeqCode {
      * in this class.
      * Insert sequence codes in format:
      * UI=000000:NS=0000000000:WM=000000:BH=0000000000:JSS=000000:LM=000000:LRMS=000000:APP=000000:LBS=000000
-     * @param seqCodeString
+     * @param type type of sequence code (NORMAL, DUPLICATE, CREAMWMS, CREAM)
+     * @param seqCodeString sequence code string
      */
     public void getSeqCodeFromString(int type,String seqCodeString) {
 	switch (type) {

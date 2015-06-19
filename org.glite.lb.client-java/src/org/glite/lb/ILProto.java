@@ -48,7 +48,7 @@ public class ILProto {
      * construcor initializes the class' socket, inStream and outStream attributes
      *
      * @param socket an SSLSocket
-     * @throws java.io.IOException
+     * @throws IOException if any I/O operation fails
      */
     public ILProto(Socket socket) throws IOException {
         this.socket = socket;
@@ -62,7 +62,7 @@ public class ILProto {
      *
      * @return a String containing third line of the inputStream data, without
      * the info about its length
-     * @throws IOException
+     * @throws IOException if any I/O operation fails
      */
     /* XXX: weird implementation, should follow C */
     public String receiveMessage() throws IOException{
@@ -155,7 +155,7 @@ public class ILProto {
      * @param errCode errCode of the calling
      * @param minErrCode minimum available errcode
      * @param message message for the interlogger - could be any String
-     * @throws IOException
+     * @throws IOException if any I/O operation fails
      */
     public void sendReply(int errCode, int minErrCode, String message) throws IOException {
         byte[] errByte = (new String()+errCode).getBytes();

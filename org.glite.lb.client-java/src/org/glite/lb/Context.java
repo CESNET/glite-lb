@@ -50,18 +50,17 @@ public abstract class Context {
 
     /**
      * Creates new instance of Context class.
-     * 
-     * @param id message id, if null, random number is generated
-     * @param source one if paramaters of Sources enumeration
-     * @param flag
+     *
+     * @param src one if paramaters of Sources enumeration
+     * @param flag flag to set
      * @param host host name, if null or "", the name is get from host name of this computer
      * @param user user name
      * @param prog if null then is used "egd-wms"
      * @param srcInstance if null then it is set as ""
-     * @param jobid
-     * @throws java.lang.IllegalArgumentException if user or jobid is null 
-     *  or flag < 0 or source <=0 || >= 9 
-     * 
+     * @param jobid jobId to set
+     * @throws java.lang.IllegalArgumentException if user or jobid is null
+     *  or flag &lt; 0 or source &lt;=0 || &gt;= 9
+     *
      */
     public Context(Sources src,
             int flag,
@@ -115,14 +114,15 @@ public abstract class Context {
     /**
      * Abstract method which will serve as method for sending messages with events.
      * @param event event for which will be created and send message
+     * @throws LBException when logging fails
      */
     public abstract void log(Event event) throws LBException;
-    
+
     /**
      * Creates message prepared to send
      * @param event event for which is message generated
      * @throws IllegalArgumentException if event, source, user or job is null
-     * or flag < 0
+     * or flag &lt; 0
      * @return output String with message
      */
     protected String createMessage(Event event) {
@@ -201,7 +201,7 @@ public abstract class Context {
     }
 
     /**
-     * Return flag 
+     * Return flag
      * 
      * @return flag
      */
@@ -212,7 +212,7 @@ public abstract class Context {
     /**
      * Set flag
      * 
-     * @param flag
+     * @param flag flag to set
      * @throws java.lang.IllegalArgumentException if flag is lower than 0
      */
     public void setFlag(int flag) {
@@ -257,7 +257,7 @@ public abstract class Context {
     /**
      * Sets jobid.
      * 
-     * @param jobid
+     * @param jobid jobId to set
      * @throws java.lang.IllegalArgumentException if jobid is null
      */
     public void setJobid(Jobid jobid) {
@@ -278,7 +278,7 @@ public abstract class Context {
 
     /**
      * Sets prog, if prog is null then is set default value "edg-wms"
-     * @param prog
+     * @param prog program to set or null (default is "edg-wms")
      */
     public void setProg(String prog) {
         if (prog == null) {
@@ -320,7 +320,7 @@ public abstract class Context {
 
     /**
      * Sets source which represents which part of sequence code will be changed
-     * @param source source
+     * @param src source
      * @throws java.lang.IllegalArgumentException if source is null
      */
     public void setSource(Sources src) {

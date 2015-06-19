@@ -87,6 +87,7 @@ public abstract class Event {
 
     /**
      * Get and set methods for Event attributes.
+     * @return arrived time
      */
 
     public Timeval getArrived() {

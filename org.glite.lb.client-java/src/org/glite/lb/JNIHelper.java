@@ -9,6 +9,10 @@ public class JNIHelper {
 
 /**
  * Helper function to try load from several locations.
+ *
+ * @param dirs list of paths to try
+ * @param filename library file name
+ * @return JNI successfully loaded
  */
 protected static boolean loadHelper(String[] dirs, String filename) {
 	int i;

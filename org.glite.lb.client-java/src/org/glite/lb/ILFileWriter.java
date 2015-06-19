@@ -42,6 +42,10 @@ public class ILFileWriter {
      * @param prefix file path
      * @param message message which will be written
      * @param repeatWriteToFile count of attempts to write to file in case of failure
+     * @param owner requested owner of the file or @null
+     * @param permissions requested permissions of the file or @null
+     * @return result file size
+     * @throws LBException if any file operation fails
      */
     public static Long write(String prefix, String message, int repeatWriteToFile, String owner, String permissions) throws LBException {
         FileWriter fileWriter = null;
@@ -99,6 +103,8 @@ public class ILFileWriter {
      * @param prefix file path
      * @param message message which will be written
      * @param repeatWriteToFile count of attempts to write to file in case of failure
+     * @return result file size
+     * @throws LBException if any file operation fails
      */
     public static Long write(String prefix, String message, int repeatWriteToFile) throws LBException {
         return ILFileWriter.write(prefix, message, repeatWriteToFile, null, null);
