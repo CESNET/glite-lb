@@ -1,4 +1,13 @@
 %global with_trustmanager 0
+
+# axis available only in Fedora and EMI third-party repositories
+# (EPEL 5, EPEL 6)
+%if 0%{?rhel} <= 6 || 0%{?fedora}
+%global with_axis 1
+%else
+%global with_axis 0
+%endif
+
 %global groupId     org.glite
 %global artifactId  lb-client-java
 %{!?_mavenpomdir: %global _mavenpomdir %{_datadir}/maven2/poms}
@@ -16,10 +25,11 @@ Source:         http://eticssoft.web.cern.ch/eticssoft/repository/emi/emi.lb.cli
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:  ant
+%if %{with_axis}
 %if 0%{?rhel} >= 7 || 0%{?fedora}
 BuildRequires:  axis
 %else
-# only in EMI third-party repository
+# only in EMI third-party repository (EPEL 5, EPEL 6)
 BuildRequires:  axis1.4
 %endif
 BuildRequires:  chrpath
@@ -27,6 +37,7 @@ BuildRequires:  chrpath
 # only in EMI third-party repository
 BuildRequires:  emi-trustmanager
 BuildRequires:  emi-trustmanager-axis
+%endif
 %endif
 BuildRequires:  glite-jobid-api-java
 BuildRequires:  glite-lb-types
@@ -64,6 +75,7 @@ Requires(postun): jpackage-utils
 %description
 @DESCRIPTION@
 
+%if %{with_axis}
 
 %package        axis
 Summary:        Axis 1.4 flavor of Java L&B client
@@ -87,8 +99,9 @@ BuildArch:      noarch
 %description    axis
 This package contains java L&B client library based on Axis 1.4.
 
-
+%endif
 %if %{with_trustmanager}
+
 %package        examples
 Summary:        Java L&B client examples
 Group:          Applications/Communications
@@ -108,8 +121,8 @@ BuildArch:      noarch
 %description    examples
 This package contains java L&B client examples for Axis 1.4. For the
 communication is used trustmanager or pure SSL.
-%endif
 
+%endif
 
 %package        javadoc
 Summary:        Java API documentation for %{name}
@@ -132,15 +145,18 @@ L&B client.
 
 
 %build
+%if %{with_axis}
 %if 0%{?rhel} <= 6 && ! 0%{?fedora}
 # axis from EMI third-party repository
-args="--with-axis=/usr/local/axis1.4"
+args_axis='--with-axis=/usr/local/axis1.4'
 %endif
-./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi $args
-if [ "%with_trustmanager" == "0" ]; then
-    echo >> Makefile.inc
-    echo "trustmanager_prefix=no" >> Makefile.inc
-fi
+%else
+args_axis='--with-axis=no'
+%endif
+%if ! %{with_trustmanager}
+args_trustmanager='--with-trustmanager=no'
+%endif
+./configure --root=/ --prefix=%{_prefix} --libdir=%{_lib} --project=emi $args_axis $args_trustmanager
 # parallel build not supported
 CFLAGS="%{?optflags}" LDFLAGS="%{?__global_ldflags}" make LOADER_SOURCES=JNIFedoraLoader.java
 
@@ -162,14 +178,22 @@ rm -f %{buildroot}%{_libdir}/*.a
 rm -f %{buildroot}%{_libdir}/*.la
 find %{buildroot} -name '*' -print | xargs -I {} -i bash -c "chrpath -d {} > /dev/null 2>&1" || echo 'Stripped RPATH'
 mkdir -p %{buildroot}%{_mavenpomdir}
-install -m 0644 JPP-%{name}.pom JPP-%{name}-axis.pom %{buildroot}%{_mavenpomdir}
+install -m 0644 JPP-%{name}.pom %{buildroot}%{_mavenpomdir}
+%if %{with_axis}
+install -m 0644 JPP-%{name}-axis.pom %{buildroot}%{_mavenpomdir}
+%endif
 %if 0%{?add_maven_depmap:1}
 %add_maven_depmap JPP-%{name}.pom %{name}.jar
+%if %{with_axis}
 %add_maven_depmap JPP-%{name}-axis.pom %{name}-axis.jar -f axis
+%endif
 %else
 %add_to_maven_depmap %{groupId} %{artifactId} %{version} JPP %{name}
+touch .mfiles
+%if %{with_axis}
 %add_to_maven_depmap %{groupId} %{artifactId}-axis %{version} JPP %{name}-axis
-touch .mfiles .mfiles-axis
+touch .mfiles-axis
+%endif
 %endif
 
 
@@ -201,11 +225,13 @@ rm -rf %{buildroot}
 %{_mavenpomdir}/JPP-%{name}.pom
 %endif
 
+%if %{with_axis}
 %files axis -f .mfiles-axis
 %defattr(-,root,root)
 %if ! 0%{?add_maven_depmap:1}
 %{_javadir}/%{name}-axis.jar
 %{_mavenpomdir}/JPP-%{name}-axis.pom
+%endif
 %endif
 
 %if %{with_trustmanager}
