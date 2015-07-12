@@ -154,8 +154,10 @@ fi
 
 
 %files
+%{!?_licensedir:%global license %doc}
 %defattr(-,root,root)
-%doc ChangeLog LICENSE
+%doc ChangeLog
+%license LICENSE
 %dir %attr(-, glite, glite) %{_localstatedir}/lib/glite
 %dir %attr(-, glite, glite) %{_localstatedir}/run/glite
 %dir %attr(-, glite, glite) %{_localstatedir}/spool/glite

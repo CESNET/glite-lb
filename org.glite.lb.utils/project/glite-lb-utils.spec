@@ -52,8 +52,10 @@ rm -rf %{buildroot}
 
 
 %files
+%{!?_licensedir:%global license %doc}
 %defattr(-,root,root)
-%doc ChangeLog LICENSE doc/README.LB-monitoring doc/README.LB-statistics
+%doc ChangeLog doc/README.LB-monitoring doc/README.LB-statistics
+%license LICENSE
 %{_bindir}/glite-lb-bkpurge-offline
 %{_bindir}/glite-lb-dump
 %{_bindir}/glite-lb-dump_exporter

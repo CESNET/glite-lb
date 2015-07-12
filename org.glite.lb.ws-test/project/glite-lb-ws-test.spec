@@ -48,8 +48,10 @@ rm -rf %{buildroot}
 
 
 %files
+%{!?_licensedir:%global license %doc}
 %defattr(-,root,root)
-%doc ChangeLog LICENSE
+%doc ChangeLog
+%license LICENSE
 %dir %{_libdir}/glite-lb/
 %dir %{_libdir}/glite-lb/examples/
 %{_libdir}/glite-lb/examples/glite-lb-ws_getversion

@@ -213,8 +213,10 @@ rm -rf %{buildroot}
 
 
 %files -f .mfiles
+%{!?_licensedir:%global license %doc}
 %defattr(-,root,root)
-%doc ChangeLog LICENSE
+%doc ChangeLog
+%license LICENSE
 %dir %{_libdir}/%{name}/
 %{_libdir}/%{name}/libglite_lb_sendviasocket.so
 %{_libdir}/%{name}/libglite_lb_sendviasocket.so.0

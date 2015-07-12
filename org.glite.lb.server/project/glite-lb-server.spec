@@ -169,8 +169,10 @@ fi
 
 
 %files
+%{!?_licensedir:%global license %doc}
 %defattr(-,root,root)
-%doc ChangeLog LICENSE glite-lb
+%doc ChangeLog glite-lb
+%license LICENSE
 %dir %attr(-, glite, glite) %{_localstatedir}/lib/glite
 %dir %attr(-, glite, glite) %{_localstatedir}/lib/glite/dump
 %dir %attr(-, glite, glite) %{_localstatedir}/lib/glite/purge

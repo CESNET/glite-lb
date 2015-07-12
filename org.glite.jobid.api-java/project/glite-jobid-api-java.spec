@@ -101,8 +101,10 @@ rm -rf %{buildroot}
 
 
 %files -f .mfiles
+%{!?_licensedir:%global license %doc}
 %defattr(-,root,root)
-%doc ChangeLog LICENSE
+%doc ChangeLog
+%license LICENSE
 %if ! 0%{?add_maven_depmap:1}
 %{_javadir}/%{name}.jar
 %{_mavendepmapfragdir}/%{name}

@@ -39,8 +39,10 @@ rm -rf %{buildroot}
 
 
 %files
+%{!?_licensedir:%global license %doc}
 %defattr(-,root,root)
-%doc ChangeLog LICENSE
+%doc ChangeLog
+%license LICENSE
 %dir %{_datadir}/glite-lb/
 %dir %{_datadir}/glite-lb/at3/
 %dir %{perl_vendorlib}/

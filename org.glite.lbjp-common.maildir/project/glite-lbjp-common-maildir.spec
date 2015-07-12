@@ -58,8 +58,10 @@ rm -rf %{buildroot}
 
 
 %files
+%{!?_licensedir:%global license %doc}
 %defattr(-,root,root)
-%doc ChangeLog LICENSE
+%doc ChangeLog
+%license LICENSE
 %{_libdir}/libglite_lbu_maildir.so.2
 %{_libdir}/libglite_lbu_maildir.so.2.*
 

@@ -52,12 +52,13 @@ rm -rf %{buildroot}
 
 
 %files
+%{!?_licensedir:%global license %nil}
 %defattr(-,root,root)
 %dir %{_pkgdocdir}/
 %dir %{_pkgdocdir}/examples/
+%license %{_pkgdocdir}/LICENSE
 %{_pkgdocdir}/examples/*
 %{_pkgdocdir}/ChangeLog
-%{_pkgdocdir}/LICENSE
 %{_pkgdocdir}/README
 %{_pkgdocdir}/LBAG.pdf
 %{_pkgdocdir}/LBUG.pdf

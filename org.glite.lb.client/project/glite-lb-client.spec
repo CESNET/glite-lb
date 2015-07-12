@@ -88,6 +88,7 @@ rm -rf %{buildroot}
 
 
 %files
+%{!?_licensedir:%global license %nil}
 %defattr(-,root,root)
 %dir %{_pkgdocdir}/
 %{_libdir}/libglite_lb_client.so.14
@@ -95,7 +96,7 @@ rm -rf %{buildroot}
 %{_libdir}/libglite_lb_clientpp.so.14
 %{_libdir}/libglite_lb_clientpp.so.14.*
 %{_pkgdocdir}/ChangeLog
-%{_pkgdocdir}/LICENSE
+%license %{_pkgdocdir}/LICENSE
 
 %files devel
 %defattr(-,root,root)

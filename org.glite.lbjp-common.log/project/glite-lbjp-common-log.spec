@@ -65,12 +65,13 @@ rm -rf %{buildroot}
 
 
 %files
+%{!?_licensedir:%global license %nil}
 %defattr(-,root,root)
 %dir %{_pkgdocdir}/
 %dir %{_sysconfdir}/glite-lb
 %config(noreplace) %{_sysconfdir}/glite-lb/log4crc
+%license %{_pkgdocdir}/LICENSE
 %doc %{_pkgdocdir}/ChangeLog
-%doc %{_pkgdocdir}/LICENSE
 %doc %{_pkgdocdir}/README
 %doc %{_pkgdocdir}/log4crc.example-debugging
 %doc %{_pkgdocdir}/log4crc.example-production

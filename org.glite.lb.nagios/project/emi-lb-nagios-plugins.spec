@@ -44,8 +44,10 @@ rm -rf %{buildroot}
 
 
 %files
+%{!?_licensedir:%global license %doc}
 %defattr(-,root,root)
-%doc ChangeLog LICENSE
+%doc ChangeLog
+%license LICENSE
 %dir %{_libexecdir}/grid-monitoring/
 %dir %{_libexecdir}/grid-monitoring/probes/
 %dir %{_libexecdir}/grid-monitoring/probes/emi.lb/

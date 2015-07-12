@@ -77,8 +77,10 @@ rm -rf %{buildroot}
 
 
 %files
+%{!?_licensedir:%global license %doc}
 %defattr(-,root,root)
-%doc ChangeLog LICENSE
+%doc ChangeLog
+%license LICENSE
 %{_libdir}/libglite_security_gsoap_plugin_*.so.9
 %{_libdir}/libglite_security_gsoap_plugin_*.so.9.*
 
