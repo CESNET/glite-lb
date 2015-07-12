@@ -1,0 +1,9 @@
+/*/debian/
+/*/dist/
+/*/Makefile\.inc
+/*/emi-*.tar.gz
+/*/glite-*.tar.gz
+/*/config.status
+/*/*.spec
+/Makefile
+/config.status
