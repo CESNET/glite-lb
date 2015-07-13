@@ -107,7 +107,7 @@ ${PLUGIN_LIB}: ${PLUGIN_LOBJS}
 	gzip -9 -f -c $< > $@
 
 glite-lb-cmsclient: cmsclient.o
-	$(CXX) $< ${EXT_LIB} -o $@
+	$(LINKXX) $< ${EXT_LIB} -o $@
 
 man: glite-lb-msg-brokers.8
 
