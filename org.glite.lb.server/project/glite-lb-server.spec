@@ -2,8 +2,10 @@
 
 %if 0%{?rhel} >= 7 || 0%{?fedora}
 %global mysqlconfdir %{_sysconfdir}/my.cnf.d
+%global mysqlserver mariadb-server%{?_isa}
 %else
 %global mysqlconfdir %{_sysconfdir}/mysql/conf.d
+%global mysqlserver mysql-server%{?_isa}
 %endif
 
 # condor classads requires 2011 ISO C++ standard since Fedora 19
@@ -62,7 +64,7 @@ BuildRequires:  perl(Getopt::Long)
 BuildRequires:  perl(POSIX)
 BuildRequires:  pkgconfig
 Requires:       crontabs
-Requires:       mysql-server%{?_isa}
+Requires:       %{mysqlserver}
 # for upgrade from EMI-1:
 # new function glite_srvbones_daemon_listen() in 2.2.0
 Requires:       glite-lbjp-common-server-bones%{?_isa} >= 2.2.0
