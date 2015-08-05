@@ -451,6 +451,8 @@ event_store_rotate_file(struct event_store *es)
 	}
 
 	/* change names in event_store */
+	free(es->event_file_name);
+	free(es->control_file_name);
 	es->event_file_name = strdup(newname);
 	es->control_file_name = astrcat(newname, ".ctl");
 	es->rotate_index = 1000*timestamp + num + 1;
