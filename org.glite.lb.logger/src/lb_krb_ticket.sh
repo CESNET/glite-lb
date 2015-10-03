@@ -22,13 +22,16 @@ KRB5CCNAME="FILE:$ticket"
 
 [ -d $GLITE_HOME ] || mkdir -p $GLITE_HOME
 
-KTUTIL=${KTUTIL:-"/usr/sbin/ktutil"}
+KTUTIL=${KTUTIL:-"/usr/bin/ktutil"}
 HOSTNAMECMD=${HOSTNAMECMD:-"/bin/hostname"}
 KINIT=${KINIT:-"/usr/bin/kinit"}
 KLIST=${KLIST:-"/usr/bin/klist"}
 KINIT_HEIMDAL_ARGS="--no-afslog"
 KINIT_MIT_ARGS=""
 
+[ -x ${KTUTIL} ] || KTUTIL='/usr/sbin/ktutil'
+[ -x ${KINIT} ] || KINIT='/usr/sbin/kinit'
+[ -x ${KLIST} ] || KLIST='/usr/sbin/klist'
 [ -x ${KTUTIL} ] && [ -x ${HOSTNAMECMD} ] && [ -x ${KINIT} ] && [ -x ${KLIST} ] || exit 1
 
 ${KLIST} --version >/dev/null 2>&1
