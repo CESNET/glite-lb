@@ -64,7 +64,7 @@ while (<>) {
 	}
 
 	if ($code) {
-		if (/^\@\@\@}$/) {
+		if (/^\@\@\@\}$/) {
 			$code .= "1;\n";
 			print "#line $startcode \"$ARGV\"\n/* begin */\n" if $lines;
 			eval $code or die "eval: $@ at $ARGV:$.\n";
@@ -75,7 +75,7 @@ while (<>) {
 		else { $code .= $_."\n"; }
 	}
 	else {
-		if (/^\@\@\@{$/) {
+		if (/^\@\@\@\{$/) {
 			$startcode = $.;
 			$code = "\n";
 		}
